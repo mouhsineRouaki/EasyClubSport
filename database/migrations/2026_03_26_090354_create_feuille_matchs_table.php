@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('feuille_matchs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('evenement_id')->unique()->constrained('evenements')->cascadeOnDelete();
+            $table->string('formation')->nullable();
+            $table->text('notes')->nullable();
+            $table->boolean('est_validee')->default(false);
             $table->timestamps();
         });
     }
