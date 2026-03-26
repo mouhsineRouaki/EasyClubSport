@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documents', function (Blueprint $table) {
+        Schema::create('medias', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('utilisateur_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('evenement_id')->nullable()->constrained('evenements')->nullOnDelete();
+            $table->foreignId('utilisateur_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('nom');
-            $table->string('type_document');
+            $table->enum('type_media', ['image', 'video'])->default('image');
             $table->string('fichier');
-            $table->timestamp('date_ajout')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('documents');
+        Schema::dropIfExists('medias');
     }
 };

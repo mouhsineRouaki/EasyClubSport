@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('canaux', function (Blueprint $table) {
             $table->id();
             $table->foreignId('equipe_id')->nullable()->constrained('equipes')->nullOnDelete();
-            $table->foreignId('expediteur_id')->constrained('users')->cascadeOnDelete();
-            $table->text('contenu');
-            $table->enum('type_message', ['equipe', 'prive', 'annonce'])->default('equipe');
+            $table->string('nom');
+            $table->enum('type_canal', ['equipe', 'prive', 'club'])->default('equipe');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('canaux');
     }
 };

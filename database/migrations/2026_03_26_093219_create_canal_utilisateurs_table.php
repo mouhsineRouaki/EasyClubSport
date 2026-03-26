@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('canal_utilisateurs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('canal_id')->constrained('canaux')->cascadeOnDelete();
             $table->foreignId('utilisateur_id')->constrained('users')->cascadeOnDelete();
-            $table->string('titre');
-            $table->text('contenu');
-            $table->enum('type_notification', ['info', 'alerte', 'message', 'convocation'])->default('info');
-            $table->boolean('est_lue')->default(false);
-            $table->timestamp('date_lecture')->nullable();
             $table->timestamps();
+
+            $table->unique(['canal_id', 'utilisateur_id']);
         });
     }
 
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('canal_utilisateurs');
     }
 };
