@@ -14,5 +14,6 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
+    Route::get('/moi', [AuthController::class, 'moi']);
     Route::post('/deconnexion', [AuthController::class, 'deconnexion']);
 });

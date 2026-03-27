@@ -57,4 +57,28 @@ class AuthController extends Controller
             'data' => null,
         ]);
     }
+
+    public function moi(): JsonResponse
+    {
+        $utilisateur = request()->user();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Utilisateur connecte recupere avec succes.',
+            'data' => [
+                'utilisateur' => [
+                    'id' => $utilisateur->id,
+                    'name' => $utilisateur->name,
+                    'nom' => $utilisateur->nom,
+                    'prenom' => $utilisateur->prenom,
+                    'email' => $utilisateur->email,
+                    'telephone' => $utilisateur->telephone,
+                    'adresse' => $utilisateur->adresse,
+                    'photo' => $utilisateur->photo,
+                    'role' => $utilisateur->role,
+                    'statut' => $utilisateur->statut,
+                ],
+            ],
+        ]);
+    }
 }
