@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\President\ProfilPresidentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/inscription', [AuthController::class, 'inscription']);
@@ -16,4 +17,9 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     Route::get('/moi', [AuthController::class, 'moi']);
     Route::post('/deconnexion', [AuthController::class, 'deconnexion']);
+});
+
+Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->group(function () {
+    Route::get('/profil', [ProfilPresidentController::class, 'afficher']);
+    Route::put('/profil', [ProfilPresidentController::class, 'modifier']);
 });
