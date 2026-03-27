@@ -24,6 +24,7 @@ class ProfilPresidentResource extends JsonResource
                     'telephone' => $utilisateur->telephone,
                     'adresse' => $utilisateur->adresse,
                     'photo' => $utilisateur->photo,
+                    'photo_url' => $utilisateur->photo ? asset('storage/'.$utilisateur->photo) : null,
                     'role' => $utilisateur->role,
                     'statut' => $utilisateur->statut,
                 ],

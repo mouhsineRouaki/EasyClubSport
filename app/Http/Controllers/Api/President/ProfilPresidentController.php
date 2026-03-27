@@ -32,7 +32,11 @@ class ProfilPresidentController extends Controller
 
         $this->authorize('modifierProfilPresident', $utilisateur);
 
-        $utilisateur = $this->profilPresidentService->mettreAJour($utilisateur, $request->validated());
+        $utilisateur = $this->profilPresidentService->mettreAJour(
+            $utilisateur,
+            $request->safe()->except('photo'),
+            $request->file('photo')
+        );
 
         return new ProfilPresidentResource([
             'message' => 'Profil president modifie avec succes.',

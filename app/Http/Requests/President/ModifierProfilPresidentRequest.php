@@ -20,7 +20,7 @@ class ModifierProfilPresidentRequest extends FormRequest
             'prenom' => ['required', 'string', 'max:255'],
             'telephone' => ['nullable', 'string', 'max:20'],
             'adresse' => ['nullable', 'string', 'max:255'],
-            'photo' => ['nullable', 'string', 'max:255'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$utilisateur?->id],
         ];
     }

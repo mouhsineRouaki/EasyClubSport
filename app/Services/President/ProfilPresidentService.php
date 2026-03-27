@@ -4,6 +4,8 @@ namespace App\Services\President;
 
 use App\Models\User;
 use App\Repositories\President\ProfilPresidentRepository;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class ProfilPresidentService
 {
@@ -12,9 +14,17 @@ class ProfilPresidentService
     ) {
     }
 
-    public function mettreAJour(User $utilisateur, array $donnees): User
+    public function mettreAJour(User $utilisateur, array $donnees, ?UploadedFile $photo = null): User
     {
         $donnees['name'] = trim($donnees['prenom'].' '.$donnees['nom']);
+
+        if ($photo) {
+            if ($utilisateur->photo) {
+                Storage::disk('public')->delete($utilisateur->photo);
+            }
+
+            $donnees['photo'] = $photo->store('profils', 'public');
+        }
 
         return $this->profilPresidentRepository->mettreAJour($utilisateur, $donnees);
     }

@@ -22,6 +22,8 @@ class AuthResource extends JsonResource
                     'email' => $this['utilisateur']->email,
                     'telephone' => $this['utilisateur']->telephone,
                     'adresse' => $this['utilisateur']->adresse,
+                    'photo' => $this['utilisateur']->photo,
+                    'photo_url' => $this['utilisateur']->photo ? asset('storage/'.$this['utilisateur']->photo) : null,
                     'role' => $this['utilisateur']->role,
                     'statut' => $this['utilisateur']->statut,
                 ],
