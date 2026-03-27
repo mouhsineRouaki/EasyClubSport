@@ -19,7 +19,7 @@ class AuthService
         $donnees['name'] = trim($donnees['prenom'].' '.$donnees['nom']);
 
         $utilisateur = $this->authRepository->creerUtilisateur($donnees);
-        $token = $utilisateur->createToken('auth_token')->plainTextToken;
+        $token = $this->authRepository->creerToken($utilisateur);
 
         return [
             'utilisateur' => $utilisateur,
@@ -35,7 +35,7 @@ class AuthService
             throw new AuthenticationException('Les informations de connexion sont incorrectes.');
         }
 
-        $token = $utilisateur->createToken('auth_token')->plainTextToken;
+        $token = $this->authRepository->creerToken($utilisateur);
 
         return [
             'utilisateur' => $utilisateur,
@@ -45,6 +45,6 @@ class AuthService
 
     public function deconnecter(User $utilisateur): void
     {
-        $utilisateur->currentAccessToken()?->delete();
+        $this->authRepository->supprimerTokenActuel($utilisateur);
     }
 }
