@@ -19,6 +19,13 @@ class EquipeResource extends JsonResource
                     'id' => $equipe->id,
                     'club_id' => $equipe->club_id,
                     'coach_id' => $equipe->coach_id,
+                    'coach' => $equipe->coach ? [
+                        'id' => $equipe->coach->id,
+                        'name' => $equipe->coach->name,
+                        'nom' => $equipe->coach->nom,
+                        'prenom' => $equipe->coach->prenom,
+                        'email' => $equipe->coach->email,
+                    ] : null,
                     'nom' => $equipe->nom,
                     'categorie' => $equipe->categorie,
                     'logo' => $equipe->logo,

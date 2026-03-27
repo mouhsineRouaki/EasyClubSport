@@ -37,4 +37,16 @@ class EquipePolicy
         return $utilisateur->role === 'president'
             && $equipe->club?->president_id === $utilisateur->id;
     }
+
+    public function gererCoach(User $utilisateur, Equipe $equipe): bool
+    {
+        return $utilisateur->role === 'president'
+            && $equipe->club?->president_id === $utilisateur->id;
+    }
+
+    public function gererJoueurs(User $utilisateur, Equipe $equipe): bool
+    {
+        return $utilisateur->role === 'president'
+            && $equipe->club?->president_id === $utilisateur->id;
+    }
 }

@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api\President;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\President\AjouterJoueurEquipeRequest;
+use App\Http\Requests\President\AssignerCoachEquipeRequest;
 use App\Http\Requests\President\CreerEquipeRequest;
 use App\Http\Requests\President\ModifierEquipeRequest;
 use App\Http\Resources\President\EquipeCollection;
 use App\Http\Resources\President\EquipeResource;
+use App\Http\Resources\President\JoueurEquipeCollection;
 use App\Models\Club;
 use App\Models\Equipe;
+use App\Models\User;
 use App\Services\President\EquipeService;
 use Illuminate\Http\JsonResponse;
 
@@ -80,6 +84,70 @@ class EquipeController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Equipe supprimee avec succes.',
+            'data' => null,
+        ]);
+    }
+
+    public function assignerCoach(AssignerCoachEquipeRequest $request, Club $club, Equipe $equipe): EquipeResource
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('gererCoach', $equipe);
+
+        $coach = User::findOrFail($request->integer('coach_id'));
+        $equipe = $this->equipeService->assignerCoach($equipe, $coach);
+
+        return new EquipeResource([
+            'message' => 'Coach assigne a l equipe avec succes.',
+            'equipe' => $equipe,
+        ]);
+    }
+
+    public function retirerCoach(Club $club, Equipe $equipe): EquipeResource
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('gererCoach', $equipe);
+
+        $equipe = $this->equipeService->retirerCoach($equipe);
+
+        return new EquipeResource([
+            'message' => 'Coach retire de l equipe avec succes.',
+            'equipe' => $equipe,
+        ]);
+    }
+
+    public function listerJoueurs(Club $club, Equipe $equipe): JoueurEquipeCollection
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('gererJoueurs', $equipe);
+
+        return new JoueurEquipeCollection($this->equipeService->listerJoueurs($equipe));
+    }
+
+    public function ajouterJoueur(AjouterJoueurEquipeRequest $request, Club $club, Equipe $equipe): JsonResponse
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('gererJoueurs', $equipe);
+
+        $joueur = User::findOrFail($request->integer('utilisateur_id'));
+        $this->equipeService->ajouterJoueur($equipe, $joueur);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Joueur ajoute a l equipe avec succes.',
+            'data' => null,
+        ]);
+    }
+
+    public function retirerJoueur(Club $club, Equipe $equipe, User $joueur): JsonResponse
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('gererJoueurs', $equipe);
+
+        $this->equipeService->retirerJoueur($equipe, $joueur);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Joueur retire de l equipe avec succes.',
             'data' => null,
         ]);
     }

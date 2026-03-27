@@ -36,4 +36,9 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::get('/clubs/{club}/equipes/{equipe}', [EquipeController::class, 'show']);
     Route::put('/clubs/{club}/equipes/{equipe}', [EquipeController::class, 'update']);
     Route::delete('/clubs/{club}/equipes/{equipe}', [EquipeController::class, 'destroy']);
+    Route::put('/clubs/{club}/equipes/{equipe}/coach', [EquipeController::class, 'assignerCoach']);
+    Route::delete('/clubs/{club}/equipes/{equipe}/coach', [EquipeController::class, 'retirerCoach']);
+    Route::get('/clubs/{club}/equipes/{equipe}/joueurs', [EquipeController::class, 'listerJoueurs']);
+    Route::post('/clubs/{club}/equipes/{equipe}/joueurs', [EquipeController::class, 'ajouterJoueur']);
+    Route::delete('/clubs/{club}/equipes/{equipe}/joueurs/{joueur}', [EquipeController::class, 'retirerJoueur']);
 });
