@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers\Api\President;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\President\CreerClubRequest;
+use App\Http\Requests\President\ModifierClubRequest;
+use App\Http\Resources\President\ClubCollection;
+use App\Http\Resources\President\ClubResource;
+use App\Models\Club;
+use App\Services\President\ClubService;
+use Illuminate\Http\JsonResponse;
+
+class ClubController extends Controller
+{
+    public function __construct(
+        protected ClubService $clubService
+    ) {
+    }
+
+    public function index(): ClubCollection
+    {
+        $utilisateur = request()->user();
+
+        $this->authorize('voirListe', Club::class);
+
+        return new ClubCollection($this->clubService->lister($utilisateur));
+    }
+
+    public function store(CreerClubRequest $request): ClubResource
+    {
+        $utilisateur = $request->user();
+
+        $this->authorize('creer', Club::class);
+
+        $club = $this->clubService->creer(
+            $utilisateur,
+            $request->safe()->except('logo'),
+            $request->file('logo')
+        );
+
+        return new ClubResource([
+            'message' => 'Club cree avec succes.',
+            'club' => $club,
+        ]);
+    }
+
+    public function show(Club $club): ClubResource
+    {
+        $this->authorize('voir', $club);
+
+        return new ClubResource([
+            'message' => 'Details du club recuperes avec succes.',
+            'club' => $club,
+        ]);
+    }
+
+    public function update(ModifierClubRequest $request, Club $club): ClubResource
+    {
+        $this->authorize('modifier', $club);
+
+        $club = $this->clubService->mettreAJour(
+            $club,
+            $request->safe()->except('logo'),
+            $request->file('logo')
+        );
+
+        return new ClubResource([
+            'message' => 'Club modifie avec succes.',
+            'club' => $club,
+        ]);
+    }
+
+    public function destroy(Club $club): JsonResponse
+    {
+        $this->authorize('supprimer', $club);
+
+        $this->clubService->supprimer($club);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Club supprime avec succes.',
+            'data' => null,
+        ]);
+    }
+}
