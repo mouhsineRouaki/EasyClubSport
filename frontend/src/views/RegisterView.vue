@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, reactive } from 'vue'
 import imageHero from '../assets/hero.png'
 
@@ -42,111 +42,150 @@ const soumettre = () => {
 </script>
 
 <template>
-  <main class="auth-page">
-    <section class="auth-shell">
-      <div class="auth-visual">
-        <div class="auth-brand">
-          <span class="brand-badge">ES</span>
+  <main class="flex min-h-screen items-center justify-center p-4 sm:p-8">
+    <section class="grid min-h-[760px] w-full max-w-6xl overflow-hidden rounded-[36px] border border-white/70 bg-white/80 shadow-[0_25px_60px_rgba(15,23,42,0.18)] backdrop-blur-[14px] lg:grid-cols-[1.05fr_0.95fr]">
+      <div class="flex flex-col gap-6 bg-[linear-gradient(160deg,#0f172a_0%,#172554_52%,#1d4ed8_100%)] p-6 text-slate-50 sm:p-8">
+        <div class="flex items-start gap-4">
+          <span class="grid h-14 w-14 place-items-center rounded-[18px] border border-white/20 bg-white/10 font-bold">ES</span>
           <div>
-            <p>EasyClubSport</p>
-            <h1>Construire votre club de sport avec une base solide</h1>
+            <p class="m-0 text-sm uppercase tracking-[0.08em] text-white/75">EasyClubSport</p>
+            <h1 class="mt-1.5 text-[2.2rem] leading-[1.1] font-semibold">Construire votre club de sport avec une base solide</h1>
           </div>
         </div>
 
-        <img :src="imageHero" alt="Illustration sportive" class="auth-image" />
+        <img :src="imageHero" alt="Illustration sportive" class="min-h-[360px] w-full flex-1 rounded-[28px] border border-white/15 object-cover" />
 
-        <div class="auth-note">
-          <strong>Etape actuelle</strong>
-          <p>
+        <div class="rounded-[24px] border border-white/10 bg-slate-900/30 px-5 py-4">
+          <strong class="block">Etape actuelle</strong>
+          <p class="mt-1.5 text-white/80">
             Nous commencons par une page register claire, avec les champs relies a Vue.
           </p>
         </div>
       </div>
 
-      <div class="auth-panel">
-        <div class="auth-panel-head">
-          <p class="eyebrow">Inscription</p>
-          <h2>Creer un compte</h2>
-          <p class="muted">
+      <div class="flex flex-col justify-center gap-6 p-6 sm:p-10">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.08em] text-blue-600">Inscription</p>
+          <h2 class="mt-2.5 text-[2.4rem] leading-[1.1] font-semibold text-slate-900">Creer un compte</h2>
+          <p class="mt-2.5 text-slate-500">
             Cette premiere version construit uniquement l interface et la liaison des champs.
           </p>
         </div>
 
-        <form class="auth-form" @submit.prevent="soumettre">
-          <div class="form-grid two-columns">
-            <label class="field">
-              <span>Nom</span>
-              <input v-model="formulaire.nom" type="text" placeholder="Entrer votre nom" />
+        <form class="flex flex-col gap-[18px]" @submit.prevent="soumettre">
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-slate-700">Nom</span>
+              <input
+                v-model="formulaire.nom"
+                type="text"
+                placeholder="Entrer votre nom"
+                class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
+              />
             </label>
 
-            <label class="field">
-              <span>Prenom</span>
-              <input v-model="formulaire.prenom" type="text" placeholder="Entrer votre prenom" />
-            </label>
-          </div>
-
-          <div class="form-grid two-columns">
-            <label class="field">
-              <span>Email</span>
-              <input v-model="formulaire.email" type="email" placeholder="exemple@email.com" />
-            </label>
-
-            <label class="field">
-              <span>Telephone</span>
-              <input v-model="formulaire.telephone" type="text" placeholder="06XXXXXXXX" />
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-slate-700">Prenom</span>
+              <input
+                v-model="formulaire.prenom"
+                type="text"
+                placeholder="Entrer votre prenom"
+                class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
+              />
             </label>
           </div>
 
-          <label class="field">
-            <span>Adresse</span>
-            <input v-model="formulaire.adresse" type="text" placeholder="Ville, quartier, adresse" />
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-slate-700">Email</span>
+              <input
+                v-model="formulaire.email"
+                type="email"
+                placeholder="exemple@email.com"
+                class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
+              />
+            </label>
+
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-slate-700">Telephone</span>
+              <input
+                v-model="formulaire.telephone"
+                type="text"
+                placeholder="06XXXXXXXX"
+                class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
+              />
+            </label>
+          </div>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-sm font-semibold text-slate-700">Adresse</span>
+            <input
+              v-model="formulaire.adresse"
+              type="text"
+              placeholder="Ville, quartier, adresse"
+              class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
+            />
           </label>
 
-          <label class="field">
-            <span>Role</span>
-            <select v-model="formulaire.role">
+          <label class="flex flex-col gap-2">
+            <span class="text-sm font-semibold text-slate-700">Role</span>
+            <select
+              v-model="formulaire.role"
+              class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
+            >
               <option v-for="role in roles" :key="role.value" :value="role.value">
                 {{ role.label }}
               </option>
             </select>
           </label>
 
-          <div class="form-grid two-columns">
-            <label class="field">
-              <span>Mot de passe</span>
-              <input v-model="formulaire.password" type="password" placeholder="Mot de passe" />
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-slate-700">Mot de passe</span>
+              <input
+                v-model="formulaire.password"
+                type="password"
+                placeholder="Mot de passe"
+                class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
+              />
             </label>
 
-            <label class="field">
-              <span>Confirmation du mot de passe</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-semibold text-slate-700">Confirmation du mot de passe</span>
               <input
                 v-model="formulaire.password_confirmation"
                 type="password"
                 placeholder="Confirmer le mot de passe"
+                class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
               />
             </label>
           </div>
 
-          <p v-if="motDePasseDifferent" class="error-text">
+          <p v-if="motDePasseDifferent" class="-mt-1 text-sm text-red-600">
             Les deux mots de passe ne sont pas identiques.
           </p>
 
-          <button class="primary-button" type="submit">Continuer</button>
+          <button
+            class="cursor-pointer rounded-full bg-[linear-gradient(135deg,#111827_0%,#1f2937_100%)] px-[18px] py-[15px] font-bold text-white transition hover:opacity-95"
+            type="submit"
+          >
+            Continuer
+          </button>
         </form>
 
-        <section class="preview-card">
-          <div class="preview-head">
-            <h3>Ce que Vue fait ici</h3>
-            <span>Etape 1</span>
+        <section class="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="m-0 text-lg font-semibold text-slate-900">Ce que Vue fait ici</h3>
+            <span class="text-sm font-bold text-blue-600">Etape 1</span>
           </div>
 
-          <ul class="preview-list">
+          <ul class="my-4 list-disc pl-[18px] text-slate-600">
             <li>Chaque input est lie a `formulaire` avec `v-model`.</li>
             <li>La verification du mot de passe utilise `computed`.</li>
             <li>Le bouton submit declenche `soumettre()` sans recharger la page.</li>
           </ul>
 
-          <pre class="preview-json">{{ JSON.stringify(resumeInscription, null, 2) }}</pre>
+          <pre class="m-0 overflow-auto rounded-2xl bg-slate-900 p-3.5 text-[13px] text-slate-200">{{ JSON.stringify(resumeInscription, null, 2) }}</pre>
         </section>
       </div>
     </section>
