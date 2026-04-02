@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EasyClubSport - Presentation Claire</title>
+  <style>
+    :root {
+      --bg: #06111f;
+      --panel: #0d1b31;
+      --panel-soft: #132440;
+      --line: rgba(163, 184, 208, 0.16);
+      --text: #ebf2fc;
+      --muted: #95a6bf;
+      --blue: #4f8cff;
+      --emerald: #19c48d;
+      --amber: #ffb341;
+      --rose: #ff7f96;
+      --shadow: 0 28px 80px rgba(2, 10, 24, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #06101d 0%, #091425 100%);
+      color: var(--text);
+    }
+
+    body { padding: 28px; }
+
+    .document {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .slide {
+      min-height: 740px;
+      padding: 42px;
+      border-radius: 30px;
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle at top right, rgba(79,140,255,0.16), transparent 25%),
+        radial-gradient(circle at bottom left, rgba(25,196,141,0.08), transparent 18%),
+        linear-gradient(160deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)),
+        var(--panel);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    .slide:last-child { page-break-after: auto; }
+
+    .topbar, .grid-2, .grid-3, .hero-grid, .stats-grid {
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, rgba(79,140,255,0.3), rgba(25,196,141,0.24));
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #a9c7ff;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p, ul, .tag-row, .quote {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 18px 0 12px;
+      font-size: 56px;
+      line-height: 1.04;
+      max-width: 760px;
+    }
+
+    h2 {
+      margin: 18px 0 14px;
+      font-size: 34px;
+      line-height: 1.15;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.72;
+    }
+
+    .hero-grid, .grid-2 {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+      margin-top: 26px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 22px;
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-card {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+    }
+
+    .image-box {
+      width: 100%;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .image-box img,
+    .image-box svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .tag {
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .tag.blue { color: #c8dcff; background: rgba(79,140,255,0.16); }
+    .tag.green { color: #bff6e6; background: rgba(25,196,141,0.14); }
+    .tag.amber { color: #ffe6bf; background: rgba(255,179,65,0.14); }
+    .tag.rose { color: #ffd2db; background: rgba(255,127,150,0.14); }
+
+    ul {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    li + li { margin-top: 8px; }
+
+    .metric {
+      display: block;
+      font-size: 34px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .accent-box {
+      margin-top: 24px;
+      padding: 24px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(79,140,255,0.16), rgba(25,196,141,0.12));
+      border: 1px solid rgba(169,199,255,0.18);
+    }
+
+    .quote {
+      margin-top: 26px;
+      font-size: 30px;
+      color: #fff;
+      line-height: 1.42;
+      max-width: 860px;
+    }
+
+    .footer-note {
+      position: absolute;
+      right: 42px;
+      bottom: 32px;
+      color: rgba(149,166,191,0.72);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+
+    @media print {
+      body { padding: 0; }
+      .document { max-width: none; gap: 0; }
+      .slide { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="document">
+    <section class="slide">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo">ES</div>
+          <div>
+            <p class="eyebrow">Presentation du projet</p>
+            <strong>EasyClubSport</strong>
+          </div>
+        </div>
+        <div class="tag-row">
+          <span class="tag blue">Laravel API</span>
+          <span class="tag green">Vue 3</span>
+          <span class="tag amber">Tailwind CSS</span>
+        </div>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div>
+            <p class="eyebrow">Notre idée</p>
+            <h1>Centraliser toute la gestion d'un club sportif dans une seule application</h1>
+            <p>
+              EasyClubSport aide un club à organiser ses équipes, gérer ses joueurs, suivre les événements,
+              simplifier la communication et rendre l'organisation plus professionnelle.
+            </p>
+          </div>
+
+          <div class="tag-row">
+            <span class="tag rose">Besoin réel</span>
+            <span class="tag blue">Projet complet</span>
+            <span class="tag green">Architecture moderne</span>
+          </div>
+        </div>
+
+        <div class="image-box">
+          <img src="../frontend/src/assets/hero.png" alt="Visuel sportif EasyClubSport" />
+        </div>
+      </div>
+
+      <div class="accent-box">
+        <h3>Message principal</h3>
+        <p>
+          Cette idée est convaincante parce qu'elle répond à un problème concret vécu dans les clubs sportifs,
+          tout en offrant un très bon terrain d'apprentissage en backend, frontend et architecture logicielle.
+        </p>
+      </div>
+
+      <div class="footer-note">Slide 1 - Introduction</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Le problème</p>
+      <h2>Pourquoi ce projet est nécessaire</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Organisation actuelle dans beaucoup de clubs</h3>
+          <ul>
+            <li>WhatsApp pour les messages</li>
+            <li>Excel pour les listes et suivis</li>
+            <li>Appels pour confirmer les présences</li>
+            <li>Documents dispersés ou perdus</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Conséquences</h3>
+          <ul>
+            <li>Planning mal suivi</li>
+            <li>Convocations de dernière minute</li>
+            <li>Informations non centralisées</li>
+            <li>Absence d'historique fiable</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accent-box">
+        <h3>Problème central</h3>
+        <p>
+          Le club utilise trop d'outils séparés. Résultat : moins de clarté, moins d'efficacité et plus de stress
+          dans l'organisation quotidienne.
+        </p>
+      </div>
+
+      <div class="footer-note">Slide 2 - Probleme</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Solution</p>
+      <h2>Ce que propose EasyClubSport</h2>
+
+      <div class="image-box" style="margin-top: 24px;">
+        <img src="assets/modules-easyclubsport.svg" alt="Schéma des modules du projet" />
+      </div>
+
+      <div class="accent-box">
+        <h3>Résumé</h3>
+        <p>
+          L'application permet de gérer les clubs, équipes, joueurs, profils, événements, convocations,
+          documents et statistiques dans une interface claire et structurée.
+        </p>
+      </div>
+
+      <div class="footer-note">Slide 3 - Fonctionnalites</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Utilisateurs</p>
+      <h2>Les rôles principaux dans l'application</h2>
+      <div class="grid-3">
+        <div class="card">
+          <span class="metric">01</span>
+          <h3>Président</h3>
+          <p>Gère le club, les équipes, les coachs, les indicateurs globaux et l'organisation générale.</p>
+        </div>
+        <div class="card">
+          <span class="metric">02</span>
+          <h3>Coach</h3>
+          <p>Gère les événements, les convocations, l'effectif, les compositions et les statistiques.</p>
+        </div>
+        <div class="card">
+          <span class="metric">03</span>
+          <h3>Joueur</h3>
+          <p>Consulte son planning, répond à ses disponibilités et accède à ses informations personnelles.</p>
+        </div>
+      </div>
+
+      <div class="tag-row">
+        <span class="tag blue">Role-based access</span>
+        <span class="tag green">Securite par policies</span>
+        <span class="tag amber">Experience adaptee par acteur</span>
+      </div>
+
+      <div class="footer-note">Slide 4 - Acteurs</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Architecture</p>
+      <h2>Une organisation technique professionnelle</h2>
+
+      <div class="image-box" style="margin-top: 24px;">
+        <img src="assets/architecture-easyclubsport.svg" alt="Architecture frontend backend base de donnees" />
+      </div>
+
+      <div class="grid-2" style="margin-top: 18px;">
+        <div class="card">
+          <h3>Backend</h3>
+          <p>Laravel API REST avec Requests, Services, Repositories, Resources, Policies et Middleware.</p>
+        </div>
+        <div class="card">
+          <h3>Frontend</h3>
+          <p>Vue 3 et Tailwind CSS pour construire une interface moderne, claire et facile à faire évoluer.</p>
+        </div>
+      </div>
+
+      <div class="footer-note">Slide 5 - Architecture</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Pourquoi convaincre</p>
+      <h2>Ce projet est une très bonne idée pour apprendre et construire</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Réel</h3>
+          <p>Le projet part d'un vrai besoin observé sur le terrain sportif.</p>
+        </div>
+        <div class="card">
+          <h3>Complet</h3>
+          <p>Il mélange sécurité, API, frontend moderne, base de données et logique métier.</p>
+        </div>
+        <div class="card">
+          <h3>Présentable</h3>
+          <p>Le projet est facile à défendre devant une classe, un encadrant ou un jury.</p>
+        </div>
+      </div>
+
+      <p class="quote">
+        « EasyClubSport est un projet utile, crédible et techniquement formateur. Il montre une vraie
+        compréhension d'un besoin, ainsi qu'une capacité à construire une solution moderne et structurée. »
+      </p>
+
+      <div class="footer-note">Slide 6 - Conclusion</div>
+    </section>
+  </div>
+</body>
+</html>

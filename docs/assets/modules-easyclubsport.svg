@@ -1,0 +1,50 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="700" rx="36" fill="#071427"/>
+  <text x="72" y="92" fill="#EAF2FE" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700">Modules du projet</text>
+  <text x="72" y="128" fill="#90A4C2" font-family="Arial, Helvetica, sans-serif" font-size="19">Vue synthétique des fonctionnalités couvertes par EasyClubSport</text>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="72" y="180" width="240" height="132" rx="24" fill="#14294A" stroke="#3B82F6"/>
+    <text x="98" y="226" fill="#FFFFFF" font-size="28" font-weight="700">Authentification</text>
+    <text x="98" y="262" fill="#C8D7EA" font-size="18">Inscription</text>
+    <text x="98" y="288" fill="#C8D7EA" font-size="18">Connexion</text>
+
+    <rect x="340" y="180" width="240" height="132" rx="24" fill="#10263E" stroke="#10B981"/>
+    <text x="366" y="226" fill="#FFFFFF" font-size="28" font-weight="700">Clubs</text>
+    <text x="366" y="262" fill="#C8D7EA" font-size="18">Creation</text>
+    <text x="366" y="288" fill="#C8D7EA" font-size="18">Gestion</text>
+
+    <rect x="608" y="180" width="240" height="132" rx="24" fill="#2A1C12" stroke="#F59E0B"/>
+    <text x="634" y="226" fill="#FFFFFF" font-size="28" font-weight="700">Equipes</text>
+    <text x="634" y="262" fill="#F4DEC0" font-size="18">Coachs</text>
+    <text x="634" y="288" fill="#F4DEC0" font-size="18">Joueurs</text>
+
+    <rect x="876" y="180" width="240" height="132" rx="24" fill="#301624" stroke="#FB7185"/>
+    <text x="902" y="226" fill="#FFFFFF" font-size="28" font-weight="700">Profil</text>
+    <text x="902" y="262" fill="#F7CBD5" font-size="18">Photo</text>
+    <text x="902" y="288" fill="#F7CBD5" font-size="18">Coordonnees</text>
+
+    <rect x="72" y="356" width="240" height="132" rx="24" fill="#10263E" stroke="#10B981"/>
+    <text x="98" y="402" fill="#FFFFFF" font-size="28" font-weight="700">Evenements</text>
+    <text x="98" y="438" fill="#C8D7EA" font-size="18">Matchs</text>
+    <text x="98" y="464" fill="#C8D7EA" font-size="18">Entrainements</text>
+
+    <rect x="340" y="356" width="240" height="132" rx="24" fill="#14294A" stroke="#3B82F6"/>
+    <text x="366" y="402" fill="#FFFFFF" font-size="28" font-weight="700">Convocations</text>
+    <text x="366" y="438" fill="#C8D7EA" font-size="18">Disponibilites</text>
+    <text x="366" y="464" fill="#C8D7EA" font-size="18">Presence</text>
+
+    <rect x="608" y="356" width="240" height="132" rx="24" fill="#2A1C12" stroke="#F59E0B"/>
+    <text x="634" y="402" fill="#FFFFFF" font-size="28" font-weight="700">Documents</text>
+    <text x="634" y="438" fill="#F4DEC0" font-size="18">Licences</text>
+    <text x="634" y="464" fill="#F4DEC0" font-size="18">Photos</text>
+
+    <rect x="876" y="356" width="240" height="132" rx="24" fill="#301624" stroke="#FB7185"/>
+    <text x="902" y="402" fill="#FFFFFF" font-size="28" font-weight="700">Statistiques</text>
+    <text x="902" y="438" fill="#F7CBD5" font-size="18">Performances</text>
+    <text x="902" y="464" fill="#F7CBD5" font-size="18">Suivi saison</text>
+
+    <rect x="238" y="532" width="724" height="92" rx="24" fill="#0B1830" stroke="#20385E"/>
+    <text x="272" y="586" fill="#EAF2FE" font-size="28" font-weight="700">Objectif : centraliser toute la gestion du club dans une seule plateforme</text>
+  </g>
+</svg>
