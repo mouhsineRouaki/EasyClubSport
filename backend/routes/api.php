@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\President\ClubController;
-use App\Http\Controllers\Api\President\DashboardPresidentController;
 use App\Http\Controllers\Api\President\EquipeController;
 use App\Http\Controllers\Api\President\ProfilPresidentController;
 use Illuminate\Http\Request;
@@ -23,8 +22,6 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->group(function () {
-    Route::get('/dashboard', [DashboardPresidentController::class, 'index']);
-
     Route::get('/profil', [ProfilPresidentController::class, 'afficher']);
     Route::put('/profil', [ProfilPresidentController::class, 'modifier']);
 
