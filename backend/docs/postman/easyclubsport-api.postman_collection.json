@@ -1,0 +1,495 @@
+﻿{
+  "info": {
+    "_postman_id": "7e2f09e6-ef2c-4ef5-9f28-easyclubsport-api",
+    "name": "EasyClubSport API",
+    "description": "Collection Postman pour tester l'API actuelle de EasyClubSport. Le token est enregistre automatiquement apres la connexion dans la variable de collection token_api.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token_api}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "token_api", "value": "" },
+    { "key": "club_id", "value": "1" },
+    { "key": "equipe_id", "value": "1" },
+    { "key": "coach_id", "value": "1" },
+    { "key": "joueur_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentification",
+      "item": [
+        {
+          "name": "Inscription President",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"El Idrissi\",\n  \"prenom\": \"Hamza\",\n  \"email\": \"president@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0612345678\",\n  \"adresse\": \"Safi\",\n  \"role\": \"president\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/inscription",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "inscription"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.data?.utilisateur?.id) pm.collectionVariables.set('president_id', String(data.data.utilisateur.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscription Coach",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Coach\",\n  \"prenom\": \"Youssef\",\n  \"email\": \"coach@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0622222222\",\n  \"adresse\": \"Casablanca\",\n  \"role\": \"coach\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/inscription",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "inscription"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.data?.utilisateur?.id) pm.collectionVariables.set('coach_id', String(data.data.utilisateur.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscription Joueur",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Joueur\",\n  \"prenom\": \"Amine\",\n  \"email\": \"joueur@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0633333333\",\n  \"adresse\": \"Marrakech\",\n  \"role\": \"joueur\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/inscription",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "inscription"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.data?.utilisateur?.id) pm.collectionVariables.set('joueur_id', String(data.data.utilisateur.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Connexion President",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"president@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/connexion",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "connexion"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.data?.token) {",
+                  "  pm.collectionVariables.set('token_api', data.data.token);",
+                  "}",
+                  "if (data?.data?.utilisateur?.id) {",
+                  "  pm.collectionVariables.set('president_id', String(data.data.utilisateur.id));",
+                  "}",
+                  "pm.test('Token enregistre', function () {",
+                  "  pm.expect(pm.collectionVariables.get('token_api')).to.not.eql('');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Moi",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auth/moi",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "moi"]
+            }
+          }
+        },
+        {
+          "name": "Deconnexion",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/deconnexion",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "deconnexion"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset('token_api');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Profil President",
+      "item": [
+        {
+          "name": "Afficher Profil President",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/president/profil",
+              "host": ["{{base_url}}"],
+              "path": ["president", "profil"]
+            }
+          }
+        },
+        {
+          "name": "Modifier Profil President",
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "nom", "value": "El Idrissi", "type": "text" },
+                { "key": "prenom", "value": "Hamza", "type": "text" },
+                { "key": "email", "value": "president@example.com", "type": "text" },
+                { "key": "telephone", "value": "0611111111", "type": "text" },
+                { "key": "adresse", "value": "Safi centre", "type": "text" },
+                { "key": "photo", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/president/profil",
+              "host": ["{{base_url}}"],
+              "path": ["president", "profil"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Clubs President",
+      "item": [
+        {
+          "name": "Lister Clubs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/president/clubs",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs"]
+            }
+          }
+        },
+        {
+          "name": "Creer Club",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "nom", "value": "Easy Club Safi", "type": "text" },
+                { "key": "adresse", "value": "Quartier sportif, Safi", "type": "text" },
+                { "key": "telephone", "value": "0520000000", "type": "text" },
+                { "key": "email", "value": "club@example.com", "type": "text" },
+                { "key": "description", "value": "Club sportif de demonstration", "type": "text" },
+                { "key": "ville", "value": "Safi", "type": "text" },
+                { "key": "pays", "value": "Maroc", "type": "text" },
+                { "key": "logo", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/president/clubs",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.data?.club?.id) pm.collectionVariables.set('club_id', String(data.data.club.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Afficher Club",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Modifier Club",
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "nom", "value": "Easy Club Safi Updated", "type": "text" },
+                { "key": "adresse", "value": "Nouvelle adresse Safi", "type": "text" },
+                { "key": "telephone", "value": "0520111111", "type": "text" },
+                { "key": "email", "value": "club-updated@example.com", "type": "text" },
+                { "key": "description", "value": "Club sportif mis a jour", "type": "text" },
+                { "key": "ville", "value": "Safi", "type": "text" },
+                { "key": "pays", "value": "Maroc", "type": "text" },
+                { "key": "logo", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Supprimer Club",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Equipes President",
+      "item": [
+        {
+          "name": "Lister Equipes du Club",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes"]
+            }
+          }
+        },
+        {
+          "name": "Creer Equipe",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "nom", "value": "Seniors A", "type": "text" },
+                { "key": "categorie", "value": "Senior", "type": "text" },
+                { "key": "statut", "value": "active", "type": "text" },
+                { "key": "description", "value": "Equipe principale du club", "type": "text" },
+                { "key": "logo", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data?.data?.equipe?.id) pm.collectionVariables.set('equipe_id', String(data.data.equipe.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Afficher Equipe",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Modifier Equipe",
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "nom", "value": "Seniors A Updated", "type": "text" },
+                { "key": "categorie", "value": "Senior Elite", "type": "text" },
+                { "key": "statut", "value": "active", "type": "text" },
+                { "key": "description", "value": "Equipe mise a jour", "type": "text" },
+                { "key": "logo", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Assigner Coach a Equipe",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coach_id\": {{coach_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/coach",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "coach"]
+            }
+          }
+        },
+        {
+          "name": "Retirer Coach de Equipe",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/coach",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "coach"]
+            }
+          }
+        },
+        {
+          "name": "Lister Joueurs de Equipe",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "joueurs"]
+            }
+          }
+        },
+        {
+          "name": "Ajouter Joueur a Equipe",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"utilisateur_id\": {{joueur_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "joueurs"]
+            }
+          }
+        },
+        {
+          "name": "Retirer Joueur de Equipe",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs/{{joueur_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "joueurs", "{{joueur_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Supprimer Equipe",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
