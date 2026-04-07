@@ -1,11 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\President\ClubController;
-use App\Http\Controllers\Api\President\DashboardPresidentController;
-use App\Http\Controllers\Api\President\EvenementController;
-use App\Http\Controllers\Api\President\EquipeController;
-use App\Http\Controllers\Api\President\ProfilPresidentController;
+use App\Http\Controllers\Api\President\Club\ClubController;
+use App\Http\Controllers\Api\President\Dashboard\DashboardPresidentController;
+use App\Http\Controllers\Api\President\Evenement\EvenementController;
+use App\Http\Controllers\Api\President\Equipe\EquipeController;
+use App\Http\Controllers\Api\President\Profil\ProfilPresidentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
