@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\President\Annonce\AnnonceController;
 use App\Http\Controllers\Api\President\Club\ClubController;
 use App\Http\Controllers\Api\President\Dashboard\DashboardPresidentController;
+use App\Http\Controllers\Api\President\Document\DocumentController;
 use App\Http\Controllers\Api\President\Evenement\EvenementController;
 use App\Http\Controllers\Api\President\Equipe\EquipeController;
 use App\Http\Controllers\Api\President\Profil\ProfilPresidentController;
@@ -27,6 +28,7 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->group(function () {
     Route::get('/dashboard', [DashboardPresidentController::class, 'index']);
     Route::get('/annonces', [AnnonceController::class, 'index']);
+    Route::get('/documents', [DocumentController::class, 'index']);
     Route::get('/evenements', [EvenementController::class, 'index']);
 
     Route::get('/profil', [ProfilPresidentController::class, 'afficher']);
@@ -39,6 +41,8 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::delete('/clubs/{club}', [ClubController::class, 'destroy']);
     Route::get('/clubs/{club}/annonces', [AnnonceController::class, 'indexParClub']);
     Route::post('/clubs/{club}/annonces', [AnnonceController::class, 'store']);
+    Route::get('/clubs/{club}/documents', [DocumentController::class, 'indexParClub']);
+    Route::post('/clubs/{club}/documents', [DocumentController::class, 'store']);
 
     Route::get('/clubs/{club}/equipes', [EquipeController::class, 'index']);
     Route::post('/clubs/{club}/equipes', [EquipeController::class, 'store']);
@@ -60,4 +64,7 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::get('/annonces/{annonce}', [AnnonceController::class, 'show']);
     Route::put('/annonces/{annonce}', [AnnonceController::class, 'update']);
     Route::delete('/annonces/{annonce}', [AnnonceController::class, 'destroy']);
+    Route::get('/documents/{document}', [DocumentController::class, 'show']);
+    Route::put('/documents/{document}', [DocumentController::class, 'update']);
+    Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);
 });
