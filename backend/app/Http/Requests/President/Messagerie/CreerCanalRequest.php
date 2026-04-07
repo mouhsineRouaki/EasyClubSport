@@ -16,7 +16,7 @@ class CreerCanalRequest extends FormRequest
         return [
             'nom' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'type_canal' => ['nullable', 'in:equipe,club'],
+            'type_canal' => ['nullable', 'in:equipe'],
         ];
     }
 }

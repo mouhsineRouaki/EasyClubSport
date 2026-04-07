@@ -36,4 +36,10 @@ class Canal extends Model
         return $this->belongsToMany(User::class, 'canal_utilisateurs', 'canal_id', 'utilisateur_id')
             ->withTimestamps();
     }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'equipe_id', 'equipe_id')
+            ->where('type_message', 'equipe');
+    }
 }
