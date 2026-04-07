@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\President\Dashboard\DashboardPresidentController;
 use App\Http\Controllers\Api\President\Document\DocumentController;
 use App\Http\Controllers\Api\President\Evenement\EvenementController;
 use App\Http\Controllers\Api\President\Equipe\EquipeController;
+use App\Http\Controllers\Api\President\Messagerie\MessagerieController;
 use App\Http\Controllers\Api\President\Profil\ProfilPresidentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,7 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->group(function () {
     Route::get('/dashboard', [DashboardPresidentController::class, 'index']);
     Route::get('/annonces', [AnnonceController::class, 'index']);
+    Route::get('/canaux', [MessagerieController::class, 'indexCanaux']);
     Route::get('/documents', [DocumentController::class, 'index']);
     Route::get('/evenements', [EvenementController::class, 'index']);
 
@@ -41,6 +43,8 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::delete('/clubs/{club}', [ClubController::class, 'destroy']);
     Route::get('/clubs/{club}/annonces', [AnnonceController::class, 'indexParClub']);
     Route::post('/clubs/{club}/annonces', [AnnonceController::class, 'store']);
+    Route::get('/clubs/{club}/equipes/{equipe}/canaux', [MessagerieController::class, 'indexCanauxParEquipe']);
+    Route::post('/clubs/{club}/equipes/{equipe}/canaux', [MessagerieController::class, 'storeCanal']);
     Route::get('/clubs/{club}/documents', [DocumentController::class, 'indexParClub']);
     Route::post('/clubs/{club}/documents', [DocumentController::class, 'store']);
 
@@ -64,7 +68,12 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::get('/annonces/{annonce}', [AnnonceController::class, 'show']);
     Route::put('/annonces/{annonce}', [AnnonceController::class, 'update']);
     Route::delete('/annonces/{annonce}', [AnnonceController::class, 'destroy']);
+    Route::get('/canaux/{canal}', [MessagerieController::class, 'showCanal']);
+    Route::get('/canaux/{canal}/messages', [MessagerieController::class, 'indexMessages']);
+    Route::post('/canaux/{canal}/messages', [MessagerieController::class, 'storeMessage']);
     Route::get('/documents/{document}', [DocumentController::class, 'show']);
     Route::put('/documents/{document}', [DocumentController::class, 'update']);
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);
+    Route::put('/messages/{message}', [MessagerieController::class, 'updateMessage']);
+    Route::delete('/messages/{message}', [MessagerieController::class, 'destroyMessage']);
 });
