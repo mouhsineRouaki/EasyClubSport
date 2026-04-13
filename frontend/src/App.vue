@@ -1,7 +1,7 @@
-﻿<script setup>
-import RegisterView from './views/RegisterView.vue'
+<script setup>
+import LoginView from './views/LoginView.vue'
 </script>
 
 <template>
-  <RegisterView />
+  <LoginView />
 </template>
