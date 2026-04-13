@@ -75,10 +75,7 @@ const soumettre = async () => {
         <div class="relative z-10 flex flex-col gap-5">
           <div class="flex items-center gap-3">
             <img :src="logoEasyClubSport" alt="Logo EasyClubSport" class="h-12 w-auto" />
-            <div>
-              <p class="m-0 text-xs font-bold uppercase tracking-[0.15em] text-white/60">EasyClubSport</p>
-              <p class="m-0 text-sm font-semibold text-white">Plateforme de gestion</p>
-            </div>
+              
           </div>
 
           <div class="mt-1">
