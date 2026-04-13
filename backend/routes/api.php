@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Joueur\JoueurController;
 use App\Http\Controllers\Api\President\Annonce\AnnonceController;
 use App\Http\Controllers\Api\President\Club\ClubController;
 use App\Http\Controllers\Api\President\Dashboard\DashboardPresidentController;
@@ -76,4 +77,25 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);
     Route::put('/messages/{message}', [MessagerieController::class, 'updateMessage']);
     Route::delete('/messages/{message}', [MessagerieController::class, 'destroyMessage']);
+});
+
+Route::middleware(['auth:sanctum', 'role:joueur'])->prefix('joueur')->group(function () {
+    Route::get('/dashboard', [JoueurController::class, 'dashboard']);
+    Route::get('/profil', [JoueurController::class, 'afficherProfil']);
+    Route::put('/profil', [JoueurController::class, 'modifierProfil']);
+    Route::get('/equipe', [JoueurController::class, 'equipe']);
+    Route::get('/evenements', [JoueurController::class, 'evenements']);
+    Route::put('/evenements/{evenement}/disponibilite', [JoueurController::class, 'repondreDisponibilite']);
+    Route::get('/convocations', [JoueurController::class, 'convocations']);
+    Route::put('/convocations/{convocation}', [JoueurController::class, 'repondreConvocation']);
+    Route::get('/documents', [JoueurController::class, 'documents']);
+    Route::get('/canaux', [JoueurController::class, 'canaux']);
+    Route::get('/canaux/{canal}/messages', [JoueurController::class, 'messages']);
+    Route::post('/canaux/{canal}/messages', [JoueurController::class, 'envoyerMessage']);
+    Route::put('/messages/{message}', [JoueurController::class, 'modifierMessage']);
+    Route::delete('/messages/{message}', [JoueurController::class, 'supprimerMessage']);
+    Route::get('/notifications', [JoueurController::class, 'notifications']);
+    Route::put('/notifications/{notification}/lecture', [JoueurController::class, 'marquerNotificationCommeLue']);
+    Route::put('/notifications/lecture/toutes', [JoueurController::class, 'marquerToutesNotificationsCommeLues']);
+    Route::get('/statistiques', [JoueurController::class, 'statistiques']);
 });
