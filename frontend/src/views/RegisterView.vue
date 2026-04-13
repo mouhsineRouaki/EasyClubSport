@@ -1,6 +1,7 @@
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import imageHero from '../assets/hero.png'
+import { API_BASE_URL, post } from '../services/api'
 
 const roles = [
   { label: 'President', value: 'president' },
@@ -19,6 +20,12 @@ const formulaire = reactive({
   role: 'joueur',
 })
 
+const chargement = ref(false)
+const erreurGlobale = ref('')
+const succes = ref('')
+const token = ref('')
+const erreursValidation = ref({})
+
 const motDePasseDifferent = computed(() => {
   if (!formulaire.password_confirmation) {
     return false
@@ -36,8 +43,42 @@ const resumeInscription = computed(() => ({
   role: formulaire.role,
 }))
 
-const soumettre = () => {
-  console.log('Donnees du formulaire register :', { ...formulaire })
+const peutSoumettre = computed(() => {
+  return !motDePasseDifferent.value && !chargement.value
+})
+
+const lireErreur = (champ) => {
+  return erreursValidation.value?.[champ]?.[0] || ''
+}
+
+const reinitialiserMessages = () => {
+  erreurGlobale.value = ''
+  succes.value = ''
+  erreursValidation.value = {}
+}
+
+const soumettre = async () => {
+  reinitialiserMessages()
+
+  if (motDePasseDifferent.value) {
+    erreurGlobale.value = 'Les deux mots de passe ne sont pas identiques.'
+    return
+  }
+
+  chargement.value = true
+
+  try {
+    const reponse = await post('/auth/inscription', { ...formulaire })
+
+    succes.value = reponse.message || 'Compte cree avec succes.'
+    token.value = reponse?.data?.token || ''
+  } catch (error) {
+    const reponseErreur = error.response || {}
+    erreurGlobale.value = reponseErreur.message || error.message || 'Une erreur est survenue pendant l inscription.'
+    erreursValidation.value = reponseErreur.data || {}
+  } finally {
+    chargement.value = false
+  }
 }
 </script>
 
@@ -68,7 +109,7 @@ const soumettre = () => {
           <p class="text-xs font-bold uppercase tracking-[0.08em] text-blue-600">Inscription</p>
           <h2 class="mt-2.5 text-[2.4rem] leading-[1.1] font-semibold text-slate-900">Creer un compte</h2>
           <p class="mt-2.5 text-slate-500">
-            Cette premiere version construit uniquement l interface et la liaison des champs.
+            Cette vue consomme maintenant l API Laravel pour creer un compte reel.
           </p>
         </div>
 
@@ -82,6 +123,7 @@ const soumettre = () => {
                 placeholder="Entrer votre nom"
                 class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
               />
+              <span v-if="lireErreur('nom')" class="text-sm text-red-600">{{ lireErreur('nom') }}</span>
             </label>
 
             <label class="flex flex-col gap-2">
@@ -92,6 +134,7 @@ const soumettre = () => {
                 placeholder="Entrer votre prenom"
                 class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
               />
+              <span v-if="lireErreur('prenom')" class="text-sm text-red-600">{{ lireErreur('prenom') }}</span>
             </label>
           </div>
 
@@ -104,6 +147,7 @@ const soumettre = () => {
                 placeholder="exemple@email.com"
                 class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
               />
+              <span v-if="lireErreur('email')" class="text-sm text-red-600">{{ lireErreur('email') }}</span>
             </label>
 
             <label class="flex flex-col gap-2">
@@ -114,6 +158,7 @@ const soumettre = () => {
                 placeholder="06XXXXXXXX"
                 class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
               />
+              <span v-if="lireErreur('telephone')" class="text-sm text-red-600">{{ lireErreur('telephone') }}</span>
             </label>
           </div>
 
@@ -125,6 +170,7 @@ const soumettre = () => {
               placeholder="Ville, quartier, adresse"
               class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
             />
+            <span v-if="lireErreur('adresse')" class="text-sm text-red-600">{{ lireErreur('adresse') }}</span>
           </label>
 
           <label class="flex flex-col gap-2">
@@ -137,6 +183,7 @@ const soumettre = () => {
                 {{ role.label }}
               </option>
             </select>
+            <span v-if="lireErreur('role')" class="text-sm text-red-600">{{ lireErreur('role') }}</span>
           </label>
 
           <div class="grid gap-4 md:grid-cols-2">
@@ -148,6 +195,7 @@ const soumettre = () => {
                 placeholder="Mot de passe"
                 class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
               />
+              <span v-if="lireErreur('password')" class="text-sm text-red-600">{{ lireErreur('password') }}</span>
             </label>
 
             <label class="flex flex-col gap-2">
@@ -158,6 +206,7 @@ const soumettre = () => {
                 placeholder="Confirmer le mot de passe"
                 class="w-full rounded-[18px] border border-slate-200 bg-white/95 px-4 py-3.5 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/12"
               />
+              <span v-if="lireErreur('password_confirmation')" class="text-sm text-red-600">{{ lireErreur('password_confirmation') }}</span>
             </label>
           </div>
 
@@ -165,11 +214,23 @@ const soumettre = () => {
             Les deux mots de passe ne sont pas identiques.
           </p>
 
+          <p v-if="erreurGlobale" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ erreurGlobale }}
+          </p>
+
+          <div v-if="succes" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <p class="m-0 font-semibold">{{ succes }}</p>
+            <p class="mt-2 mb-0 break-all" v-if="token">
+              Token recu : <span class="font-mono text-[12px]">{{ token }}</span>
+            </p>
+          </div>
+
           <button
+            :disabled="!peutSoumettre"
             class="cursor-pointer rounded-full bg-[linear-gradient(135deg,#111827_0%,#1f2937_100%)] px-[18px] py-[15px] font-bold text-white transition hover:opacity-95"
             type="submit"
           >
-            Continuer
+            {{ chargement ? 'Inscription en cours...' : 'Continuer' }}
           </button>
         </form>
 
@@ -183,6 +244,8 @@ const soumettre = () => {
             <li>Chaque input est lie a `formulaire` avec `v-model`.</li>
             <li>La verification du mot de passe utilise `computed`.</li>
             <li>Le bouton submit declenche `soumettre()` sans recharger la page.</li>
+            <li>La fonction `post()` envoie les donnees vers `{{ API_BASE_URL }}/auth/inscription`.</li>
+            <li>Les messages d erreur et de succes viennent maintenant de la vraie API.</li>
           </ul>
 
           <pre class="m-0 overflow-auto rounded-2xl bg-slate-900 p-3.5 text-[13px] text-slate-200">{{ JSON.stringify(resumeInscription, null, 2) }}</pre>
