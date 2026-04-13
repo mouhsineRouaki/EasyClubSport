@@ -1,495 +1,1225 @@
 ﻿{
-  "info": {
-    "_postman_id": "7e2f09e6-ef2c-4ef5-9f28-easyclubsport-api",
-    "name": "EasyClubSport API",
-    "description": "Collection Postman pour tester l'API actuelle de EasyClubSport. Le token est enregistre automatiquement apres la connexion dans la variable de collection token_api.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{token_api}}",
-        "type": "string"
-      }
-    ]
-  },
-  "variable": [
-    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
-    { "key": "token_api", "value": "" },
-    { "key": "club_id", "value": "1" },
-    { "key": "equipe_id", "value": "1" },
-    { "key": "coach_id", "value": "1" },
-    { "key": "joueur_id", "value": "1" }
-  ],
-  "item": [
-    {
-      "name": "1. Authentification",
-      "item": [
-        {
-          "name": "Inscription President",
-          "request": {
-            "auth": { "type": "noauth" },
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nom\": \"El Idrissi\",\n  \"prenom\": \"Hamza\",\n  \"email\": \"president@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0612345678\",\n  \"adresse\": \"Safi\",\n  \"role\": \"president\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/inscription",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "inscription"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "if (data?.data?.utilisateur?.id) pm.collectionVariables.set('president_id', String(data.data.utilisateur.id));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Inscription Coach",
-          "request": {
-            "auth": { "type": "noauth" },
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nom\": \"Coach\",\n  \"prenom\": \"Youssef\",\n  \"email\": \"coach@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0622222222\",\n  \"adresse\": \"Casablanca\",\n  \"role\": \"coach\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/inscription",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "inscription"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "if (data?.data?.utilisateur?.id) pm.collectionVariables.set('coach_id', String(data.data.utilisateur.id));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Inscription Joueur",
-          "request": {
-            "auth": { "type": "noauth" },
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nom\": \"Joueur\",\n  \"prenom\": \"Amine\",\n  \"email\": \"joueur@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0633333333\",\n  \"adresse\": \"Marrakech\",\n  \"role\": \"joueur\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/inscription",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "inscription"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "if (data?.data?.utilisateur?.id) pm.collectionVariables.set('joueur_id', String(data.data.utilisateur.id));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Connexion President",
-          "request": {
-            "auth": { "type": "noauth" },
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"president@example.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/connexion",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "connexion"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "if (data?.data?.token) {",
-                  "  pm.collectionVariables.set('token_api', data.data.token);",
-                  "}",
-                  "if (data?.data?.utilisateur?.id) {",
-                  "  pm.collectionVariables.set('president_id', String(data.data.utilisateur.id));",
-                  "}",
-                  "pm.test('Token enregistre', function () {",
-                  "  pm.expect(pm.collectionVariables.get('token_api')).to.not.eql('');",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Moi",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/auth/moi",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "moi"]
-            }
-          }
-        },
-        {
-          "name": "Deconnexion",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/auth/deconnexion",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "deconnexion"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.unset('token_api');"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "2. Profil President",
-      "item": [
-        {
-          "name": "Afficher Profil President",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/president/profil",
-              "host": ["{{base_url}}"],
-              "path": ["president", "profil"]
-            }
-          }
-        },
-        {
-          "name": "Modifier Profil President",
-          "request": {
-            "method": "PUT",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "nom", "value": "El Idrissi", "type": "text" },
-                { "key": "prenom", "value": "Hamza", "type": "text" },
-                { "key": "email", "value": "president@example.com", "type": "text" },
-                { "key": "telephone", "value": "0611111111", "type": "text" },
-                { "key": "adresse", "value": "Safi centre", "type": "text" },
-                { "key": "photo", "type": "file", "src": "" }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/president/profil",
-              "host": ["{{base_url}}"],
-              "path": ["president", "profil"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "3. Clubs President",
-      "item": [
-        {
-          "name": "Lister Clubs",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/president/clubs",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs"]
-            }
-          }
-        },
-        {
-          "name": "Creer Club",
-          "request": {
-            "method": "POST",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "nom", "value": "Easy Club Safi", "type": "text" },
-                { "key": "adresse", "value": "Quartier sportif, Safi", "type": "text" },
-                { "key": "telephone", "value": "0520000000", "type": "text" },
-                { "key": "email", "value": "club@example.com", "type": "text" },
-                { "key": "description", "value": "Club sportif de demonstration", "type": "text" },
-                { "key": "ville", "value": "Safi", "type": "text" },
-                { "key": "pays", "value": "Maroc", "type": "text" },
-                { "key": "logo", "type": "file", "src": "" }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/president/clubs",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "if (data?.data?.club?.id) pm.collectionVariables.set('club_id', String(data.data.club.id));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Afficher Club",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Modifier Club",
-          "request": {
-            "method": "PUT",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "nom", "value": "Easy Club Safi Updated", "type": "text" },
-                { "key": "adresse", "value": "Nouvelle adresse Safi", "type": "text" },
-                { "key": "telephone", "value": "0520111111", "type": "text" },
-                { "key": "email", "value": "club-updated@example.com", "type": "text" },
-                { "key": "description", "value": "Club sportif mis a jour", "type": "text" },
-                { "key": "ville", "value": "Safi", "type": "text" },
-                { "key": "pays", "value": "Maroc", "type": "text" },
-                { "key": "logo", "type": "file", "src": "" }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Supprimer Club",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "4. Equipes President",
-      "item": [
-        {
-          "name": "Lister Equipes du Club",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes"]
-            }
-          }
-        },
-        {
-          "name": "Creer Equipe",
-          "request": {
-            "method": "POST",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "nom", "value": "Seniors A", "type": "text" },
-                { "key": "categorie", "value": "Senior", "type": "text" },
-                { "key": "statut", "value": "active", "type": "text" },
-                { "key": "description", "value": "Equipe principale du club", "type": "text" },
-                { "key": "logo", "type": "file", "src": "" }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "if (data?.data?.equipe?.id) pm.collectionVariables.set('equipe_id', String(data.data.equipe.id));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Afficher Equipe",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Modifier Equipe",
-          "request": {
-            "method": "PUT",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "nom", "value": "Seniors A Updated", "type": "text" },
-                { "key": "categorie", "value": "Senior Elite", "type": "text" },
-                { "key": "statut", "value": "active", "type": "text" },
-                { "key": "description", "value": "Equipe mise a jour", "type": "text" },
-                { "key": "logo", "type": "file", "src": "" }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Assigner Coach a Equipe",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"coach_id\": {{coach_id}}\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/coach",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "coach"]
-            }
-          }
-        },
-        {
-          "name": "Retirer Coach de Equipe",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/coach",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "coach"]
-            }
-          }
-        },
-        {
-          "name": "Lister Joueurs de Equipe",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "joueurs"]
-            }
-          }
-        },
-        {
-          "name": "Ajouter Joueur a Equipe",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"utilisateur_id\": {{joueur_id}}\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "joueurs"]
-            }
-          }
-        },
-        {
-          "name": "Retirer Joueur de Equipe",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs/{{joueur_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}", "joueurs", "{{joueur_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Supprimer Equipe",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["president", "clubs", "{{club_id}}", "equipes", "{{equipe_id}}"]
-            }
-          }
-        }
-      ]
-    }
-  ]
+    "info":  {
+                 "_postman_id":  "7e2f09e6-ef2c-4ef5-9f28-easyclubsport-api",
+                 "name":  "EasyClubSport API",
+                 "description":  "Collection Postman pour tester l\u0027API actuelle de EasyClubSport. Le token est enregistre automatiquement apres la connexion dans la variable de collection token_api.",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "auth":  {
+                 "type":  "bearer",
+                 "bearer":  [
+                                {
+                                    "key":  "token",
+                                    "value":  "{{token_api}}",
+                                    "type":  "string"
+                                }
+                            ]
+             },
+    "variable":  [
+                     {
+                         "key":  "base_url",
+                         "value":  "http://127.0.0.1:8000/api"
+                     },
+                     {
+                         "key":  "token_api",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "club_id",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "equipe_id",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "coach_id",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "joueur_id",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "event_id",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "convocation_id",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "canal_id",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "message_id",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "notification_id",
+                         "value":  ""
+                     }
+                 ],
+    "item":  [
+                 {
+                     "name":  "1. Authentification",
+                     "item":  [
+                                  {
+                                      "name":  "Inscription President",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "noauth"
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"nom\": \"El Idrissi\",\n  \"prenom\": \"Hamza\",\n  \"email\": \"president@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0612345678\",\n  \"adresse\": \"Safi\",\n  \"role\": \"president\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/inscription",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "inscription"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "const data = pm.response.json();",
+                                                                                    "if (data?.data?.utilisateur?.id) pm.collectionVariables.set(\u0027president_id\u0027, String(data.data.utilisateur.id));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Inscription Coach",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "noauth"
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"nom\": \"Coach\",\n  \"prenom\": \"Youssef\",\n  \"email\": \"coach@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0622222222\",\n  \"adresse\": \"Casablanca\",\n  \"role\": \"coach\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/inscription",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "inscription"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "const data = pm.response.json();",
+                                                                                    "if (data?.data?.utilisateur?.id) pm.collectionVariables.set(\u0027coach_id\u0027, String(data.data.utilisateur.id));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Inscription Joueur",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "noauth"
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"nom\": \"Joueur\",\n  \"prenom\": \"Amine\",\n  \"email\": \"joueur@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"telephone\": \"0633333333\",\n  \"adresse\": \"Marrakech\",\n  \"role\": \"joueur\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/inscription",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "inscription"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "const data = pm.response.json();",
+                                                                                    "if (data?.data?.utilisateur?.id) pm.collectionVariables.set(\u0027joueur_id\u0027, String(data.data.utilisateur.id));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Connexion President",
+                                      "request":  {
+                                                      "auth":  {
+                                                                   "type":  "noauth"
+                                                               },
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"president@example.com\",\n  \"password\": \"password123\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/connexion",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "connexion"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "const data = pm.response.json();",
+                                                                                    "if (data?.data?.token) {",
+                                                                                    "  pm.collectionVariables.set(\u0027token_api\u0027, data.data.token);",
+                                                                                    "}",
+                                                                                    "if (data?.data?.utilisateur?.id) {",
+                                                                                    "  pm.collectionVariables.set(\u0027president_id\u0027, String(data.data.utilisateur.id));",
+                                                                                    "}",
+                                                                                    "pm.test(\u0027Token enregistre\u0027, function () {",
+                                                                                    "  pm.expect(pm.collectionVariables.get(\u0027token_api\u0027)).to.not.eql(\u0027\u0027);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Moi",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/moi",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "moi"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Deconnexion",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/deconnexion",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "deconnexion"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.collectionVariables.unset(\u0027token_api\u0027);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "2. Profil President",
+                     "item":  [
+                                  {
+                                      "name":  "Afficher Profil President",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/profil",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "profil"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Modifier Profil President",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "nom",
+                                                                                        "value":  "El Idrissi",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "prenom",
+                                                                                        "value":  "Hamza",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "email",
+                                                                                        "value":  "president@example.com",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "telephone",
+                                                                                        "value":  "0611111111",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "adresse",
+                                                                                        "value":  "Safi centre",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "photo",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/profil",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "profil"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "3. Clubs President",
+                     "item":  [
+                                  {
+                                      "name":  "Lister Clubs",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Creer Club",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "nom",
+                                                                                        "value":  "Easy Club Safi",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "adresse",
+                                                                                        "value":  "Quartier sportif, Safi",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "telephone",
+                                                                                        "value":  "0520000000",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "email",
+                                                                                        "value":  "club@example.com",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "description",
+                                                                                        "value":  "Club sportif de demonstration",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "ville",
+                                                                                        "value":  "Safi",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "pays",
+                                                                                        "value":  "Maroc",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "logo",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "const data = pm.response.json();",
+                                                                                    "if (data?.data?.club?.id) pm.collectionVariables.set(\u0027club_id\u0027, String(data.data.club.id));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Afficher Club",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Modifier Club",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "nom",
+                                                                                        "value":  "Easy Club Safi Updated",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "adresse",
+                                                                                        "value":  "Nouvelle adresse Safi",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "telephone",
+                                                                                        "value":  "0520111111",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "email",
+                                                                                        "value":  "club-updated@example.com",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "description",
+                                                                                        "value":  "Club sportif mis a jour",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "ville",
+                                                                                        "value":  "Safi",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "pays",
+                                                                                        "value":  "Maroc",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "logo",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Supprimer Club",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "4. Equipes President",
+                     "item":  [
+                                  {
+                                      "name":  "Lister Equipes du Club",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Creer Equipe",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "nom",
+                                                                                        "value":  "Seniors A",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "categorie",
+                                                                                        "value":  "Senior",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "statut",
+                                                                                        "value":  "active",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "description",
+                                                                                        "value":  "Equipe principale du club",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "logo",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "const data = pm.response.json();",
+                                                                                    "if (data?.data?.equipe?.id) pm.collectionVariables.set(\u0027equipe_id\u0027, String(data.data.equipe.id));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Afficher Equipe",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Modifier Equipe",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "nom",
+                                                                                        "value":  "Seniors A Updated",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "categorie",
+                                                                                        "value":  "Senior Elite",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "statut",
+                                                                                        "value":  "active",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "description",
+                                                                                        "value":  "Equipe mise a jour",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "logo",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Assigner Coach a Equipe",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"coach_id\": {{coach_id}}\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/coach",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}",
+                                                                               "coach"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Retirer Coach de Equipe",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/coach",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}",
+                                                                               "coach"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Lister Joueurs de Equipe",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}",
+                                                                               "joueurs"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Ajouter Joueur a Equipe",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"utilisateur_id\": {{joueur_id}}\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}",
+                                                                               "joueurs"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Retirer Joueur de Equipe",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}/joueurs/{{joueur_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}",
+                                                                               "joueurs",
+                                                                               "{{joueur_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Supprimer Equipe",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/president/clubs/{{club_id}}/equipes/{{equipe_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "president",
+                                                                               "clubs",
+                                                                               "{{club_id}}",
+                                                                               "equipes",
+                                                                               "{{equipe_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "5. Joueur",
+                     "item":  [
+                                  {
+                                      "name":  "Dashboard Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/dashboard",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "dashboard"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Afficher Profil Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/profil",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "profil"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Modifier Profil Joueur",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "nom",
+                                                                                        "value":  "Joueur",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "prenom",
+                                                                                        "value":  "Amine",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "email",
+                                                                                        "value":  "joueur@example.com",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "telephone",
+                                                                                        "value":  "0633333333",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "adresse",
+                                                                                        "value":  "Marrakech",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "statut",
+                                                                                        "value":  "actif",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "photo",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/profil",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "profil"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Afficher Equipe Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/equipe",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "equipe"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Lister Evenements Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/evenements",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "evenements"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Repondre Disponibilite",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"reponse\": \"present\",\n  \"commentaire\": \"Je serai present\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/evenements/{{event_id}}/disponibilite",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "evenements",
+                                                                               "{{event_id}}",
+                                                                               "disponibilite"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Lister Convocations",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/convocations",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "convocations"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Repondre Convocation",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"statut\": \"confirme\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/convocations/{{convocation_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "convocations",
+                                                                               "{{convocation_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Lister Documents Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/documents",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "documents"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Lister Canaux Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/canaux",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "canaux"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Lister Messages d un Canal",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/canaux/{{canal_id}}/messages",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "canaux",
+                                                                               "{{canal_id}}",
+                                                                               "messages"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Envoyer Message Joueur",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"contenu\": \"Bonjour l equipe\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/canaux/{{canal_id}}/messages",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "canaux",
+                                                                               "{{canal_id}}",
+                                                                               "messages"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Modifier Message Joueur",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"contenu\": \"Message modifie\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/messages/{{message_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "messages",
+                                                                               "{{message_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Supprimer Message Joueur",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/messages/{{message_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "messages",
+                                                                               "{{message_id}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Lister Notifications Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/notifications",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "notifications"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Marquer Notification Comme Lue",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/notifications/{{notification_id}}/lecture",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "notifications",
+                                                                               "{{notification_id}}",
+                                                                               "lecture"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Marquer Toutes Les Notifications Comme Lues",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/notifications/lecture/toutes",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "notifications",
+                                                                               "lecture",
+                                                                               "toutes"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Afficher Statistiques Joueur",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/joueur/statistiques",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "joueur",
+                                                                               "statistiques"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 }
+             ]
 }
