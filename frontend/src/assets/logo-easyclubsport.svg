@@ -1,0 +1,39 @@
+<svg width="760" height="200" viewBox="0 0 760 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ecsGradA" x1="20" y1="20" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3D37F1"/>
+      <stop offset="1" stop-color="#0A075F"/>
+    </linearGradient>
+    <linearGradient id="ecsGradB" x1="46" y1="38" x2="154" y2="164" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5167E"/>
+      <stop offset="1" stop-color="#FF7AAE"/>
+    </linearGradient>
+    <filter id="ecsShadow" x="0" y="0" width="220" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="6"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0392157 0 0 0 0 0.027451 0 0 0 0 0.372549 0 0 0 0.28 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#ecsShadow)">
+    <path d="M100 16C64 16 32 34 20 64V108C20 149 53 180 100 188C147 180 180 149 180 108V64C168 34 136 16 100 16Z" fill="url(#ecsGradA)"/>
+    <path d="M100 36C73 36 49 48 40 70V105C40 137 66 162 100 170C134 162 160 137 160 105V70C151 48 127 36 100 36Z" fill="#F2F4FF"/>
+    <path d="M100 46C80 46 61 54 54 72V103C54 128 73 148 100 154C127 148 146 128 146 103V72C139 54 120 46 100 46Z" fill="url(#ecsGradB)"/>
+    <circle cx="100" cy="102" r="18" fill="#FFFFFF"/>
+    <path d="M101.8 84.5L109.4 95.7L105.5 107.7H93.7L89.8 95.7L97.4 84.5H101.8Z" fill="#0A075F"/>
+    <path d="M82 116.5L93.7 107.7H105.5L117.4 116.7L112.7 130H86.8L82 116.5Z" fill="#0A075F"/>
+  </g>
+
+  <g>
+    <text x="220" y="95" fill="#242565" font-family="Outfit, Poppins, Montserrat, Arial, sans-serif" font-size="64" font-weight="800" letter-spacing="0.5">EasyClub</text>
+    <text x="222" y="145" fill="#3D37F1" font-family="Outfit, Poppins, Montserrat, Arial, sans-serif" font-size="48" font-weight="700" letter-spacing="1.5">SPORT</text>
+    <circle cx="533" cy="128" r="7" fill="#F5167E"/>
+    <path d="M560 125C579 125 589 116 599 103C610 88 622 78 646 78" stroke="#F5167E" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="650" cy="77" r="8" fill="#F5167E"/>
+  </g>
+</svg>

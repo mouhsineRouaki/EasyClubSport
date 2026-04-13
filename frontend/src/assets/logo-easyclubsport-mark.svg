@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="markGradA" x1="20" y1="20" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3D37F1"/>
+      <stop offset="1" stop-color="#0A075F"/>
+    </linearGradient>
+    <linearGradient id="markGradB" x1="46" y1="38" x2="154" y2="164" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5167E"/>
+      <stop offset="1" stop-color="#FF7AAE"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M100 16C64 16 32 34 20 64V108C20 149 53 180 100 188C147 180 180 149 180 108V64C168 34 136 16 100 16Z" fill="url(#markGradA)"/>
+  <path d="M100 36C73 36 49 48 40 70V105C40 137 66 162 100 170C134 162 160 137 160 105V70C151 48 127 36 100 36Z" fill="#F2F4FF"/>
+  <path d="M100 46C80 46 61 54 54 72V103C54 128 73 148 100 154C127 148 146 128 146 103V72C139 54 120 46 100 46Z" fill="url(#markGradB)"/>
+  <circle cx="100" cy="102" r="18" fill="#FFFFFF"/>
+  <path d="M101.8 84.5L109.4 95.7L105.5 107.7H93.7L89.8 95.7L97.4 84.5H101.8Z" fill="#0A075F"/>
+  <path d="M82 116.5L93.7 107.7H105.5L117.4 116.7L112.7 130H86.8L82 116.5Z" fill="#0A075F"/>
+</svg>
