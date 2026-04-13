@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, reactive, ref } from 'vue'
 import imageHero from '../assets/hero.png'
 import logoEasyClubSport from '../assets/logo-easyclubsport.svg'
@@ -246,7 +246,7 @@ const soumettre = async () => {
 
           <p class="text-center text-sm text-[#717275]">
             Deja un compte ?
-            <a href="#" class="font-semibold text-[#3D37F1] underline-offset-2 transition hover:text-[#F5167E] hover:underline">Se connecter</a>
+            <RouterLink to="/login" class="font-semibold text-[#3D37F1] underline-offset-2 transition hover:text-[#F5167E] hover:underline">Se connecter</RouterLink>
           </p>
 
           <p class="text-xs text-[#717275]">
@@ -258,3 +258,4 @@ const soumettre = async () => {
     </div>
   </main>
 </template>
+
