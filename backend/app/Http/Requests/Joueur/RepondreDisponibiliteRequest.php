@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Joueur;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RepondreDisponibiliteRequest extends FormRequest
 {
@@ -13,6 +14,9 @@ class RepondreDisponibiliteRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'reponse' => ['required', Rule::in(['present', 'absent', 'incertain'])],
+            'commentaire' => ['nullable', 'string'],
+        ];
     }
 }

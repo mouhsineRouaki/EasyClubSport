@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Joueur;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RepondreConvocationRequest extends FormRequest
 {
@@ -13,6 +14,8 @@ class RepondreConvocationRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'statut' => ['required', Rule::in(['confirme', 'refuse', 'en_attente'])],
+        ];
     }
 }

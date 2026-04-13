@@ -13,6 +13,8 @@ class ModifierMessageJoueurRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'contenu' => ['required', 'string'],
+        ];
     }
 }

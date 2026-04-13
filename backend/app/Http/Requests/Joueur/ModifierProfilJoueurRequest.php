@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Joueur;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ModifierProfilJoueurRequest extends FormRequest
 {
@@ -13,6 +14,14 @@ class ModifierProfilJoueurRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'nom' => ['nullable', 'string', 'max:255'],
+            'prenom' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user()?->id)],
+            'telephone' => ['nullable', 'string', 'max:30'],
+            'adresse' => ['nullable', 'string', 'max:500'],
+            'photo' => ['nullable', 'image', 'max:2048'],
+            'statut' => ['nullable', Rule::in(['actif', 'blesse', 'suspendu', 'inactif'])],
+        ];
     }
 }
