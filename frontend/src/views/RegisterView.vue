@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import imageHero from '../assets/hero.png'
+import logoEasyClubSport from '../assets/logo-easyclubsport.svg'
 import { API_BASE_URL, post } from '../services/api'
 
 const roles = [
@@ -73,9 +74,7 @@ const soumettre = async () => {
 
         <div class="relative z-10 flex flex-col gap-5">
           <div class="flex items-center gap-3">
-            <div class="flex h-12 w-12 items-center justify-center rounded-[14px] border border-[rgba(245,22,126,0.4)] bg-[rgba(245,22,126,0.25)] text-sm font-extrabold">
-              ES
-            </div>
+            <img :src="logoEasyClubSport" alt="Logo EasyClubSport" class="h-12 w-auto" />
             <div>
               <p class="m-0 text-xs font-bold uppercase tracking-[0.15em] text-white/60">EasyClubSport</p>
               <p class="m-0 text-sm font-semibold text-white">Plateforme de gestion</p>
