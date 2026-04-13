@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Coach\CoachController;
 use App\Http\Controllers\Api\Joueur\JoueurController;
 use App\Http\Controllers\Api\President\Annonce\AnnonceController;
 use App\Http\Controllers\Api\President\Club\ClubController;
@@ -98,4 +99,27 @@ Route::middleware(['auth:sanctum', 'role:joueur'])->prefix('joueur')->group(func
     Route::put('/notifications/{notification}/lecture', [JoueurController::class, 'marquerNotificationCommeLue']);
     Route::put('/notifications/lecture/toutes', [JoueurController::class, 'marquerToutesNotificationsCommeLues']);
     Route::get('/statistiques', [JoueurController::class, 'statistiques']);
+});
+
+Route::middleware(['auth:sanctum', 'role:coach'])->prefix('coach')->group(function () {
+    Route::get('/dashboard', [CoachController::class, 'dashboard']);
+    Route::get('/profil', [CoachController::class, 'afficherProfil']);
+    Route::put('/profil', [CoachController::class, 'modifierProfil']);
+    Route::get('/equipes', [CoachController::class, 'equipes']);
+    Route::get('/equipes/{equipe}/joueurs', [CoachController::class, 'joueursEquipe']);
+    Route::get('/equipes/{equipe}/evenements', [CoachController::class, 'evenementsEquipe']);
+    Route::post('/equipes/{equipe}/evenements', [CoachController::class, 'creerEvenement']);
+    Route::put('/equipes/{equipe}/evenements/{evenement}', [CoachController::class, 'modifierEvenement']);
+    Route::delete('/equipes/{equipe}/evenements/{evenement}', [CoachController::class, 'supprimerEvenement']);
+    Route::get('/equipes/{equipe}/convocations', [CoachController::class, 'convocationsEquipe']);
+    Route::post('/equipes/{equipe}/evenements/{evenement}/convocations', [CoachController::class, 'creerConvocations']);
+    Route::put('/convocations/{convocation}', [CoachController::class, 'modifierConvocation']);
+    Route::get('/canaux', [CoachController::class, 'canaux']);
+    Route::get('/canaux/{canal}/messages', [CoachController::class, 'messages']);
+    Route::post('/canaux/{canal}/messages', [CoachController::class, 'envoyerMessage']);
+    Route::put('/messages/{message}', [CoachController::class, 'modifierMessage']);
+    Route::delete('/messages/{message}', [CoachController::class, 'supprimerMessage']);
+    Route::get('/notifications', [CoachController::class, 'notifications']);
+    Route::put('/notifications/{notification}/lecture', [CoachController::class, 'marquerNotificationCommeLue']);
+    Route::put('/notifications/lecture/toutes', [CoachController::class, 'marquerToutesNotificationsCommeLues']);
 });
