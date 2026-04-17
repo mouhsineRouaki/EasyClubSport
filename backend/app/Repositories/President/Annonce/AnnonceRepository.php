@@ -5,26 +5,64 @@ namespace App\Repositories\President\Annonce;
 use App\Models\Annonce;
 use App\Models\Club;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class AnnonceRepository
 {
-    public function listerParPresident(User $utilisateur): Collection
+    public function listerParPresident(User $utilisateur, array $filtres = []): LengthAwarePaginator
     {
-        return Annonce::with(['club', 'auteur'])
+        $query = Annonce::with(['club', 'auteur'])
             ->whereHas('club', function ($query) use ($utilisateur) {
                 $query->where('president_id', $utilisateur->id);
-            })
+            });
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('titre', 'like', "%{$terme}%")
+                    ->orWhere('contenu', 'like', "%{$terme}%");
+            });
+        }
+
+        if (isset($filtres['est_active']) && $filtres['est_active'] !== '') {
+            $query->where('est_active', (bool) $filtres['est_active']);
+        }
+
+        return $query
             ->latest()
-            ->get();
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 12),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
     }
 
-    public function listerParClub(Club $club): Collection
+    public function listerParClub(Club $club, array $filtres = []): LengthAwarePaginator
     {
-        return Annonce::with(['club', 'auteur'])
-            ->where('club_id', $club->id)
+        $query = Annonce::with(['club', 'auteur'])
+            ->where('club_id', $club->id);
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('titre', 'like', "%{$terme}%")
+                    ->orWhere('contenu', 'like', "%{$terme}%");
+            });
+        }
+
+        if (isset($filtres['est_active']) && $filtres['est_active'] !== '') {
+            $query->where('est_active', (bool) $filtres['est_active']);
+        }
+
+        return $query
             ->latest()
-            ->get();
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 12),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
     }
 
     public function creer(array $donnees): Annonce

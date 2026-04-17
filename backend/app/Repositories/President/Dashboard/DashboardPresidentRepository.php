@@ -106,7 +106,7 @@ class DashboardPresidentRepository
         return Evenement::whereHas('equipe.club', function ($query) use ($utilisateur) {
             $query->where('president_id', $utilisateur->id);
         })
-            ->with(['equipe.club'])
+            ->with(['equipe.club', 'adversaireEquipe.club'])
             ->where('date_debut', '>=', now())
             ->orderBy('date_debut')
             ->take($limite)

@@ -6,16 +6,71 @@ use App\Models\Club;
 use App\Models\Equipe;
 use App\Models\MembreEquipe;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 class EquipeRepository
 {
-    public function listerParClub(Club $club): Collection
+    public function listerParClub(Club $club, array $filtres = []): LengthAwarePaginator
     {
-        return Equipe::with('coach')
+        $query = Equipe::with('coach')
             ->where('club_id', $club->id)
+            ->withCount('membreEquipes');
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('nom', 'like', "%{$terme}%")
+                    ->orWhere('categorie', 'like', "%{$terme}%")
+                    ->orWhere('description', 'like', "%{$terme}%")
+                    ->orWhere('code_invitation', 'like', "%{$terme}%");
+            });
+        }
+
+        if (! empty($filtres['statut'])) {
+            $query->where('statut', $filtres['statut']);
+        }
+
+        return $query
             ->latest()
-            ->get();
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 12),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
+    }
+
+    public function listerAdversaires(array $filtres = []): LengthAwarePaginator
+    {
+        $query = Equipe::query()
+            ->with(['club', 'coach'])
+            ->withCount('membreEquipes');
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('nom', 'like', "%{$terme}%")
+                    ->orWhere('categorie', 'like', "%{$terme}%")
+                    ->orWhereHas('club', function ($clubQuery) use ($terme) {
+                        $clubQuery->where('nom', 'like', "%{$terme}%")
+                            ->orWhere('ville', 'like', "%{$terme}%");
+                    });
+            });
+        }
+
+        if (! empty($filtres['exclude_equipe_id'])) {
+            $query->whereKeyNot((int) $filtres['exclude_equipe_id']);
+        }
+
+        return $query
+            ->latest()
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 20),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
     }
 
     public function creer(array $donnees): Equipe
@@ -58,11 +113,28 @@ class EquipeRepository
         return $equipe->fresh(['coach']);
     }
 
-    public function listerJoueurs(Equipe $equipe): Collection
+    public function listerJoueurs(Equipe $equipe, array $filtres = []): LengthAwarePaginator
     {
-        return $equipe->utilisateurs()
+        $query = $equipe->utilisateurs()
             ->wherePivot('role_equipe', 'joueur')
-            ->get();
+            ->select('users.*');
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('users.nom', 'like', "%{$terme}%")
+                    ->orWhere('users.prenom', 'like', "%{$terme}%")
+                    ->orWhere('users.email', 'like', "%{$terme}%")
+                    ->orWhere('users.telephone', 'like', "%{$terme}%");
+            });
+        }
+
+        return $query->paginate(
+            (int) ($filtres['per_page'] ?? 12),
+            ['*'],
+            'page',
+            (int) ($filtres['page'] ?? 1)
+        );
     }
 
     public function trouverMembreEquipe(int $utilisateurId): ?MembreEquipe

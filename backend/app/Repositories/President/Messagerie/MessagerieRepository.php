@@ -2,30 +2,61 @@
 
 namespace App\Repositories\President\Messagerie;
 
+use App\Events\MessageEquipeEnvoye;
 use App\Models\Canal;
 use App\Models\Equipe;
 use App\Models\Message;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class MessagerieRepository
 {
-    public function listerCanauxParPresident(User $utilisateur): Collection
+    public function listerCanauxParPresident(User $utilisateur, array $filtres = []): LengthAwarePaginator
     {
-        return Canal::with(['equipe.club', 'utilisateurs'])
+        $query = Canal::with(['equipe.club', 'utilisateurs'])
             ->whereHas('equipe.club', function ($query) use ($utilisateur) {
                 $query->where('president_id', $utilisateur->id);
-            })
+            });
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('nom', 'like', "%{$terme}%")
+                    ->orWhere('description', 'like', "%{$terme}%");
+            });
+        }
+
+        return $query
             ->latest()
-            ->get();
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 12),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
     }
 
-    public function listerCanauxParEquipe(Equipe $equipe): Collection
+    public function listerCanauxParEquipe(Equipe $equipe, array $filtres = []): LengthAwarePaginator
     {
-        return Canal::with(['equipe.club', 'utilisateurs'])
-            ->where('equipe_id', $equipe->id)
+        $query = Canal::with(['equipe.club', 'utilisateurs'])
+            ->where('equipe_id', $equipe->id);
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('nom', 'like', "%{$terme}%")
+                    ->orWhere('description', 'like', "%{$terme}%");
+            });
+        }
+
+        return $query
             ->latest()
-            ->get();
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 12),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
     }
 
     public function trouverCanalEquipe(Equipe $equipe): ?Canal
@@ -45,18 +76,40 @@ class MessagerieRepository
         $canal->utilisateurs()->syncWithoutDetaching($utilisateurIds);
     }
 
-    public function listerMessagesParCanal(Canal $canal): Collection
+    public function listerMessagesParCanal(Canal $canal, array $filtres = []): LengthAwarePaginator
     {
-        return Message::with(['expediteur', 'equipe.club'])
+        $query = Message::with(['expediteur', 'equipe.club'])
             ->where('equipe_id', $canal->equipe_id)
-            ->where('type_message', 'equipe')
-            ->oldest()
-            ->get();
+            ->where('type_message', 'equipe');
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('contenu', 'like', "%{$terme}%")
+                    ->orWhereHas('expediteur', function ($userQuery) use ($terme) {
+                        $userQuery->where('nom', 'like', "%{$terme}%")
+                            ->orWhere('prenom', 'like', "%{$terme}%")
+                            ->orWhere('email', 'like', "%{$terme}%");
+                    });
+            });
+        }
+
+        return $query->latest()
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 20),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
     }
 
     public function creerMessage(array $donnees): Message
     {
-        return Message::create($donnees)->load(['expediteur', 'equipe.club']);
+        $message = Message::create($donnees)->load(['expediteur', 'equipe.club']);
+
+        event(new MessageEquipeEnvoye($message));
+
+        return $message;
     }
 
     public function mettreAJourMessage(Message $message, array $donnees): Message
