@@ -16,6 +16,7 @@ class ModifierAnnonceRequest extends FormRequest
         return [
             'titre' => ['sometimes', 'required', 'string', 'max:255'],
             'contenu' => ['sometimes', 'required', 'string'],
+            'image' => ['sometimes', 'nullable', 'image', 'max:5120'],
             'est_active' => ['sometimes', 'boolean'],
         ];
     }

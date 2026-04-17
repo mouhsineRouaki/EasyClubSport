@@ -16,6 +16,7 @@ class CreerAnnonceRequest extends FormRequest
         return [
             'titre' => ['required', 'string', 'max:255'],
             'contenu' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'max:5120'],
             'est_active' => ['nullable', 'boolean'],
         ];
     }
