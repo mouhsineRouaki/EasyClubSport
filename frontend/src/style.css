@@ -1,8 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap");
 @import "tailwindcss";
 
 @layer base {
   html {
-    font-family: Inter, Arial, Helvetica, sans-serif;
+    font-family: "Plus Jakarta Sans", Inter, Arial, Helvetica, sans-serif;
   }
 
   body {
@@ -11,8 +12,9 @@
     min-width: 320px;
     color: #0f172a;
     background:
-      radial-gradient(circle at top left, rgba(30, 64, 175, 0.28), transparent 28%),
-      linear-gradient(135deg, #dbeafe 0%, #eef2ff 38%, #f8fafc 100%);
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 32%),
+      radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 30%),
+      linear-gradient(140deg, #f8fbff 0%, #f4f8ff 40%, #f8fafc 100%);
   }
 
   #app {
@@ -21,7 +23,50 @@
 
   button,
   input,
-  select {
+  select,
+  textarea {
     font: inherit;
+  }
+}
+
+@layer components {
+  .ecs-card {
+    @apply rounded-2xl border border-[#e8edf5] bg-white p-4 sm:p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)];
+  }
+
+  .ecs-heading {
+    @apply text-lg font-bold text-[#1f2a44];
+  }
+
+  .ecs-subheading {
+    @apply mt-1 text-sm text-[#6b7280];
+  }
+
+  .ecs-input {
+    @apply mt-1 w-full rounded-xl border border-[#d7e2f0] bg-white px-3 py-2 text-sm text-[#1f2a44] outline-none transition placeholder:text-[#9aa8bc] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15;
+  }
+
+  .ecs-select {
+    @apply mt-1 w-full rounded-xl border border-[#d7e2f0] bg-white px-3 py-2 text-sm text-[#1f2a44] outline-none transition placeholder:text-[#9aa8bc] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15;
+  }
+
+  .ecs-textarea {
+    @apply mt-1 w-full rounded-xl border border-[#d7e2f0] bg-white px-3 py-2 text-sm text-[#1f2a44] outline-none transition placeholder:text-[#9aa8bc] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15 min-h-[100px] resize-y;
+  }
+
+  .ecs-btn-primary {
+    @apply rounded-xl bg-[linear-gradient(120deg,#0f172a_0%,#1e293b_100%)] px-4 py-2 text-sm font-bold text-white shadow-[0_10px_20px_rgba(15,23,42,0.25)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .ecs-btn-secondary {
+    @apply rounded-xl border border-[#d7e2f0] bg-white px-4 py-2 text-sm font-semibold text-[#334155] transition hover:bg-[#f8fbff];
+  }
+
+  .ecs-btn-danger {
+    @apply rounded-xl bg-[#ef4444] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#dc2626];
+  }
+
+  .ecs-note-success {
+    @apply mt-4 rounded-2xl border border-[#d4f4d0] bg-[#f3fff0] p-4 text-sm font-semibold text-[#166534];
   }
 }
