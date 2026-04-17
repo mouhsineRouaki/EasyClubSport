@@ -24,6 +24,13 @@ class EvenementCoachCollection extends ResourceCollection
                         'adversaire' => $evenement->adversaire,
                         'description' => $evenement->description,
                         'statut' => $evenement->statut,
+                        'statut_invitation_adversaire' => $evenement->statut_invitation_adversaire,
+                        'adversaire_equipe_id' => $evenement->adversaire_equipe_id,
+                        'adversaire_equipe' => $evenement->adversaireEquipe ? [
+                            'id' => $evenement->adversaireEquipe->id,
+                            'nom' => $evenement->adversaireEquipe->nom,
+                            'logo_url' => $evenement->adversaireEquipe->logo ? asset('storage/'.$evenement->adversaireEquipe->logo) : null,
+                        ] : null,
                         'equipe' => $evenement->equipe ? [
                             'id' => $evenement->equipe->id,
                             'nom' => $evenement->equipe->nom,

@@ -41,6 +41,8 @@ class DashboardJoueurResource extends JsonResource
                     'id' => $annonce->id,
                     'titre' => $annonce->titre,
                     'contenu' => $annonce->contenu,
+                    'image' => $annonce->image,
+                    'image_url' => $annonce->image ? asset('storage/'.$annonce->image) : null,
                     'created_at' => $annonce->created_at,
                 ])->values(),
                 'derniers_documents' => collect($this['derniers_documents'])->map(fn ($document) => [
