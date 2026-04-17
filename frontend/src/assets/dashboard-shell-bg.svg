@@ -1,0 +1,17 @@
+<svg width="1440" height="720" viewBox="0 0 1440 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="720" fill="#2446D8"/>
+  <rect width="1440" height="720" fill="url(#paint0_radial)"/>
+  <path d="M-120 715C105 420 320 270 585 270C880 270 1080 470 1580 215V720H-120V715Z" fill="#1E35B8" fill-opacity="0.32"/>
+  <path d="M-80 720C150 500 370 372 650 372C925 372 1115 530 1530 335V720H-80Z" fill="#4C6FFF" fill-opacity="0.18"/>
+  <path d="M-40 720C195 595 425 510 705 510C945 510 1150 620 1480 480V720H-40Z" fill="#0F2FA8" fill-opacity="0.28"/>
+  <circle cx="1180" cy="130" r="220" fill="#4C6FFF" fill-opacity="0.12"/>
+  <circle cx="310" cy="120" r="180" fill="#60A5FA" fill-opacity="0.11"/>
+  <path d="M1305 592L1322 625L1358 631L1332 656L1338 691L1305 675L1273 691L1279 656L1253 631L1289 625L1305 592Z" fill="white" fill-opacity="0.68"/>
+  <defs>
+    <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(730 65) rotate(100) scale(815 1130)">
+      <stop stop-color="#2F7DF5"/>
+      <stop offset="0.46" stop-color="#2446D8"/>
+      <stop offset="1" stop-color="#13257E"/>
+    </radialGradient>
+  </defs>
+</svg>

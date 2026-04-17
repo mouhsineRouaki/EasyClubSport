@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import imageHero from '../assets/hero.png'
 import logoEasyClubSport from '../assets/logo-easyclubsport.svg'
 import { API_BASE_URL, post } from '../services/api'
+import { notifyError } from '../stores/toast'
 
 const roles = [
   { label: 'President', value: 'president' },
@@ -22,7 +23,6 @@ const formulaire = reactive({
 })
 
 const chargement = ref(false)
-const erreurGlobale = ref('')
 const succes = ref('')
 const token = ref('')
 const erreursValidation = ref({})
@@ -37,7 +37,6 @@ const peutSoumettre = computed(() => !motDePasseDifferent.value && !chargement.v
 const lireErreur = (champ) => erreursValidation.value?.[champ]?.[0] || ''
 
 const reinitialiserMessages = () => {
-  erreurGlobale.value = ''
   succes.value = ''
   erreursValidation.value = {}
 }
@@ -45,7 +44,7 @@ const reinitialiserMessages = () => {
 const soumettre = async () => {
   reinitialiserMessages()
   if (motDePasseDifferent.value) {
-    erreurGlobale.value = 'Les deux mots de passe ne sont pas identiques.'
+    notifyError('Les deux mots de passe ne sont pas identiques.')
     return
   }
   chargement.value = true
@@ -55,7 +54,6 @@ const soumettre = async () => {
     token.value = reponse?.data?.token || ''
   } catch (error) {
     const reponseErreur = error.response || {}
-    erreurGlobale.value = reponseErreur.message || error.message || "Une erreur est survenue pendant l'inscription."
     erreursValidation.value = reponseErreur.data || {}
   } finally {
     chargement.value = false
@@ -210,13 +208,6 @@ const soumettre = async () => {
             </div>
           </div>
 
-          <div v-if="erreurGlobale" class="flex items-start gap-2.5 rounded-[10px] border border-[rgba(245,22,126,0.3)] bg-[#FFF0F6] px-4 py-3 text-[#C0004E]">
-            <svg class="mt-0.5 h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-            </svg>
-            <p class="text-sm">{{ erreurGlobale }}</p>
-          </div>
-
           <div v-if="succes" class="flex flex-col gap-2 rounded-[10px] border border-[rgba(7,238,18,0.3)] bg-[#F0FFF4] px-4 py-3 text-[#0A7A12]">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -248,14 +239,8 @@ const soumettre = async () => {
             Deja un compte ?
             <RouterLink to="/login" class="font-semibold text-[#3D37F1] underline-offset-2 transition hover:text-[#F5167E] hover:underline">Se connecter</RouterLink>
           </p>
-
-          <p class="text-xs text-[#717275]">
-            Endpoint utilise :
-            <code class="rounded bg-slate-100 px-1.5 py-0.5">{{ API_BASE_URL }}/auth/inscription</code>
-          </p>
         </form>
       </div>
     </div>
   </main>
 </template>
-

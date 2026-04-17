@@ -1,8 +1,12 @@
-﻿<script setup>
+<script setup>
 import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import imageHero from '../assets/hero.png'
 import logoEasyClubSport from '../assets/logo-easyclubsport.svg'
 import { API_BASE_URL, post } from '../services/api'
+import { notifyError } from '../stores/toast'
+
+const router = useRouter()
 
 const formulaire = reactive({
   email: '',
@@ -10,7 +14,6 @@ const formulaire = reactive({
 })
 
 const chargement = ref(false)
-const erreurGlobale = ref('')
 const succes = ref('')
 const token = ref('')
 const utilisateur = ref(null)
@@ -23,7 +26,6 @@ const peutSoumettre = computed(() => {
 const lireErreur = (champ) => erreursValidation.value?.[champ]?.[0] || ''
 
 const reinitialiserMessages = () => {
-  erreurGlobale.value = ''
   succes.value = ''
   erreursValidation.value = {}
 }
@@ -41,9 +43,19 @@ const soumettre = async () => {
     if (token.value) {
       localStorage.setItem('token_api', token.value)
     }
+
+    if (utilisateur.value) {
+      localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur.value))
+    }
+
+    if (utilisateur.value?.role === 'president') {
+      router.push('/president/dashboard')
+    }
   } catch (error) {
     const reponseErreur = error.response || {}
-    erreurGlobale.value = reponseErreur.message || error.message || "Une erreur est survenue pendant la connexion."
+    if (!reponseErreur?.message && error?.message) {
+      notifyError(error.message)
+    }
     erreursValidation.value = reponseErreur.data || {}
   } finally {
     chargement.value = false
@@ -118,13 +130,6 @@ const soumettre = async () => {
             <span v-if="lireErreur('password')" class="text-xs text-[#F5167E]">{{ lireErreur('password') }}</span>
           </div>
 
-          <div v-if="erreurGlobale" class="flex items-start gap-2.5 rounded-[10px] border border-[rgba(245,22,126,0.3)] bg-[#FFF0F6] px-4 py-3 text-[#C0004E]">
-            <svg class="mt-0.5 h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-            </svg>
-            <p class="text-sm">{{ erreurGlobale }}</p>
-          </div>
-
           <div v-if="succes" class="flex flex-col gap-2 rounded-[10px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
             <p class="text-sm font-semibold">{{ succes }}</p>
             <p v-if="utilisateur" class="text-xs">Bienvenue {{ utilisateur.prenom || utilisateur.name || 'utilisateur' }}.</p>
@@ -162,4 +167,5 @@ const soumettre = async () => {
     </section>
   </main>
 </template>
+
 
