@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\User;
 use App\Repositories\Coach\CoachRepository;
+use App\Services\Evenement\MatchInvitationService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,8 @@ use Illuminate\Validation\ValidationException;
 class CoachService
 {
     public function __construct(
-        protected CoachRepository $coachRepository
+        protected CoachRepository $coachRepository,
+        protected MatchInvitationService $matchInvitationService
     ) {
     }
 
@@ -69,7 +71,9 @@ class CoachService
     {
         $this->verifierEquipeCoach($utilisateur, $equipe);
 
-        return $this->coachRepository->creerEvenement([
+        $donnees = $this->synchroniserAdversaire($donnees);
+
+        $evenement = $this->coachRepository->creerEvenement([
             'equipe_id' => $equipe->id,
             'createur_id' => $utilisateur->id,
             'titre' => $donnees['titre'],
@@ -78,9 +82,17 @@ class CoachService
             'date_fin' => $donnees['date_fin'] ?? null,
             'lieu' => $donnees['lieu'] ?? null,
             'adversaire' => $donnees['adversaire'] ?? null,
+            'adversaire_equipe_id' => $donnees['adversaire_equipe_id'] ?? null,
             'description' => $donnees['description'] ?? null,
             'statut' => $donnees['statut'] ?? 'planifie',
+            'statut_invitation_adversaire' => $donnees['type'] === 'match' ? 'en_attente' : 'sans_invitation',
+            'invitation_adversaire_repondue_par_id' => null,
+            'invitation_adversaire_repondue_at' => null,
         ]);
+
+        $this->matchInvitationService->notifierDemande($evenement);
+
+        return $evenement;
     }
 
     public function modifierEvenement(User $utilisateur, Equipe $equipe, Evenement $evenement, array $donnees): Evenement
@@ -91,7 +103,36 @@ class CoachService
             throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
         }
 
-        return $this->coachRepository->mettreAJourEvenement($evenement, $donnees);
+        $ancienType = $evenement->type;
+        $ancienAdversaireEquipeId = $evenement->adversaire_equipe_id;
+        $donnees = $this->synchroniserAdversaire($donnees, $evenement);
+        $invitationChangee = $this->invitationAdversaireChangee($donnees, $ancienType, $ancienAdversaireEquipeId);
+
+        if (($donnees['type'] ?? $evenement->type) !== 'match') {
+            $donnees['statut_invitation_adversaire'] = 'sans_invitation';
+            $donnees['invitation_adversaire_repondue_par_id'] = null;
+            $donnees['invitation_adversaire_repondue_at'] = null;
+        } elseif ($invitationChangee) {
+            $donnees['statut_invitation_adversaire'] = 'en_attente';
+            $donnees['invitation_adversaire_repondue_par_id'] = null;
+            $donnees['invitation_adversaire_repondue_at'] = null;
+        }
+
+        $evenement = $this->coachRepository->mettreAJourEvenement(
+            $evenement,
+            $donnees
+        );
+
+        if ($invitationChangee) {
+            $this->matchInvitationService->notifierDemande($evenement);
+        }
+
+        return $evenement;
+    }
+
+    public function repondreInvitationAdversaire(User $utilisateur, Evenement $evenement, string $decision): Evenement
+    {
+        return $this->matchInvitationService->repondre($utilisateur, $evenement, $decision);
     }
 
     public function supprimerEvenement(User $utilisateur, Equipe $equipe, Evenement $evenement): void
@@ -231,6 +272,42 @@ class CoachService
         if ((int) $equipe->coach_id !== (int) $utilisateur->id) {
             throw new AuthorizationException('Vous ne pouvez gerer que vos equipes.');
         }
+    }
+
+    protected function synchroniserAdversaire(array $donnees, ?Evenement $evenement = null): array
+    {
+        $type = $donnees['type'] ?? $evenement?->type;
+
+        if ($type !== 'match') {
+            $donnees['adversaire'] = null;
+            $donnees['adversaire_equipe_id'] = null;
+
+            return $donnees;
+        }
+
+        $adversaireEquipeId = $donnees['adversaire_equipe_id'] ?? $evenement?->adversaire_equipe_id;
+
+        if ($adversaireEquipeId) {
+            $donnees['adversaire'] = Equipe::query()
+                ->whereKey($adversaireEquipeId)
+                ->value('nom');
+        }
+
+        return $donnees;
+    }
+
+    protected function invitationAdversaireChangee(array $donnees, ?string $ancienType, ?int $ancienAdversaireEquipeId): bool
+    {
+        $nouveauType = $donnees['type'] ?? $ancienType;
+        $nouvelAdversaireEquipeId = array_key_exists('adversaire_equipe_id', $donnees)
+            ? $donnees['adversaire_equipe_id']
+            : $ancienAdversaireEquipeId;
+
+        if ($nouveauType !== 'match') {
+            return $ancienType === 'match';
+        }
+
+        return $ancienType !== 'match' || (int) $nouvelAdversaireEquipeId !== (int) $ancienAdversaireEquipeId;
     }
 
     protected function verifierCanalCoach(User $utilisateur, Canal $canal): void
