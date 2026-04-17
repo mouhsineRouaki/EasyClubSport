@@ -59,9 +59,6 @@ const erreursEquipe = ref({})
 const logoEquipeFichier = ref(null)
 const logoEquipePreview = ref('')
 const debounceEquipes = ref(null)
-const coachEmailAssignation = ref('')
-const envoiAssignationCoach = ref(false)
-const erreurAssignationCoach = ref('')
 const chargementJoueurs = ref(false)
 const joueursGestion = ref([])
 const paginationJoueurs = ref(null)
@@ -1082,50 +1079,6 @@ const supprimerEquipeSelectionnee = async () => {
     await chargerEquipesGestion(paginationEquipes.value?.current_page || 1)
   } catch (error) {
     notifyError(error?.response?.message || error.message || 'Impossible de supprimer cette equipe.')
-  }
-}
-
-const assignerCoachEquipe = async () => {
-  if (!clubEquipeId.value || !equipeGestionSelectionnee.value) return
-
-  const coachId = parseInt(coachEmailAssignation.value)
-  if (!coachId || isNaN(coachId)) {
-    erreurAssignationCoach.value = 'Veuillez saisir un ID valide (nombre entier).'
-    return
-  }
-
-  envoiAssignationCoach.value = true
-  erreurAssignationCoach.value = ''
-
-  try {
-    const reponse = await authPut(
-      `/president/clubs/${clubEquipeId.value}/equipes/${equipeGestionSelectionnee.value.id}/coach`,
-      { coach_id: coachId }
-    )
-    notifySuccess(reponse?.message || 'Coach assigne avec succes.')
-    coachEmailAssignation.value = ''
-    await chargerEquipesGestion(paginationEquipes.value?.current_page || 1)
-    equipeGestionSelectionnee.value = equipesGestion.value.find((e) => e.id === equipeGestionSelectionnee.value.id) || equipeGestionSelectionnee.value
-  } catch (error) {
-    erreurAssignationCoach.value = error?.response?.message || error.message || 'Impossible d assigner le coach.'
-    notifyError(erreurAssignationCoach.value)
-  } finally {
-    envoiAssignationCoach.value = false
-  }
-}
-
-const retirerCoachEquipe = async () => {
-  if (!clubEquipeId.value || !equipeGestionSelectionnee.value) return
-  const nomCoach = [equipeGestionSelectionnee.value.coach?.prenom, equipeGestionSelectionnee.value.coach?.nom].filter(Boolean).join(' ') || 'ce coach'
-  if (!window.confirm(`Retirer ${nomCoach} de l equipe ?`)) return
-
-  try {
-    const reponse = await authDelete(`/president/clubs/${clubEquipeId.value}/equipes/${equipeGestionSelectionnee.value.id}/coach`)
-    notifySuccess(reponse?.message || 'Coach retire avec succes.')
-    await chargerEquipesGestion(paginationEquipes.value?.current_page || 1)
-    equipeGestionSelectionnee.value = equipesGestion.value.find((e) => e.id === equipeGestionSelectionnee.value.id) || equipeGestionSelectionnee.value
-  } catch (error) {
-    notifyError(error?.response?.message || error.message || 'Impossible de retirer le coach.')
   }
 }
 
@@ -2415,65 +2368,11 @@ onBeforeUnmount(() => {
                       <div class="mt-5 grid gap-4 lg:grid-cols-3">
                         <section class="rounded-[22px] bg-white p-4">
                           <p class="text-sm font-black text-[#111827]">Coach</p>
-
-                          <!-- coach actuel -->
-                          <div v-if="equipeGestionSelectionnee.coach" class="mt-3 flex items-center gap-3 rounded-2xl border border-[#e6edf8] bg-[#f8fbff] p-3">
-                            <img
-                              v-if="equipeGestionSelectionnee.coach.photo_url"
-                              :src="equipeGestionSelectionnee.coach.photo_url"
-                              :alt="equipeGestionSelectionnee.coach.nom"
-                              class="h-10 w-10 rounded-xl object-cover ring-2 ring-white"
-                            />
-                            <span v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[radial-gradient(circle_at_35%_25%,#ffffff,#dbe7ff_28%,#2446d8_72%)] text-sm font-black text-white">
-                              {{ (equipeGestionSelectionnee.coach.prenom || equipeGestionSelectionnee.coach.name || 'C')[0] }}
-                            </span>
-                            <div class="min-w-0 flex-1">
-                              <p class="truncate text-sm font-black text-[#111827]">
-                                {{ [equipeGestionSelectionnee.coach.prenom, equipeGestionSelectionnee.coach.nom].filter(Boolean).join(' ') || equipeGestionSelectionnee.coach.name || 'Coach' }}
-                              </p>
-                              <p class="truncate text-[11px] font-semibold text-[#64748b]">{{ equipeGestionSelectionnee.coach.email || '-' }}</p>
-                            </div>
-                            <button
-                              type="button"
-                              class="shrink-0 rounded-full border border-[#fecaca] bg-white px-3 py-1.5 text-[11px] font-black text-[#ef4444] transition hover:bg-[#fef2f2]"
-                              title="Retirer ce coach"
-                              @click="retirerCoachEquipe"
-                            >
-                              Retirer
-                            </button>
+                          <div v-if="equipeGestionSelectionnee.coach" class="mt-4">
+                            <p class="text-sm font-black text-[#111827]">{{ [equipeGestionSelectionnee.coach.prenom, equipeGestionSelectionnee.coach.nom].filter(Boolean).join(' ') || equipeGestionSelectionnee.coach.name || 'Coach' }}</p>
+                            <p class="mt-1 text-xs font-semibold text-[#64748b]">{{ equipeGestionSelectionnee.coach.email || '-' }}</p>
                           </div>
-
-                          <p v-else class="mt-3 rounded-2xl border border-dashed border-[#cfdaf2] bg-[#f8fbff] px-3 py-3 text-center text-[11px] font-semibold text-[#6b7280]">
-                            Aucun coach affecte.
-                          </p>
-
-                          <!-- formulaire assignation -->
-                          <div class="mt-3">
-                            <label class="mb-1 block text-[10px] font-black uppercase tracking-[0.12em] text-[#6b7280]">
-                              {{ equipeGestionSelectionnee.coach ? 'Changer le coach — ID utilisateur' : 'Assigner un coach — ID utilisateur' }}
-                            </label>
-                            <div class="flex gap-2">
-                              <input
-                                v-model="coachEmailAssignation"
-                                type="number"
-                                min="1"
-                                placeholder="Ex: 12"
-                                class="h-9 flex-1 rounded-full border border-[#dbe2ef] bg-[#f8fbff] px-3 text-xs font-semibold text-[#1f2a44] outline-none placeholder:text-[#94a3b8] focus:border-[#4c6fff] focus:bg-white"
-                                @keyup.enter="assignerCoachEquipe"
-                              />
-                              <button
-                                type="button"
-                                class="shrink-0 rounded-full bg-[#111827] px-3 py-1.5 text-[11px] font-black text-white transition hover:bg-[#2446d8] disabled:opacity-60"
-                                :disabled="envoiAssignationCoach || !coachEmailAssignation"
-                                @click="assignerCoachEquipe"
-                              >
-                                {{ envoiAssignationCoach ? '...' : 'Assigner' }}
-                              </button>
-                            </div>
-                            <p v-if="erreurAssignationCoach" class="mt-1 text-[11px] font-semibold text-[#ef4444]">
-                              {{ erreurAssignationCoach }}
-                            </p>
-                          </div>
+                          <p v-else class="mt-4 rounded-2xl border border-dashed border-[#cfdaf2] px-3 py-4 text-center text-xs font-semibold text-[#6b7280]">Aucun coach affecte.</p>
                         </section>
 
                         <section class="rounded-[22px] bg-white p-4 lg:col-span-2">
