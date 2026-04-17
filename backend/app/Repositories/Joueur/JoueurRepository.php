@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Joueur;
 
+use App\Events\MessageEquipeEnvoye;
 use App\Models\Annonce;
 use App\Models\Canal;
 use App\Models\Convocation;
@@ -122,12 +123,16 @@ class JoueurRepository
 
     public function creerMessage(User $utilisateur, Canal $canal, array $donnees): Message
     {
-        return Message::create([
+        $message = Message::create([
             'equipe_id' => $canal->equipe_id,
             'expediteur_id' => $utilisateur->id,
             'contenu' => $donnees['contenu'],
             'type_message' => 'equipe',
         ])->fresh(['expediteur', 'equipe.club']);
+
+        event(new MessageEquipeEnvoye($message));
+
+        return $message;
     }
 
     public function mettreAJourMessage(Message $message, array $donnees): Message

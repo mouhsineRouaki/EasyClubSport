@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Coach;
 
+use App\Events\MessageEquipeEnvoye;
 use App\Models\Canal;
 use App\Models\Convocation;
 use App\Models\Equipe;
@@ -44,21 +45,21 @@ class CoachRepository
     {
         return Evenement::query()
             ->where('equipe_id', $equipe->id)
-            ->with(['equipe.club'])
+            ->with(['equipe.club', 'adversaireEquipe.club'])
             ->orderBy('date_debut')
             ->get();
     }
 
     public function creerEvenement(array $donnees): Evenement
     {
-        return Evenement::create($donnees)->fresh(['equipe.club', 'createur']);
+        return Evenement::create($donnees)->fresh(['equipe.club', 'adversaireEquipe.club', 'createur']);
     }
 
     public function mettreAJourEvenement(Evenement $evenement, array $donnees): Evenement
     {
         $evenement->update($donnees);
 
-        return $evenement->fresh(['equipe.club', 'createur']);
+        return $evenement->fresh(['equipe.club', 'adversaireEquipe.club', 'createur']);
     }
 
     public function supprimerEvenement(Evenement $evenement): void
@@ -129,12 +130,16 @@ class CoachRepository
 
     public function creerMessage(User $utilisateur, Canal $canal, array $donnees): Message
     {
-        return Message::create([
+        $message = Message::create([
             'equipe_id' => $canal->equipe_id,
             'expediteur_id' => $utilisateur->id,
             'contenu' => $donnees['contenu'],
             'type_message' => 'equipe',
         ])->fresh(['expediteur', 'equipe.club']);
+
+        event(new MessageEquipeEnvoye($message));
+
+        return $message;
     }
 
     public function mettreAJourMessage(Message $message, array $donnees): Message
@@ -155,6 +160,7 @@ class CoachRepository
     {
         return Notification::query()
             ->where('utilisateur_id', $utilisateur->id)
+            ->with(['evenement.equipe.club', 'evenement.adversaireEquipe.club'])
             ->orderByDesc('created_at')
             ->get();
     }
@@ -188,7 +194,7 @@ class CoachRepository
             })
             ->where('date_debut', '>=', now())
             ->where('statut', '!=', 'annule')
-            ->with('equipe.club')
+            ->with(['equipe.club', 'adversaireEquipe.club'])
             ->orderBy('date_debut')
             ->first();
     }
@@ -237,7 +243,7 @@ class CoachRepository
             ->whereHas('equipe', function ($query) use ($utilisateur) {
                 $query->where('coach_id', $utilisateur->id);
             })
-            ->with('equipe.club')
+            ->with(['equipe.club', 'adversaireEquipe.club'])
             ->orderByDesc('date_debut')
             ->limit($limite)
             ->get();
