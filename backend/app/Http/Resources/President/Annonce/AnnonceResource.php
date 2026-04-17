@@ -21,6 +21,8 @@ class AnnonceResource extends JsonResource
                     'auteur_id' => $annonce->auteur_id,
                     'titre' => $annonce->titre,
                     'contenu' => $annonce->contenu,
+                    'image' => $annonce->image,
+                    'image_url' => $annonce->image ? asset('storage/'.$annonce->image) : null,
                     'est_active' => $annonce->est_active,
                     'club' => $annonce->club ? [
                         'id' => $annonce->club->id,

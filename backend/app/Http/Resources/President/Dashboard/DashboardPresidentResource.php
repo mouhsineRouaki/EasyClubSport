@@ -55,14 +55,16 @@ class DashboardPresidentResource extends JsonResource
                         'date_fin' => $evenement->date_fin,
                         'lieu' => $evenement->lieu,
                         'adversaire' => $evenement->adversaire,
+                        'adversaire_equipe_id' => $evenement->adversaire_equipe_id,
+                        'adversaire_equipe' => $this->equipePayload($evenement->adversaireEquipe),
                         'statut' => $evenement->statut,
-                        'equipe' => $evenement->equipe ? [
-                            'id' => $evenement->equipe->id,
-                            'nom' => $evenement->equipe->nom,
-                        ] : null,
+                        'statut_invitation_adversaire' => $evenement->statut_invitation_adversaire,
+                        'equipe' => $this->equipePayload($evenement->equipe),
                         'club' => $evenement->equipe?->club ? [
                             'id' => $evenement->equipe->club->id,
                             'nom' => $evenement->equipe->club->nom,
+                            'logo' => $evenement->equipe->club->logo,
+                            'logo_url' => $evenement->equipe->club->logo ? asset('storage/'.$evenement->equipe->club->logo) : null,
                         ] : null,
                     ];
                 })->values(),
@@ -71,6 +73,8 @@ class DashboardPresidentResource extends JsonResource
                         'id' => $annonce->id,
                         'titre' => $annonce->titre,
                         'contenu' => $annonce->contenu,
+                        'image' => $annonce->image,
+                        'image_url' => $annonce->image ? asset('storage/'.$annonce->image) : null,
                         'est_active' => $annonce->est_active,
                         'club' => $annonce->club ? [
                             'id' => $annonce->club->id,
@@ -85,6 +89,28 @@ class DashboardPresidentResource extends JsonResource
                     ];
                 })->values(),
             ],
+        ];
+    }
+
+    protected function equipePayload($equipe): ?array
+    {
+        if (! $equipe) {
+            return null;
+        }
+
+        return [
+            'id' => $equipe->id,
+            'club_id' => $equipe->club_id,
+            'nom' => $equipe->nom,
+            'categorie' => $equipe->categorie,
+            'logo' => $equipe->logo,
+            'logo_url' => $equipe->logo ? asset('storage/'.$equipe->logo) : null,
+            'club' => $equipe->club ? [
+                'id' => $equipe->club->id,
+                'nom' => $equipe->club->nom,
+                'logo' => $equipe->club->logo,
+                'logo_url' => $equipe->club->logo ? asset('storage/'.$equipe->club->logo) : null,
+            ] : null,
         ];
     }
 }

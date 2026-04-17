@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\President\Document;
 
+use App\Http\Resources\Concerns\WithPaginationMeta;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class DocumentCollection extends ResourceCollection
 {
+    use WithPaginationMeta;
+
     public function toArray(Request $request): array
     {
         return [
@@ -32,6 +35,7 @@ class DocumentCollection extends ResourceCollection
                         'updated_at' => $document->updated_at,
                     ];
                 })->values(),
+                'pagination' => $this->paginationMeta(),
             ],
         ];
     }

@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\President\Equipe;
 
+use App\Http\Resources\Concerns\WithPaginationMeta;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class JoueurEquipeCollection extends ResourceCollection
 {
+    use WithPaginationMeta;
+
     public function toArray(Request $request): array
     {
         return [
@@ -30,6 +33,7 @@ class JoueurEquipeCollection extends ResourceCollection
                         'date_affectation' => $joueur->pivot?->date_affectation,
                     ];
                 })->values(),
+                'pagination' => $this->paginationMeta(),
             ],
         ];
     }

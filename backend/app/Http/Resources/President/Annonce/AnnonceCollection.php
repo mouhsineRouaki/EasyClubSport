@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\President\Annonce;
 
+use App\Http\Resources\Concerns\WithPaginationMeta;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class AnnonceCollection extends ResourceCollection
 {
+    use WithPaginationMeta;
+
     public function toArray(Request $request): array
     {
         return [
@@ -20,6 +23,8 @@ class AnnonceCollection extends ResourceCollection
                         'auteur_id' => $annonce->auteur_id,
                         'titre' => $annonce->titre,
                         'contenu' => $annonce->contenu,
+                        'image' => $annonce->image,
+                        'image_url' => $annonce->image ? asset('storage/'.$annonce->image) : null,
                         'est_active' => $annonce->est_active,
                         'club' => $annonce->club ? [
                             'id' => $annonce->club->id,
@@ -34,6 +39,7 @@ class AnnonceCollection extends ResourceCollection
                         'updated_at' => $annonce->updated_at,
                     ];
                 })->values(),
+                'pagination' => $this->paginationMeta(),
             ],
         ];
     }

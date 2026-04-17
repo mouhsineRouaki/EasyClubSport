@@ -30,6 +30,7 @@ class EquipeResource extends JsonResource
                     'categorie' => $equipe->categorie,
                     'logo' => $equipe->logo,
                     'logo_url' => $equipe->logo ? asset('storage/'.$equipe->logo) : null,
+                    'joueurs_total' => $equipe->membre_equipes_count ?? $equipe->membreEquipes()->count(),
                     'code_invitation' => $equipe->code_invitation,
                     'statut' => $equipe->statut,
                     'description' => $equipe->description,

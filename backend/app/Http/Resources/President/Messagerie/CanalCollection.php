@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\President\Messagerie;
 
+use App\Http\Resources\Concerns\WithPaginationMeta;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class CanalCollection extends ResourceCollection
 {
+    use WithPaginationMeta;
+
     public function toArray(Request $request): array
     {
         return [
@@ -33,6 +36,7 @@ class CanalCollection extends ResourceCollection
                         'updated_at' => $canal->updated_at,
                     ];
                 })->values(),
+                'pagination' => $this->paginationMeta(),
             ],
         ];
     }
