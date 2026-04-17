@@ -2,14 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import PresidentDashboardView from '../views/president/PresidentDashboardView.vue'
-import PresidentProfilView from '../views/president/PresidentProfilView.vue'
-import PresidentClubsView from '../views/president/PresidentClubsView.vue'
-import PresidentEquipesView from '../views/president/PresidentEquipesView.vue'
-import PresidentJoueursView from '../views/president/PresidentJoueursView.vue'
-import PresidentEvenementsView from '../views/president/PresidentEvenementsView.vue'
-import PresidentAnnoncesView from '../views/president/PresidentAnnoncesView.vue'
-import PresidentDocumentsView from '../views/president/PresidentDocumentsView.vue'
-import PresidentMessagerieView from '../views/president/PresidentMessagerieView.vue'
 import CoachDashboardView from '../views/coach/CoachDashboardView.vue'
 
 const routes = [
@@ -31,70 +23,6 @@ const routes = [
     path: '/president/dashboard',
     name: 'president-dashboard',
     component: PresidentDashboardView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/profil',
-    name: 'president-profil',
-    component: PresidentProfilView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/clubs',
-    name: 'president-clubs',
-    component: PresidentClubsView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/equipes',
-    name: 'president-equipes',
-    component: PresidentEquipesView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/joueurs',
-    name: 'president-joueurs',
-    component: PresidentJoueursView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/evenements',
-    name: 'president-evenements',
-    component: PresidentEvenementsView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/annonces',
-    name: 'president-annonces',
-    component: PresidentAnnoncesView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/documents',
-    name: 'president-documents',
-    component: PresidentDocumentsView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/president/messagerie',
-    name: 'president-messagerie',
-    component: PresidentMessagerieView,
     meta: {
       requiresAuth: true,
     },
