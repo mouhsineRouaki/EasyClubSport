@@ -21,8 +21,12 @@ class Evenement extends Model
         'date_fin',
         'lieu',
         'adversaire',
+        'adversaire_equipe_id',
         'description',
         'statut',
+        'statut_invitation_adversaire',
+        'invitation_adversaire_repondue_par_id',
+        'invitation_adversaire_repondue_at',
     ];
 
     protected function casts(): array
@@ -30,6 +34,7 @@ class Evenement extends Model
         return [
             'date_debut' => 'datetime',
             'date_fin' => 'datetime',
+            'invitation_adversaire_repondue_at' => 'datetime',
         ];
     }
 
@@ -38,9 +43,19 @@ class Evenement extends Model
         return $this->belongsTo(Equipe::class, 'equipe_id');
     }
 
+    public function adversaireEquipe(): BelongsTo
+    {
+        return $this->belongsTo(Equipe::class, 'adversaire_equipe_id');
+    }
+
     public function createur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'createur_id');
+    }
+
+    public function invitationAdversaireReponduePar(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invitation_adversaire_repondue_par_id');
     }
 
     public function disponibilites(): HasMany

@@ -15,6 +15,7 @@ class Annonce extends Model
         'auteur_id',
         'titre',
         'contenu',
+        'image',
         'est_active',
     ];
 
