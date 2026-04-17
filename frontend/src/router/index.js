@@ -11,11 +11,6 @@ import PresidentAnnoncesView from '../views/president/PresidentAnnoncesView.vue'
 import PresidentDocumentsView from '../views/president/PresidentDocumentsView.vue'
 import PresidentMessagerieView from '../views/president/PresidentMessagerieView.vue'
 import CoachDashboardView from '../views/coach/CoachDashboardView.vue'
-import CoachProfilView from '../views/coach/CoachProfilView.vue'
-import CoachEquipesView from '../views/coach/CoachEquipesView.vue'
-import CoachJoueursView from '../views/coach/CoachJoueursView.vue'
-import CoachEvenementsView from '../views/coach/CoachEvenementsView.vue'
-import CoachMessagerieView from '../views/coach/CoachMessagerieView.vue'
 
 const routes = [
   {
@@ -108,46 +103,6 @@ const routes = [
     path: '/coach/dashboard',
     name: 'coach-dashboard',
     component: CoachDashboardView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/coach/profil',
-    name: 'coach-profil',
-    component: CoachProfilView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/coach/equipes',
-    name: 'coach-equipes',
-    component: CoachEquipesView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/coach/joueurs',
-    name: 'coach-joueurs',
-    component: CoachJoueursView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/coach/evenements',
-    name: 'coach-evenements',
-    component: CoachEvenementsView,
-    meta: {
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/coach/messagerie',
-    name: 'coach-messagerie',
-    component: CoachMessagerieView,
     meta: {
       requiresAuth: true,
     },
