@@ -21,6 +21,13 @@ class CreerEvenementCoachRequest extends FormRequest
             'date_fin' => ['nullable', 'date', 'after_or_equal:date_debut'],
             'lieu' => ['nullable', 'string', 'max:255'],
             'adversaire' => ['nullable', 'string', 'max:255'],
+            'adversaire_equipe_id' => [
+                'nullable',
+                'required_if:type,match',
+                'integer',
+                Rule::notIn([(int) ($this->route('equipe')?->id ?? 0)]),
+                Rule::exists('equipes', 'id'),
+            ],
             'description' => ['nullable', 'string'],
             'statut' => ['nullable', Rule::in(['planifie', 'termine', 'annule'])],
         ];

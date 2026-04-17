@@ -21,6 +21,14 @@ class ModifierEvenementCoachRequest extends FormRequest
             'date_fin' => ['nullable', 'date'],
             'lieu' => ['nullable', 'string', 'max:255'],
             'adversaire' => ['nullable', 'string', 'max:255'],
+            'adversaire_equipe_id' => [
+                'sometimes',
+                'nullable',
+                'required_if:type,match',
+                'integer',
+                Rule::notIn([(int) ($this->route('equipe')?->id ?? 0)]),
+                Rule::exists('equipes', 'id'),
+            ],
             'description' => ['nullable', 'string'],
             'statut' => ['nullable', Rule::in(['planifie', 'termine', 'annule'])],
         ];
