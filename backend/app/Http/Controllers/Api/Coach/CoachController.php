@@ -136,6 +136,40 @@ class CoachController extends Controller
         }
     }
 
+    public function accepterInvitationEvenement(Evenement $evenement): JsonResponse
+    {
+        try {
+            $evenement = $this->coachService->repondreInvitationAdversaire(request()->user(), $evenement, 'accepte');
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Invitation de match acceptee avec succes.',
+                'data' => ['evenement' => $evenement],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
+        }
+    }
+
+    public function refuserInvitationEvenement(Evenement $evenement): JsonResponse
+    {
+        try {
+            $evenement = $this->coachService->repondreInvitationAdversaire(request()->user(), $evenement, 'refuse');
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Invitation de match refusee avec succes.',
+                'data' => ['evenement' => $evenement],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
+        }
+    }
+
     public function convocationsEquipe(Equipe $equipe): ConvocationCoachCollection|JsonResponse
     {
         try {
