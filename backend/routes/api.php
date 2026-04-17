@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\President\Document\DocumentController;
 use App\Http\Controllers\Api\President\Evenement\EvenementController;
 use App\Http\Controllers\Api\President\Equipe\EquipeController;
 use App\Http\Controllers\Api\President\Messagerie\MessagerieController;
+use App\Http\Controllers\Api\President\Notification\NotificationPresidentController;
 use App\Http\Controllers\Api\President\Profil\ProfilPresidentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,12 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::get('/canaux', [MessagerieController::class, 'indexCanaux']);
     Route::get('/documents', [DocumentController::class, 'index']);
     Route::get('/evenements', [EvenementController::class, 'index']);
+    Route::get('/equipes/adversaires', [EquipeController::class, 'adversaires']);
+    Route::get('/notifications', [NotificationPresidentController::class, 'index']);
+    Route::put('/notifications/{notification}/lecture', [NotificationPresidentController::class, 'marquerCommeLue']);
+    Route::put('/notifications/lecture/toutes', [NotificationPresidentController::class, 'marquerToutesCommeLues']);
+    Route::post('/evenements/{evenement}/invitation/acceptation', [EvenementController::class, 'accepterInvitation']);
+    Route::post('/evenements/{evenement}/invitation/refus', [EvenementController::class, 'refuserInvitation']);
 
     Route::get('/profil', [ProfilPresidentController::class, 'afficher']);
     Route::put('/profil', [ProfilPresidentController::class, 'modifier']);
@@ -111,6 +118,8 @@ Route::middleware(['auth:sanctum', 'role:coach'])->prefix('coach')->group(functi
     Route::post('/equipes/{equipe}/evenements', [CoachController::class, 'creerEvenement']);
     Route::put('/equipes/{equipe}/evenements/{evenement}', [CoachController::class, 'modifierEvenement']);
     Route::delete('/equipes/{equipe}/evenements/{evenement}', [CoachController::class, 'supprimerEvenement']);
+    Route::post('/evenements/{evenement}/invitation/acceptation', [CoachController::class, 'accepterInvitationEvenement']);
+    Route::post('/evenements/{evenement}/invitation/refus', [CoachController::class, 'refuserInvitationEvenement']);
     Route::get('/equipes/{equipe}/convocations', [CoachController::class, 'convocationsEquipe']);
     Route::post('/equipes/{equipe}/evenements/{evenement}/convocations', [CoachController::class, 'creerConvocations']);
     Route::put('/convocations/{convocation}', [CoachController::class, 'modifierConvocation']);
