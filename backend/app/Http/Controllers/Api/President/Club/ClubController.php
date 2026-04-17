@@ -21,10 +21,11 @@ class ClubController extends Controller
     public function index(): ClubCollection
     {
         $utilisateur = request()->user();
+        $filtres = $this->cleanFilters($this->paginationParams());
 
         $this->authorize('voirListe', Club::class);
 
-        return new ClubCollection($this->clubService->lister($utilisateur));
+        return new ClubCollection($this->clubService->lister($utilisateur, $filtres));
     }
 
     public function store(CreerClubRequest $request): ClubResource

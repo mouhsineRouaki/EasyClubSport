@@ -22,17 +22,20 @@ class DocumentController extends Controller
     public function index(): DocumentCollection
     {
         $utilisateur = request()->user();
+        $filtres = $this->cleanFilters($this->paginationParams());
 
         $this->authorize('voirListe', Document::class);
 
-        return new DocumentCollection($this->documentService->lister($utilisateur));
+        return new DocumentCollection($this->documentService->lister($utilisateur, $filtres));
     }
 
     public function indexParClub(Club $club): DocumentCollection
     {
+        $filtres = $this->cleanFilters($this->paginationParams());
+
         $this->authorize('creer', [Document::class, $club]);
 
-        return new DocumentCollection($this->documentService->listerParClub($club));
+        return new DocumentCollection($this->documentService->listerParClub($club, $filtres));
     }
 
     public function store(CreerDocumentRequest $request, Club $club): DocumentResource

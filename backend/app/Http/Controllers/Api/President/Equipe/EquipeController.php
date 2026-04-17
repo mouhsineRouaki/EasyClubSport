@@ -25,9 +25,24 @@ class EquipeController extends Controller
 
     public function index(Club $club): EquipeCollection
     {
+        $filtres = $this->cleanFilters(array_merge(
+            $this->paginationParams(),
+            request()->only(['statut'])
+        ));
+
         $this->authorize('voirListe', [Equipe::class, $club]);
 
-        return new EquipeCollection($this->equipeService->lister($club));
+        return new EquipeCollection($this->equipeService->lister($club, $filtres));
+    }
+
+    public function adversaires(): EquipeCollection
+    {
+        $filtres = $this->cleanFilters(array_merge(
+            $this->paginationParams(20, 100),
+            request()->only(['exclude_equipe_id'])
+        ));
+
+        return new EquipeCollection($this->equipeService->listerAdversaires($filtres));
     }
 
     public function store(CreerEquipeRequest $request, Club $club): EquipeResource
@@ -117,10 +132,12 @@ class EquipeController extends Controller
 
     public function listerJoueurs(Club $club, Equipe $equipe): JoueurEquipeCollection
     {
+        $filtres = $this->cleanFilters($this->paginationParams());
+
         $this->verifierAppartenanceAuClub($club, $equipe);
         $this->authorize('gererJoueurs', $equipe);
 
-        return new JoueurEquipeCollection($this->equipeService->listerJoueurs($equipe));
+        return new JoueurEquipeCollection($this->equipeService->listerJoueurs($equipe, $filtres));
     }
 
     public function ajouterJoueur(AjouterJoueurEquipeRequest $request, Club $club, Equipe $equipe): JsonResponse

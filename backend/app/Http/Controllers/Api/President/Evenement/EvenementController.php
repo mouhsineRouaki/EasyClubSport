@@ -23,18 +23,27 @@ class EvenementController extends Controller
     public function index(): EvenementCollection
     {
         $utilisateur = request()->user();
+        $filtres = $this->cleanFilters(array_merge(
+            $this->paginationParams(),
+            request()->only(['q', 'statut', 'type', 'date_debut', 'date_fin'])
+        ));
 
         $this->authorize('voirListe', Evenement::class);
 
-        return new EvenementCollection($this->evenementService->lister($utilisateur));
+        return new EvenementCollection($this->evenementService->lister($utilisateur, $filtres));
     }
 
     public function indexParEquipe(Club $club, Equipe $equipe): EvenementCollection
     {
+        $filtres = $this->cleanFilters(array_merge(
+            $this->paginationParams(),
+            request()->only(['q', 'statut', 'type', 'date_debut', 'date_fin'])
+        ));
+
         $this->verifierAppartenanceAuClub($club, $equipe);
         $this->authorize('creer', [Evenement::class, $equipe]);
 
-        return new EvenementCollection($this->evenementService->listerParEquipe($equipe));
+        return new EvenementCollection($this->evenementService->listerParEquipe($equipe, $filtres));
     }
 
     public function store(CreerEvenementRequest $request, Club $club, Equipe $equipe): EvenementResource
@@ -50,7 +59,7 @@ class EvenementController extends Controller
 
         return new EvenementResource([
             'message' => 'Evenement cree avec succes.',
-            'evenement' => $evenement,
+            'evenement' => $evenement->load(['equipe.club', 'adversaireEquipe.club']),
         ]);
     }
 
@@ -61,7 +70,7 @@ class EvenementController extends Controller
 
         return new EvenementResource([
             'message' => 'Details de l evenement recuperes avec succes.',
-            'evenement' => $evenement->load('equipe.club'),
+            'evenement' => $evenement->load(['equipe.club', 'adversaireEquipe.club']),
         ]);
     }
 
@@ -74,7 +83,7 @@ class EvenementController extends Controller
 
         return new EvenementResource([
             'message' => 'Evenement modifie avec succes.',
-            'evenement' => $evenement,
+            'evenement' => $evenement->load(['equipe.club', 'adversaireEquipe.club']),
         ]);
     }
 
@@ -89,6 +98,26 @@ class EvenementController extends Controller
             'status' => true,
             'message' => 'Evenement supprime avec succes.',
             'data' => null,
+        ]);
+    }
+
+    public function accepterInvitation(Evenement $evenement): EvenementResource
+    {
+        $evenement = $this->evenementService->repondreInvitationAdversaire(request()->user(), $evenement, 'accepte');
+
+        return new EvenementResource([
+            'message' => 'Invitation de match acceptee avec succes.',
+            'evenement' => $evenement->load(['equipe.club', 'adversaireEquipe.club', 'invitationAdversaireReponduePar']),
+        ]);
+    }
+
+    public function refuserInvitation(Evenement $evenement): EvenementResource
+    {
+        $evenement = $this->evenementService->repondreInvitationAdversaire(request()->user(), $evenement, 'refuse');
+
+        return new EvenementResource([
+            'message' => 'Invitation de match refusee avec succes.',
+            'evenement' => $evenement->load(['equipe.club', 'adversaireEquipe.club', 'invitationAdversaireReponduePar']),
         ]);
     }
 

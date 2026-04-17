@@ -27,18 +27,21 @@ class MessagerieController extends Controller
     public function indexCanaux(): CanalCollection
     {
         $utilisateur = request()->user();
+        $filtres = $this->cleanFilters($this->paginationParams());
 
         $this->authorize('voirListe', Canal::class);
 
-        return new CanalCollection($this->messagerieService->listerCanaux($utilisateur));
+        return new CanalCollection($this->messagerieService->listerCanaux($utilisateur, $filtres));
     }
 
     public function indexCanauxParEquipe(Club $club, Equipe $equipe): CanalCollection
     {
+        $filtres = $this->cleanFilters($this->paginationParams());
+
         $this->verifierAppartenanceAuClub($club, $equipe);
         $this->authorize('creer', [Canal::class, $equipe]);
 
-        return new CanalCollection($this->messagerieService->listerCanauxParEquipe($equipe));
+        return new CanalCollection($this->messagerieService->listerCanauxParEquipe($equipe, $filtres));
     }
 
     public function storeCanal(CreerCanalRequest $request, Club $club, Equipe $equipe): CanalResource
@@ -70,9 +73,11 @@ class MessagerieController extends Controller
 
     public function indexMessages(Canal $canal): MessageCollection
     {
+        $filtres = $this->cleanFilters($this->paginationParams(20, 100));
+
         $this->authorize('voir', $canal);
 
-        return new MessageCollection($this->messagerieService->listerMessages($canal));
+        return new MessageCollection($this->messagerieService->listerMessages($canal, $filtres));
     }
 
     public function storeMessage(EnvoyerMessageRequest $request, Canal $canal): MessageResource

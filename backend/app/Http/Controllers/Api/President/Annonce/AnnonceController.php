@@ -22,17 +22,26 @@ class AnnonceController extends Controller
     public function index(): AnnonceCollection
     {
         $utilisateur = request()->user();
+        $filtres = $this->cleanFilters(array_merge(
+            $this->paginationParams(),
+            request()->only(['est_active'])
+        ));
 
         $this->authorize('voirListe', Annonce::class);
 
-        return new AnnonceCollection($this->annonceService->lister($utilisateur));
+        return new AnnonceCollection($this->annonceService->lister($utilisateur, $filtres));
     }
 
     public function indexParClub(Club $club): AnnonceCollection
     {
+        $filtres = $this->cleanFilters(array_merge(
+            $this->paginationParams(),
+            request()->only(['est_active'])
+        ));
+
         $this->authorize('creer', [Annonce::class, $club]);
 
-        return new AnnonceCollection($this->annonceService->listerParClub($club));
+        return new AnnonceCollection($this->annonceService->listerParClub($club, $filtres));
     }
 
     public function store(CreerAnnonceRequest $request, Club $club): AnnonceResource
@@ -42,7 +51,8 @@ class AnnonceController extends Controller
         $annonce = $this->annonceService->creer(
             $request->user(),
             $club,
-            $request->validated()
+            $request->validated(),
+            $request->file('image')
         );
 
         return new AnnonceResource([
@@ -65,7 +75,11 @@ class AnnonceController extends Controller
     {
         $this->authorize('modifier', $annonce);
 
-        $annonce = $this->annonceService->mettreAJour($annonce, $request->validated());
+        $annonce = $this->annonceService->mettreAJour(
+            $annonce,
+            $request->validated(),
+            $request->file('image')
+        );
 
         return new AnnonceResource([
             'message' => 'Annonce modifiee avec succes.',
