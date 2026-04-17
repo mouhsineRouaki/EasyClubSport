@@ -16,14 +16,14 @@ class MessagerieService
     ) {
     }
 
-    public function listerCanaux(User $utilisateur)
+    public function listerCanaux(User $utilisateur, array $filtres = [])
     {
-        return $this->messagerieRepository->listerCanauxParPresident($utilisateur);
+        return $this->messagerieRepository->listerCanauxParPresident($utilisateur, $filtres);
     }
 
-    public function listerCanauxParEquipe(Equipe $equipe)
+    public function listerCanauxParEquipe(Equipe $equipe, array $filtres = [])
     {
-        return $this->messagerieRepository->listerCanauxParEquipe($equipe);
+        return $this->messagerieRepository->listerCanauxParEquipe($equipe, $filtres);
     }
 
     public function creerCanal(User $utilisateur, Equipe $equipe, array $donnees): Canal
@@ -53,9 +53,9 @@ class MessagerieService
         return $canal->fresh(['equipe.club', 'utilisateurs']);
     }
 
-    public function listerMessages(Canal $canal)
+    public function listerMessages(Canal $canal, array $filtres = [])
     {
-        return $this->messagerieRepository->listerMessagesParCanal($canal);
+        return $this->messagerieRepository->listerMessagesParCanal($canal, $filtres);
     }
 
     public function envoyerMessage(User $utilisateur, Canal $canal, array $donnees): Message

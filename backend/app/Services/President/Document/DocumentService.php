@@ -17,14 +17,14 @@ class DocumentService
     ) {
     }
 
-    public function lister(User $utilisateur)
+    public function lister(User $utilisateur, array $filtres = [])
     {
-        return $this->documentRepository->listerParPresident($utilisateur);
+        return $this->documentRepository->listerParPresident($utilisateur, $filtres);
     }
 
-    public function listerParClub(Club $club)
+    public function listerParClub(Club $club, array $filtres = [])
     {
-        return $this->documentRepository->listerParClub($club);
+        return $this->documentRepository->listerParClub($club, $filtres);
     }
 
     public function creer(Club $club, array $donnees, UploadedFile $fichier): Document

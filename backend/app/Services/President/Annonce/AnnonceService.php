@@ -6,6 +6,8 @@ use App\Models\Annonce;
 use App\Models\Club;
 use App\Models\User;
 use App\Repositories\President\Annonce\AnnonceRepository;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class AnnonceService
 {
@@ -14,32 +16,52 @@ class AnnonceService
     ) {
     }
 
-    public function lister(User $utilisateur)
+    public function lister(User $utilisateur, array $filtres = [])
     {
-        return $this->annonceRepository->listerParPresident($utilisateur);
+        return $this->annonceRepository->listerParPresident($utilisateur, $filtres);
     }
 
-    public function listerParClub(Club $club)
+    public function listerParClub(Club $club, array $filtres = [])
     {
-        return $this->annonceRepository->listerParClub($club);
+        return $this->annonceRepository->listerParClub($club, $filtres);
     }
 
-    public function creer(User $utilisateur, Club $club, array $donnees): Annonce
+    public function creer(User $utilisateur, Club $club, array $donnees, ?UploadedFile $image = null): Annonce
     {
+        unset($donnees['image']);
+
         $donnees['club_id'] = $club->id;
         $donnees['auteur_id'] = $utilisateur->id;
         $donnees['est_active'] = $donnees['est_active'] ?? true;
 
+        if ($image) {
+            $donnees['image'] = $image->store('annonces', 'public');
+        }
+
         return $this->annonceRepository->creer($donnees);
     }
 
-    public function mettreAJour(Annonce $annonce, array $donnees): Annonce
+    public function mettreAJour(Annonce $annonce, array $donnees, ?UploadedFile $image = null): Annonce
     {
+        unset($donnees['image']);
+
+        if ($image) {
+            if ($annonce->image) {
+                Storage::disk('public')->delete($annonce->image);
+            }
+
+            $donnees['image'] = $image->store('annonces', 'public');
+        }
+
         return $this->annonceRepository->mettreAJour($annonce, $donnees);
     }
 
     public function supprimer(Annonce $annonce): void
     {
+        if ($annonce->image) {
+            Storage::disk('public')->delete($annonce->image);
+        }
+
         $this->annonceRepository->supprimer($annonce);
     }
 }

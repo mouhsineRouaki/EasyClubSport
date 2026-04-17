@@ -15,9 +15,9 @@ class ClubService
     ) {
     }
 
-    public function lister(User $utilisateur)
+    public function lister(User $utilisateur, array $filtres = [])
     {
-        return $this->clubRepository->listerParPresident($utilisateur);
+        return $this->clubRepository->listerParPresident($utilisateur, $filtres);
     }
 
     public function creer(User $utilisateur, array $donnees, ?UploadedFile $logo = null): Club

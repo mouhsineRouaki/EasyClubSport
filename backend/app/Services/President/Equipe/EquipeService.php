@@ -18,9 +18,14 @@ class EquipeService
     ) {
     }
 
-    public function lister(Club $club)
+    public function lister(Club $club, array $filtres = [])
     {
-        return $this->equipeRepository->listerParClub($club);
+        return $this->equipeRepository->listerParClub($club, $filtres);
+    }
+
+    public function listerAdversaires(array $filtres = [])
+    {
+        return $this->equipeRepository->listerAdversaires($filtres);
     }
 
     public function creer(Club $club, array $donnees, ?UploadedFile $logo = null): Equipe
@@ -83,9 +88,9 @@ class EquipeService
         return $this->equipeRepository->retirerCoach($equipe);
     }
 
-    public function listerJoueurs(Equipe $equipe)
+    public function listerJoueurs(Equipe $equipe, array $filtres = [])
     {
-        return $this->equipeRepository->listerJoueurs($equipe);
+        return $this->equipeRepository->listerJoueurs($equipe, $filtres);
     }
 
     public function ajouterJoueur(Equipe $equipe, User $joueur): void
