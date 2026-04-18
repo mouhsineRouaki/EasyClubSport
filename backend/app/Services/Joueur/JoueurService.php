@@ -12,6 +12,7 @@ use App\Repositories\Joueur\JoueurRepository;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class JoueurService
 {
@@ -152,15 +153,46 @@ class JoueurService
 
     public function recupererDashboard(User $utilisateur): array
     {
+        $equipe = $this->joueurRepository->recupererEquipeActive($utilisateur);
+
         return [
-            'equipe' => $this->joueurRepository->recupererEquipeActive($utilisateur),
+            'equipe' => $equipe,
             'prochain_evenement' => $this->joueurRepository->prochainEvenement($utilisateur),
             'convocations_en_attente_total' => $this->joueurRepository->compterConvocationsEnAttente($utilisateur),
             'notifications_non_lues_total' => $this->joueurRepository->compterNotificationsNonLues($utilisateur),
+            'evenements' => $this->joueurRepository->listerEvenementsRecentsEquipe($utilisateur),
+            'convocations' => $this->joueurRepository->listerConvocationsRecentes($utilisateur),
             'dernieres_annonces' => $this->joueurRepository->listerAnnoncesEquipe($utilisateur),
             'derniers_documents' => $this->joueurRepository->listerDocumentsRecents($utilisateur),
             'derniers_canaux' => $this->joueurRepository->listerCanauxRecents($utilisateur),
         ];
+    }
+
+    public function rejoindreEquipeParCode(User $utilisateur, string $codeInvitation)
+    {
+        if ($this->joueurRepository->utilisateurAPourEquipeActive($utilisateur)) {
+            throw ValidationException::withMessages([
+                'code_invitation' => 'Vous etes deja assigne a une equipe.',
+            ]);
+        }
+
+        $equipe = $this->joueurRepository->trouverEquipeParCodeInvitation($codeInvitation);
+
+        if (! $equipe) {
+            throw ValidationException::withMessages([
+                'code_invitation' => 'Code d invitation invalide.',
+            ]);
+        }
+
+        if ($equipe->statut !== 'active') {
+            throw ValidationException::withMessages([
+                'code_invitation' => 'Cette equipe n accepte pas de nouvelles adhesions.',
+            ]);
+        }
+
+        $this->joueurRepository->rattacherJoueurAEquipe($utilisateur, $equipe);
+
+        return $this->joueurRepository->recupererEquipeActive($utilisateur);
     }
 
     protected function verifierAccesCanal(User $utilisateur, Canal $canal): void

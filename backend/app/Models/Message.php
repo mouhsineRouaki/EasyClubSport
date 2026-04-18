@@ -11,11 +11,17 @@ class Message extends Model
     use HasFactory;
 
     protected $fillable = [
+        'canal_id',
         'equipe_id',
         'expediteur_id',
         'contenu',
         'type_message',
     ];
+
+    public function canal(): BelongsTo
+    {
+        return $this->belongsTo(Canal::class, 'canal_id');
+    }
 
     public function equipe(): BelongsTo
     {

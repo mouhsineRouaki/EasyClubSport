@@ -238,7 +238,11 @@ class CoachController extends Controller
         try {
             $message = $this->coachService->envoyerMessage($request->user(), $canal, $request->validated());
 
-            return response()->json(['status' => true, 'message' => 'Message envoye avec succes.', 'data' => ['message' => $message]], 201);
+            return response()->json([
+                'status' => true,
+                'message' => 'Message envoye avec succes.',
+                'data' => ['message' => $this->formaterMessage($message)],
+            ], 201);
         } catch (AuthorizationException $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
         }
@@ -249,7 +253,11 @@ class CoachController extends Controller
         try {
             $message = $this->coachService->modifierMessage($request->user(), $message, $request->validated());
 
-            return response()->json(['status' => true, 'message' => 'Message modifie avec succes.', 'data' => ['message' => $message]]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Message modifie avec succes.',
+                'data' => ['message' => $this->formaterMessage($message)],
+            ]);
         } catch (AuthorizationException $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
         }
@@ -289,5 +297,34 @@ class CoachController extends Controller
         $total = $this->coachService->marquerToutesNotificationsCommeLues(request()->user());
 
         return response()->json(['status' => true, 'message' => 'Toutes les notifications ont ete marquees comme lues.', 'data' => ['notifications_mises_a_jour_total' => $total]]);
+    }
+
+    protected function formaterMessage(Message $message): array
+    {
+        $message = $message->fresh(['expediteur', 'equipe.club', 'canal']);
+
+        return [
+            'id' => $message->id,
+            'canal_id' => $message->canal_id,
+            'equipe_id' => $message->equipe_id,
+            'expediteur_id' => $message->expediteur_id,
+            'contenu' => $message->contenu,
+            'type_message' => $message->type_message,
+            'created_at' => $message->created_at,
+            'updated_at' => $message->updated_at,
+            'expediteur' => $message->expediteur ? [
+                'id' => $message->expediteur->id,
+                'nom' => trim(($message->expediteur->prenom ?? '').' '.($message->expediteur->nom ?? '')),
+                'email' => $message->expediteur->email,
+            ] : null,
+            'equipe' => $message->equipe ? [
+                'id' => $message->equipe->id,
+                'nom' => $message->equipe->nom,
+            ] : null,
+            'club' => $message->equipe?->club ? [
+                'id' => $message->equipe->club->id,
+                'nom' => $message->equipe->club->nom,
+            ] : null,
+        ];
     }
 }

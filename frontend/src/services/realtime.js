@@ -51,14 +51,14 @@ const creerEcho = () => {
   return echoInstance
 }
 
-export const subscribeToTeamMessages = (teamId, callback) => {
+export const subscribeToCanalMessages = (canalId, callback) => {
   const echo = creerEcho()
 
-  if (!echo || !teamId || typeof callback !== 'function') {
+  if (!echo || !canalId || typeof callback !== 'function') {
     return () => {}
   }
 
-  const channelName = `equipe.${teamId}.messages`
+  const channelName = `canal.${canalId}.messages`
   echo.private(channelName).listen('.message.envoye', callback)
 
   return () => {

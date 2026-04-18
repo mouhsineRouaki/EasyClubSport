@@ -39,7 +39,7 @@ class Canal extends Model
 
     public function messages(): HasMany
     {
-        return $this->hasMany(Message::class, 'equipe_id', 'equipe_id')
+        return $this->hasMany(Message::class, 'canal_id')
             ->where('type_message', 'equipe');
     }
 }

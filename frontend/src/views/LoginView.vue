@@ -49,7 +49,13 @@ const soumettre = async () => {
     }
 
     if (utilisateur.value?.role === 'president') {
-      router.push('/president/dashboard')
+      router.push('/president')
+    }else if (utilisateur.value?.role === 'coach') {
+      router.push('/coach')
+    } else if (utilisateur.value?.role === 'joueur') {
+      router.push('/joueur')
+    } else {
+      router.push('/')
     }
   } catch (error) {
     const reponseErreur = error.response || {}

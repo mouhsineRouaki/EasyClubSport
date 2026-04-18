@@ -15,6 +15,7 @@ use App\Models\Equipe;
 use App\Models\User;
 use App\Services\President\Equipe\EquipeService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class EquipeController extends Controller
 {
@@ -166,6 +167,31 @@ class EquipeController extends Controller
             'status' => true,
             'message' => 'Joueur retire de l equipe avec succes.',
             'data' => null,
+        ]);
+    }
+
+    public function listerCoachs(Request $request): JsonResponse
+    {
+        $q = $request->query('q', '');
+
+        $query = User::where('role', 'coach')
+            ->orderBy('nom')
+            ->orderBy('prenom');
+
+        if ($q) {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('nom', 'like', "%{$q}%")
+                    ->orWhere('prenom', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%");
+            });
+        }
+
+        $coachs = $query->select(['id', 'nom', 'prenom', 'email', 'telephone', 'photo'])->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Liste des coachs recuperee avec succes.',
+            'data' => ['coachs' => $coachs],
         ]);
     }
 

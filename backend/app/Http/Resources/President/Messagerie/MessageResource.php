@@ -17,6 +17,7 @@ class MessageResource extends JsonResource
             'data' => [
                 'message' => [
                     'id' => $message->id,
+                    'canal_id' => $message->canal_id,
                     'equipe_id' => $message->equipe_id,
                     'expediteur_id' => $message->expediteur_id,
                     'contenu' => $message->contenu,

@@ -22,7 +22,7 @@ class MessageEquipeEnvoye implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("equipe.{$this->message->equipe_id}.messages"),
+            new PrivateChannel("canal.{$this->message->canal_id}.messages"),
         ];
     }
 
@@ -33,10 +33,11 @@ class MessageEquipeEnvoye implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        $message = $this->message->fresh(['expediteur', 'equipe.club']);
+        $message = $this->message->fresh(['expediteur', 'equipe.club', 'canal']);
 
         return [
             'id' => $message->id,
+            'canal_id' => $message->canal_id,
             'equipe_id' => $message->equipe_id,
             'expediteur_id' => $message->expediteur_id,
             'contenu' => $message->contenu,

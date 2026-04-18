@@ -34,6 +34,42 @@ class JoueurRepository
             ->first()?->equipe;
     }
 
+    public function utilisateurAPourEquipeActive(User $utilisateur): bool
+    {
+        return MembreEquipe::query()
+            ->where('utilisateur_id', $utilisateur->id)
+            ->where('role_equipe', 'joueur')
+            ->exists();
+    }
+
+    public function trouverEquipeParCodeInvitation(string $codeInvitation): ?Equipe
+    {
+        return Equipe::query()
+            ->where('code_invitation', $codeInvitation)
+            ->with(['club', 'coach'])
+            ->withCount([
+                'membreEquipes as joueurs_total' => function ($query) {
+                    $query->where('role_equipe', 'joueur');
+                },
+                'evenements as evenements_total',
+            ])
+            ->first();
+    }
+
+    public function rattacherJoueurAEquipe(User $utilisateur, Equipe $equipe): void
+    {
+        MembreEquipe::query()->create([
+            'equipe_id' => $equipe->id,
+            'utilisateur_id' => $utilisateur->id,
+            'role_equipe' => 'joueur',
+            'date_affectation' => now()->toDateString(),
+        ]);
+
+        $equipe->canaux()
+            ->get()
+            ->each(fn (Canal $canal) => $canal->utilisateurs()->syncWithoutDetaching([$utilisateur->id]));
+    }
+
     public function listerEvenements(User $utilisateur)
     {
         $equipe = $this->recupererEquipeActive($utilisateur);
@@ -72,7 +108,10 @@ class JoueurRepository
     {
         return Convocation::query()
             ->where('utilisateur_id', $utilisateur->id)
-            ->with(['evenement.equipe.club'])
+            ->with([
+                'evenement.equipe.club',
+                'evenement.adversaireEquipe.club',
+            ])
             ->orderByDesc('date_convocation')
             ->orderByDesc('id')
             ->get();
@@ -85,7 +124,10 @@ class JoueurRepository
             'date_confirmation' => in_array($donnees['statut'], ['confirme', 'refuse'], true) ? now() : null,
         ]);
 
-        return $convocation->fresh(['evenement.equipe.club']);
+        return $convocation->fresh([
+            'evenement.equipe.club',
+            'evenement.adversaireEquipe.club',
+        ]);
     }
 
     public function listerDocuments(User $utilisateur)
@@ -124,11 +166,12 @@ class JoueurRepository
     public function creerMessage(User $utilisateur, Canal $canal, array $donnees): Message
     {
         $message = Message::create([
+            'canal_id' => $canal->id,
             'equipe_id' => $canal->equipe_id,
             'expediteur_id' => $utilisateur->id,
             'contenu' => $donnees['contenu'],
             'type_message' => 'equipe',
-        ])->fresh(['expediteur', 'equipe.club']);
+        ])->fresh(['expediteur', 'equipe.club', 'canal']);
 
         event(new MessageEquipeEnvoye($message));
 
@@ -141,7 +184,7 @@ class JoueurRepository
             'contenu' => $donnees['contenu'],
         ]);
 
-        return $message->fresh(['expediteur', 'equipe.club']);
+        return $message->fresh(['expediteur', 'equipe.club', 'canal']);
     }
 
     public function supprimerMessage(Message $message): void
@@ -261,5 +304,35 @@ class JoueurRepository
         $utilisateur->update($donnees);
 
         return $utilisateur->fresh();
+    }
+
+    public function listerEvenementsRecentsEquipe(User $utilisateur, int $limite = 4)
+    {
+        $equipe = $this->recupererEquipeActive($utilisateur);
+
+        if (! $equipe) {
+            return collect();
+        }
+
+        return Evenement::query()
+            ->where('equipe_id', $equipe->id)
+            ->with(['equipe.club'])
+            ->orderBy('date_debut')
+            ->limit($limite)
+            ->get();
+    }
+
+    public function listerConvocationsRecentes(User $utilisateur, int $limite = 4)
+    {
+        return Convocation::query()
+            ->where('utilisateur_id', $utilisateur->id)
+            ->with([
+                'evenement.equipe.club',
+                'evenement.adversaireEquipe.club',
+            ])
+            ->orderByDesc('date_convocation')
+            ->orderByDesc('id')
+            ->limit($limite)
+            ->get();
     }
 }

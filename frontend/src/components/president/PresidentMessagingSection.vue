@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import PresidentConversationItem from './PresidentConversationItem.vue'
 import PresidentMessageBubble from './PresidentMessageBubble.vue'
 import { authDelete, authGet, authPost, authPut } from '../../services/api'
-import { disconnectRealtime, subscribeToTeamMessages } from '../../services/realtime'
+import { disconnectRealtime, subscribeToCanalMessages } from '../../services/realtime'
 import { notifyError, notifySuccess } from '../../stores/toast'
 
 const props = defineProps({
@@ -109,6 +109,7 @@ const reinitialiserFormulaireCanal = () => {
 
 const normaliserMessage = (message) => ({
   id: message.id,
+  canal_id: message.canal_id,
   equipe_id: message.equipe_id,
   expediteur_id: message.expediteur_id,
   contenu: message.contenu,
@@ -131,9 +132,9 @@ const pousserMessage = async (message, { incrementUnread = false } = {}) => {
     return
   }
 
-  if (!canalActuel.value || String(canalActuel.value.equipe_id) !== String(messageNormalise.equipe_id)) {
+  if (!canalActuel.value || String(canalActuel.value.id) !== String(messageNormalise.canal_id)) {
     if (incrementUnread) {
-      const canalCible = canaux.value.find((item) => String(item.equipe_id) === String(messageNormalise.equipe_id))
+      const canalCible = canaux.value.find((item) => String(item.id) === String(messageNormalise.canal_id))
       if (canalCible) {
         unreadByCanal.value = {
           ...unreadByCanal.value,
@@ -156,7 +157,7 @@ const synchroniserRealtime = () => {
     return
   }
 
-  stopRealtimeSubscription.value = subscribeToTeamMessages(canalActuel.value.equipe_id, async (payload) => {
+  stopRealtimeSubscription.value = subscribeToCanalMessages(canalActuel.value.id, async (payload) => {
     await pousserMessage(payload, { incrementUnread: true })
   })
 }

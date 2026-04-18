@@ -9,12 +9,29 @@ class DashboardCoachResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $equipe = $this['equipe'];
         $prochainEvenement = $this['prochain_evenement'];
 
         return [
             'status' => true,
             'message' => 'Dashboard coach recupere avec succes.',
             'data' => [
+                'equipe' => $equipe ? [
+                    'id' => $equipe->id,
+                    'nom' => $equipe->nom,
+                    'categorie' => $equipe->categorie,
+                    'statut' => $equipe->statut,
+                    'description' => $equipe->description,
+                    'logo_url' => $equipe->logo_url ?? null,
+                    'joueurs_total' => $equipe->joueurs_total ?? 0,
+                    'evenements_total' => $equipe->evenements_total ?? 0,
+                    'club' => $equipe->club ? [
+                        'id' => $equipe->club->id,
+                        'nom' => $equipe->club->nom,
+                        'ville' => $equipe->club->ville,
+                        'logo_url' => $equipe->club->logo_url ?? null,
+                    ] : null,
+                ] : null,
                 'statistiques' => [
                     'equipes_total' => $this['equipes_total'],
                     'joueurs_total' => $this['joueurs_total'],

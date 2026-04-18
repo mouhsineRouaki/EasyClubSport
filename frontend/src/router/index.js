@@ -3,6 +3,7 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import PresidentDashboardView from '../views/president/PresidentDashboardView.vue'
 import CoachDashboardView from '../views/coach/CoachDashboardView.vue'
+import JoueurDashboardView from '../views/joueur/JoueurDashboardView.vue'
 
 const routes = [
   {
@@ -20,17 +21,25 @@ const routes = [
     component: RegisterView,
   },
   {
-    path: '/president/dashboard',
-    name: 'president-dashboard',
+    path: '/president',
+    name: 'president',
     component: PresidentDashboardView,
     meta: {
       requiresAuth: true,
     },
   },
   {
-    path: '/coach/dashboard',
-    name: 'coach-dashboard',
+    path: '/coach',
+    name: 'coach',
     component: CoachDashboardView,
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/joueur',
+    name: 'joueur',
+    component: JoueurDashboardView,
     meta: {
       requiresAuth: true,
     },

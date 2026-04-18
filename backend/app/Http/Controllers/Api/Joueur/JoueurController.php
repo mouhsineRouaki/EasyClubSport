@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Joueur\EnvoyerMessageJoueurRequest;
 use App\Http\Requests\Joueur\ModifierMessageJoueurRequest;
 use App\Http\Requests\Joueur\ModifierProfilJoueurRequest;
+use App\Http\Requests\Joueur\RejoindreEquipeJoueurRequest;
 use App\Http\Requests\Joueur\RepondreConvocationRequest;
 use App\Http\Requests\Joueur\RepondreDisponibiliteRequest;
 use App\Http\Resources\Joueur\CanalJoueurCollection;
@@ -72,6 +73,19 @@ class JoueurController extends Controller
         return new EquipeJoueurResource([
             'message' => 'Equipe du joueur recuperee avec succes.',
             'equipe' => $this->joueurService->recupererEquipe(request()->user()),
+        ]);
+    }
+
+    public function rejoindreEquipe(RejoindreEquipeJoueurRequest $request): EquipeJoueurResource
+    {
+        $equipe = $this->joueurService->rejoindreEquipeParCode(
+            $request->user(),
+            strtoupper(trim($request->string('code_invitation')->toString()))
+        );
+
+        return new EquipeJoueurResource([
+            'message' => 'Equipe rejointe avec succes.',
+            'equipe' => $equipe,
         ]);
     }
 
@@ -193,13 +207,7 @@ class JoueurController extends Controller
                 'status' => true,
                 'message' => 'Message envoye avec succes.',
                 'data' => [
-                    'message' => [
-                        'id' => $message->id,
-                        'equipe_id' => $message->equipe_id,
-                        'expediteur_id' => $message->expediteur_id,
-                        'contenu' => $message->contenu,
-                        'type_message' => $message->type_message,
-                    ],
+                    'message' => $this->formaterMessage($message),
                 ],
             ], 201);
         } catch (AuthorizationException $e) {
@@ -224,11 +232,7 @@ class JoueurController extends Controller
                 'status' => true,
                 'message' => 'Message modifie avec succes.',
                 'data' => [
-                    'message' => [
-                        'id' => $message->id,
-                        'contenu' => $message->contenu,
-                        'updated_at' => $message->updated_at,
-                    ],
+                    'message' => $this->formaterMessage($message),
                 ],
             ]);
         } catch (AuthorizationException $e) {
@@ -309,5 +313,34 @@ class JoueurController extends Controller
         return new StatistiqueJoueurCollection(
             $this->joueurService->listerStatistiques(request()->user())
         );
+    }
+
+    protected function formaterMessage(Message $message): array
+    {
+        $message = $message->fresh(['expediteur', 'equipe.club', 'canal']);
+
+        return [
+            'id' => $message->id,
+            'canal_id' => $message->canal_id,
+            'equipe_id' => $message->equipe_id,
+            'expediteur_id' => $message->expediteur_id,
+            'contenu' => $message->contenu,
+            'type_message' => $message->type_message,
+            'created_at' => $message->created_at,
+            'updated_at' => $message->updated_at,
+            'expediteur' => $message->expediteur ? [
+                'id' => $message->expediteur->id,
+                'nom' => trim(($message->expediteur->prenom ?? '').' '.($message->expediteur->nom ?? '')),
+                'email' => $message->expediteur->email,
+            ] : null,
+            'equipe' => $message->equipe ? [
+                'id' => $message->equipe->id,
+                'nom' => $message->equipe->nom,
+            ] : null,
+            'club' => $message->equipe?->club ? [
+                'id' => $message->equipe->club->id,
+                'nom' => $message->equipe->club->nom,
+            ] : null,
+        ];
     }
 }

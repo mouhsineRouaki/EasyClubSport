@@ -16,7 +16,7 @@ class AnnonceRepository
                 $query->where('president_id', $utilisateur->id);
             });
 
-        if (! empty($filtres['q'])) {
+        if (!empty($filtres['q'])) {
             $terme = $filtres['q'];
             $query->where(function ($subQuery) use ($terme) {
                 $subQuery->where('titre', 'like', "%{$terme}%")
@@ -43,7 +43,7 @@ class AnnonceRepository
         $query = Annonce::with(['club', 'auteur'])
             ->where('club_id', $club->id);
 
-        if (! empty($filtres['q'])) {
+        if (!empty($filtres['q'])) {
             $terme = $filtres['q'];
             $query->where(function ($subQuery) use ($terme) {
                 $subQuery->where('titre', 'like', "%{$terme}%")

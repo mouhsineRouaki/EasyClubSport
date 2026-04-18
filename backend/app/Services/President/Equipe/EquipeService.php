@@ -80,6 +80,14 @@ class EquipeService
             ]);
         }
 
+        $equipeDuCoach = $this->equipeRepository->trouverEquipeDuCoach($coach->id);
+
+        if ($equipeDuCoach && (int) $equipeDuCoach->id !== (int) $equipe->id) {
+            throw ValidationException::withMessages([
+                'coach_id' => 'Ce coach est deja assigne a une autre equipe.',
+            ]);
+        }
+
         return $this->equipeRepository->assignerCoach($equipe, $coach);
     }
 
@@ -123,4 +131,3 @@ class EquipeService
         $this->equipeRepository->retirerJoueur($equipe, $joueur);
     }
 }
-

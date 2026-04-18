@@ -6,7 +6,7 @@ import PresidentConversationItem from '../../components/president/PresidentConve
 import PresidentMessageBubble from '../../components/president/PresidentMessageBubble.vue'
 import { useStoredUser } from '../../composables/useStoredUser'
 import { authDelete, authGet, authPost, authPut } from '../../services/api'
-import { disconnectRealtime, subscribeToTeamMessages } from '../../services/realtime'
+import { disconnectRealtime, subscribeToCanalMessages } from '../../services/realtime'
 import { notifyError, notifySuccess } from '../../stores/toast'
 
 const router = useRouter()
@@ -53,6 +53,7 @@ const scrollToBottom = async () => {
 
 const normaliserMessage = (message) => ({
   id: message.id,
+  canal_id: message.canal_id,
   equipe_id: message.equipe_id,
   expediteur_id: message.expediteur_id,
   contenu: message.contenu,
@@ -98,12 +99,12 @@ const chargerMessages = async () => {
 const synchroniserRealtime = () => {
   stopRealtimeSubscription.value?.()
   stopRealtimeSubscription.value = () => {}
-  if (!canalActuel.value?.equipe?.id) return
+  if (!canalActuel.value?.id) return
 
-  stopRealtimeSubscription.value = subscribeToTeamMessages(canalActuel.value.equipe.id, async (payload) => {
+  stopRealtimeSubscription.value = subscribeToCanalMessages(canalActuel.value.id, async (payload) => {
     const message = normaliserMessage(payload)
     if (messages.value.some((item) => item.id === message.id)) return
-    if (String(message.equipe_id) !== String(canalActuel.value?.equipe?.id)) return
+    if (String(message.canal_id) !== String(canalActuel.value?.id)) return
     messages.value = [...messages.value, message]
     await scrollToBottom()
   })

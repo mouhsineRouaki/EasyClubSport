@@ -36,6 +36,7 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::get('/documents', [DocumentController::class, 'index']);
     Route::get('/evenements', [EvenementController::class, 'index']);
     Route::get('/equipes/adversaires', [EquipeController::class, 'adversaires']);
+    Route::get('/equipes/coachs', [EquipeController::class, 'listerCoachs']);
     Route::get('/notifications', [NotificationPresidentController::class, 'index']);
     Route::put('/notifications/{notification}/lecture', [NotificationPresidentController::class, 'marquerCommeLue']);
     Route::put('/notifications/lecture/toutes', [NotificationPresidentController::class, 'marquerToutesCommeLues']);
@@ -89,6 +90,7 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
 
 Route::middleware(['auth:sanctum', 'role:joueur'])->prefix('joueur')->group(function () {
     Route::get('/dashboard', [JoueurController::class, 'dashboard']);
+    Route::post('/rejoindre-equipe', [JoueurController::class, 'rejoindreEquipe']);
     Route::get('/profil', [JoueurController::class, 'afficherProfil']);
     Route::put('/profil', [JoueurController::class, 'modifierProfil']);
     Route::get('/equipe', [JoueurController::class, 'equipe']);

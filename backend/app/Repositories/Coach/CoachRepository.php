@@ -14,6 +14,21 @@ use App\Models\User;
 
 class CoachRepository
 {
+    public function recupererEquipeActiveCoach(User $utilisateur): ?Equipe
+    {
+        return Equipe::query()
+            ->where('coach_id', $utilisateur->id)
+            ->with(['club'])
+            ->withCount([
+                'membreEquipes as joueurs_total' => function ($query) {
+                    $query->where('role_equipe', 'joueur');
+                },
+                'evenements as evenements_total',
+            ])
+            ->latest()
+            ->first();
+    }
+
     public function recupererProfil(User $utilisateur): User
     {
         return $utilisateur->fresh();
@@ -131,11 +146,12 @@ class CoachRepository
     public function creerMessage(User $utilisateur, Canal $canal, array $donnees): Message
     {
         $message = Message::create([
+            'canal_id' => $canal->id,
             'equipe_id' => $canal->equipe_id,
             'expediteur_id' => $utilisateur->id,
             'contenu' => $donnees['contenu'],
             'type_message' => 'equipe',
-        ])->fresh(['expediteur', 'equipe.club']);
+        ])->fresh(['expediteur', 'equipe.club', 'canal']);
 
         event(new MessageEquipeEnvoye($message));
 
@@ -148,7 +164,7 @@ class CoachRepository
             'contenu' => $donnees['contenu'],
         ]);
 
-        return $message->fresh(['expediteur', 'equipe.club']);
+        return $message->fresh(['expediteur', 'equipe.club', 'canal']);
     }
 
     public function supprimerMessage(Message $message): void
@@ -188,10 +204,14 @@ class CoachRepository
 
     public function prochainEvenement(User $utilisateur): ?Evenement
     {
+        $equipe = $this->recupererEquipeActiveCoach($utilisateur);
+
+        if (! $equipe) {
+            return null;
+        }
+
         return Evenement::query()
-            ->whereHas('equipe', function ($query) use ($utilisateur) {
-                $query->where('coach_id', $utilisateur->id);
-            })
+            ->where('equipe_id', $equipe->id)
             ->where('date_debut', '>=', now())
             ->where('statut', '!=', 'annule')
             ->with(['equipe.club', 'adversaireEquipe.club'])
@@ -201,25 +221,33 @@ class CoachRepository
 
     public function compterEquipes(User $utilisateur): int
     {
-        return Equipe::query()->where('coach_id', $utilisateur->id)->count();
+        return $this->recupererEquipeActiveCoach($utilisateur) ? 1 : 0;
     }
 
     public function compterJoueurs(User $utilisateur): int
     {
+        $equipe = $this->recupererEquipeActiveCoach($utilisateur);
+
+        if (! $equipe) {
+            return 0;
+        }
+
         return MembreEquipe::query()
             ->where('role_equipe', 'joueur')
-            ->whereHas('equipe', function ($query) use ($utilisateur) {
-                $query->where('coach_id', $utilisateur->id);
-            })
+            ->where('equipe_id', $equipe->id)
             ->count();
     }
 
     public function compterEvenementsAVenir(User $utilisateur): int
     {
+        $equipe = $this->recupererEquipeActiveCoach($utilisateur);
+
+        if (! $equipe) {
+            return 0;
+        }
+
         return Evenement::query()
-            ->whereHas('equipe', function ($query) use ($utilisateur) {
-                $query->where('coach_id', $utilisateur->id);
-            })
+            ->where('equipe_id', $equipe->id)
             ->where('date_debut', '>=', now())
             ->where('statut', '!=', 'annule')
             ->count();
@@ -227,22 +255,30 @@ class CoachRepository
 
     public function compterConvocationsEnAttente(User $utilisateur): int
     {
+        $equipe = $this->recupererEquipeActiveCoach($utilisateur);
+
+        if (! $equipe) {
+            return 0;
+        }
+
         return Convocation::query()
             ->where('statut', 'en_attente')
-            ->whereHas('evenement', function ($query) use ($utilisateur) {
-                $query->whereHas('equipe', function ($subQuery) use ($utilisateur) {
-                    $subQuery->where('coach_id', $utilisateur->id);
-                });
+            ->whereHas('evenement', function ($query) use ($equipe) {
+                $query->where('equipe_id', $equipe->id);
             })
             ->count();
     }
 
     public function listerEvenementsRecents(User $utilisateur, int $limite = 3)
     {
+        $equipe = $this->recupererEquipeActiveCoach($utilisateur);
+
+        if (! $equipe) {
+            return collect();
+        }
+
         return Evenement::query()
-            ->whereHas('equipe', function ($query) use ($utilisateur) {
-                $query->where('coach_id', $utilisateur->id);
-            })
+            ->where('equipe_id', $equipe->id)
             ->with(['equipe.club', 'adversaireEquipe.club'])
             ->orderByDesc('date_debut')
             ->limit($limite)
@@ -251,10 +287,14 @@ class CoachRepository
 
     public function listerCanauxRecents(User $utilisateur, int $limite = 3)
     {
+        $equipe = $this->recupererEquipeActiveCoach($utilisateur);
+
+        if (! $equipe) {
+            return collect();
+        }
+
         return Canal::query()
-            ->whereHas('equipe', function ($query) use ($utilisateur) {
-                $query->where('coach_id', $utilisateur->id);
-            })
+            ->where('equipe_id', $equipe->id)
             ->with('equipe.club')
             ->latest()
             ->limit($limite)

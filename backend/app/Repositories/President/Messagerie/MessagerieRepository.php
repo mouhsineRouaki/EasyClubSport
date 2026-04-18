@@ -78,8 +78,8 @@ class MessagerieRepository
 
     public function listerMessagesParCanal(Canal $canal, array $filtres = []): LengthAwarePaginator
     {
-        $query = Message::with(['expediteur', 'equipe.club'])
-            ->where('equipe_id', $canal->equipe_id)
+        $query = Message::with(['expediteur', 'equipe.club', 'canal'])
+            ->where('canal_id', $canal->id)
             ->where('type_message', 'equipe');
 
         if (! empty($filtres['q'])) {
@@ -105,7 +105,7 @@ class MessagerieRepository
 
     public function creerMessage(array $donnees): Message
     {
-        $message = Message::create($donnees)->load(['expediteur', 'equipe.club']);
+        $message = Message::create($donnees)->load(['expediteur', 'equipe.club', 'canal']);
 
         event(new MessageEquipeEnvoye($message));
 
@@ -116,7 +116,7 @@ class MessagerieRepository
     {
         $message->update($donnees);
 
-        return $message->fresh(['expediteur', 'equipe.club']);
+        return $message->fresh(['expediteur', 'equipe.club', 'canal']);
     }
 
     public function supprimerMessage(Message $message): void

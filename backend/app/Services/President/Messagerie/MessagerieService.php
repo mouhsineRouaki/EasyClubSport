@@ -61,6 +61,7 @@ class MessagerieService
     public function envoyerMessage(User $utilisateur, Canal $canal, array $donnees): Message
     {
         return $this->messagerieRepository->creerMessage([
+            'canal_id' => $canal->id,
             'equipe_id' => $canal->equipe_id,
             'expediteur_id' => $utilisateur->id,
             'contenu' => $donnees['contenu'],

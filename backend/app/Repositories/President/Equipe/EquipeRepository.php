@@ -6,6 +6,7 @@ use App\Models\Club;
 use App\Models\Equipe;
 use App\Models\MembreEquipe;
 use App\Models\User;
+use App\Models\Canal;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -97,15 +98,47 @@ class EquipeRepository
 
     public function assignerCoach(Equipe $equipe, User $coach): Equipe
     {
+        if ($equipe->coach_id && (int) $equipe->coach_id !== (int) $coach->id) {
+            MembreEquipe::query()
+                ->where('equipe_id', $equipe->id)
+                ->where('utilisateur_id', $equipe->coach_id)
+                ->where('role_equipe', 'coach')
+                ->delete();
+        }
+
         $equipe->update([
             'coach_id' => $coach->id,
         ]);
+
+        MembreEquipe::query()->updateOrCreate(
+            [
+                'equipe_id' => $equipe->id,
+                'utilisateur_id' => $coach->id,
+            ],
+            [
+                'role_equipe' => 'coach',
+                'date_affectation' => now()->toDateString(),
+            ]
+        );
+
+        Canal::query()
+            ->where('equipe_id', $equipe->id)
+            ->get()
+            ->each(fn (Canal $canal) => $canal->utilisateurs()->syncWithoutDetaching([$coach->id]));
 
         return $equipe->fresh(['coach']);
     }
 
     public function retirerCoach(Equipe $equipe): Equipe
     {
+        if ($equipe->coach_id) {
+            MembreEquipe::query()
+                ->where('equipe_id', $equipe->id)
+                ->where('utilisateur_id', $equipe->coach_id)
+                ->where('role_equipe', 'coach')
+                ->delete();
+        }
+
         $equipe->update([
             'coach_id' => null,
         ]);
@@ -144,6 +177,13 @@ class EquipeRepository
             ->first();
     }
 
+    public function trouverEquipeDuCoach(int $coachId): ?Equipe
+    {
+        return Equipe::query()
+            ->where('coach_id', $coachId)
+            ->first();
+    }
+
     public function joueurExisteDansEquipe(Equipe $equipe, int $utilisateurId): bool
     {
         return MembreEquipe::where('equipe_id', $equipe->id)
@@ -160,6 +200,11 @@ class EquipeRepository
             'role_equipe' => 'joueur',
             'date_affectation' => now()->toDateString(),
         ]);
+
+        Canal::query()
+            ->where('equipe_id', $equipe->id)
+            ->get()
+            ->each(fn (Canal $canal) => $canal->utilisateurs()->syncWithoutDetaching([$joueur->id]));
     }
 
     public function retirerJoueur(Equipe $equipe, User $joueur): void
@@ -170,4 +215,3 @@ class EquipeRepository
             ->delete();
     }
 }
-

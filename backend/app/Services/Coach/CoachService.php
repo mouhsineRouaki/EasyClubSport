@@ -256,7 +256,10 @@ class CoachService
 
     public function recupererDashboard(User $utilisateur): array
     {
+        $equipe = $this->coachRepository->recupererEquipeActiveCoach($utilisateur);
+
         return [
+            'equipe' => $equipe,
             'equipes_total' => $this->coachRepository->compterEquipes($utilisateur),
             'joueurs_total' => $this->coachRepository->compterJoueurs($utilisateur),
             'evenements_a_venir_total' => $this->coachRepository->compterEvenementsAVenir($utilisateur),

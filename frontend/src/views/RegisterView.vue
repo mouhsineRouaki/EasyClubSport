@@ -2,7 +2,6 @@
 import { computed, reactive, ref } from 'vue'
 import imageHero from '../assets/hero.png'
 import logoEasyClubSport from '../assets/logo-easyclubsport.svg'
-import { API_BASE_URL, post } from '../services/api'
 import { notifyError } from '../stores/toast'
 
 const roles = [

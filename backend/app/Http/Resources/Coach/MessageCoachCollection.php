@@ -16,6 +16,7 @@ class MessageCoachCollection extends ResourceCollection
                 'messages' => $this->collection->map(function ($message) {
                     return [
                         'id' => $message->id,
+                        'canal_id' => $message->canal_id,
                         'equipe_id' => $message->equipe_id,
                         'expediteur_id' => $message->expediteur_id,
                         'contenu' => $message->contenu,
