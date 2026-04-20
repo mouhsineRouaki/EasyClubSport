@@ -13,8 +13,13 @@ import PresidentMessagingSection from '../../components/president/PresidentMessa
 import PresidentPlayerCard from '../../components/president/PresidentPlayerCard.vue'
 import PresidentTeamCard from '../../components/president/PresidentTeamCard.vue'
 import PresidentTeamForm from '../../components/president/PresidentTeamForm.vue'
+import MatchCompositionSection from '../../components/common/MatchCompositionSection.vue'
+import MatchSheetSection from '../../components/common/MatchSheetSection.vue'
+import MatchStatisticsSection from '../../components/common/MatchStatisticsSection.vue'
+import AppNotificationsDropdown from '../../components/common/AppNotificationsDropdown.vue'
 import { authDelete, authGet, authPost, authPut } from '../../services/api'
 import { notifyError, notifySuccess } from '../../stores/toast'
+import { subscribeToNotifications, disconnectRealtime } from '../../services/realtime'
 
 const router = useRouter()
 
@@ -31,6 +36,7 @@ const actionNotification = ref('')
 const rafraichissementAuto = ref(true)
 const derniereMiseAJour = ref(null)
 const intervalRafraichissement = ref(null)
+const stopRealtimeNotifications = ref(() => {})
 const chargementClubs = ref(false)
 const clubsGestion = ref([])
 const paginationClubs = ref(null)
@@ -89,6 +95,12 @@ const evenementSelectionne = ref(null)
 const modeEvenements = ref('liste')
 const envoiEvenement = ref(false)
 const erreursEvenement = ref({})
+const chargementCompositionMatch = ref(false)
+const compositionMatchEvenement = ref(null)
+const chargementFeuilleMatch = ref(false)
+const feuilleMatchEvenement = ref(null)
+const chargementStatistiquesMatch = ref(false)
+const statistiquesMatchEvenement = ref({ resume: {}, joueurs: [] })
 const debounceEvenements = ref(null)
 const debounceAdversairesEvenements = ref(null)
 const rechercheAnnonces = ref('')
@@ -168,10 +180,6 @@ const statsCards = computed(() => [
   {
     label: 'Evenements',
     value: statistiques.value.evenements_a_venir_total || 0,
-  },
-  {
-    label: 'Cotisations',
-    value: statistiques.value.cotisations_en_attente_total || 0,
   },
 ])
 
@@ -1182,14 +1190,74 @@ const changerEquipeEvenement = async () => {
   await chargerEvenementsGestion(1)
 }
 
-const selectionnerEvenement = (evenement) => {
+const chargerCompositionMatchEvenement = async (evenement) => {
+  if (!evenement || evenement.type !== 'match') {
+    compositionMatchEvenement.value = null
+    return
+  }
+
+  chargementCompositionMatch.value = true
+  try {
+    const rep = await authGet(`/president/clubs/${clubEvenementId.value}/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/composition`)
+    compositionMatchEvenement.value = rep?.data?.composition || null
+  } catch (error) {
+    compositionMatchEvenement.value = null
+    notifyError(error?.response?.message || error.message || 'Impossible de charger la composition du match.')
+  } finally {
+    chargementCompositionMatch.value = false
+  }
+}
+
+const chargerFeuilleMatchEvenement = async (evenement) => {
+  if (!evenement || evenement.type !== 'match') {
+    feuilleMatchEvenement.value = null
+    return
+  }
+
+  chargementFeuilleMatch.value = true
+  try {
+    const rep = await authGet(`/president/clubs/${clubEvenementId.value}/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/feuille-match`)
+    feuilleMatchEvenement.value = rep?.data?.feuille_match || null
+  } catch (error) {
+    feuilleMatchEvenement.value = null
+    notifyError(error?.response?.message || error.message || 'Impossible de charger la feuille de match.')
+  } finally {
+    chargementFeuilleMatch.value = false
+  }
+}
+
+const chargerStatistiquesMatchEvenement = async (evenement) => {
+  if (!evenement || evenement.type !== 'match') {
+    statistiquesMatchEvenement.value = { resume: {}, joueurs: [] }
+    return
+  }
+
+  chargementStatistiquesMatch.value = true
+  try {
+    const rep = await authGet(`/president/clubs/${clubEvenementId.value}/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/statistiques`)
+    statistiquesMatchEvenement.value = rep?.data?.statistiques || { resume: {}, joueurs: [] }
+  } catch (error) {
+    statistiquesMatchEvenement.value = { resume: {}, joueurs: [] }
+    notifyError(error?.response?.message || error.message || 'Impossible de charger les statistiques du match.')
+  } finally {
+    chargementStatistiquesMatch.value = false
+  }
+}
+
+const selectionnerEvenement = async (evenement) => {
   evenementSelectionne.value = evenement
   modeEvenements.value = 'detail'
+  await chargerCompositionMatchEvenement(evenement)
+  await chargerFeuilleMatchEvenement(evenement)
+  await chargerStatistiquesMatchEvenement(evenement)
 }
 
 const retourListeEvenements = () => {
   modeEvenements.value = 'liste'
   erreursEvenement.value = {}
+  compositionMatchEvenement.value = null
+  feuilleMatchEvenement.value = null
+  statistiquesMatchEvenement.value = { resume: {}, joueurs: [] }
 }
 
 const ouvrirCreationEvenement = () => {
@@ -1338,6 +1406,87 @@ const repondreInvitationNotification = async (notification, decision) => {
   }
 }
 
+const basculerNotifications = async () => {
+  notificationOuverte.value = !notificationOuverte.value
+
+  if (notificationOuverte.value) {
+    await chargerNotificationsPresident()
+  }
+}
+
+const integrerNotification = (notification) => {
+  if (!notification?.id) {
+    return
+  }
+
+  const indexExistant = notificationsPresident.value.findIndex((item) => String(item.id) === String(notification.id))
+
+  if (indexExistant >= 0) {
+    const copie = [...notificationsPresident.value]
+    copie[indexExistant] = { ...copie[indexExistant], ...notification }
+    notificationsPresident.value = copie
+  } else {
+    notificationsPresident.value = [notification, ...notificationsPresident.value]
+  }
+
+  notificationsNonLuesTotal.value = notificationsPresident.value.filter((item) => !item.est_lue).length
+}
+
+const marquerNotificationPresidentCommeLue = async (notification) => {
+  if (!notification || notification.est_lue) {
+    return
+  }
+
+  try {
+    await authPut(`/president/notifications/${notification.id}/lecture`)
+    notification.est_lue = true
+    notificationsNonLuesTotal.value = Math.max(0, notificationsNonLuesTotal.value - 1)
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible de marquer cette notification comme lue.')
+  }
+}
+
+const marquerToutesNotificationsPresidentCommeLues = async () => {
+  try {
+    await authPut('/president/notifications/lecture/toutes')
+    notificationsPresident.value = notificationsPresident.value.map((notification) => ({
+      ...notification,
+      est_lue: true,
+      date_lecture: notification.date_lecture || new Date().toISOString(),
+    }))
+    notificationsNonLuesTotal.value = 0
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible de marquer toutes les notifications comme lues.')
+  }
+}
+
+const ouvrirNotificationPresident = async (notification) => {
+  await marquerNotificationPresidentCommeLue(notification)
+
+  if (notification?.module_cible === 'messagerie') {
+    moduleActif.value = 'messagerie'
+    return
+  }
+
+  if (notification?.module_cible === 'evenements' && notification?.evenement) {
+    moduleActif.value = 'evenements'
+
+    const clubId = notification.evenement.equipe?.club?.id
+    const equipeId = notification.evenement.equipe?.id
+
+    if (clubId) {
+      clubEvenementId.value = String(clubId)
+      await chargerEquipesEvenementOptions(clubEvenementId.value)
+    }
+
+    if (equipeId) {
+      equipeEvenementId.value = String(equipeId)
+    }
+
+    await chargerEvenementsGestion(1)
+  }
+}
+
 const recupererDashboard = async (silencieux = false) => {
   if (silencieux) {
     chargementRafraichissement.value = true
@@ -1450,6 +1599,11 @@ onMounted(() => {
 
   recupererDashboard()
   chargerNotificationsPresident()
+  if (utilisateurConnecte.value?.id) {
+    stopRealtimeNotifications.value = subscribeToNotifications(utilisateurConnecte.value.id, (notification) => {
+      integrerNotification(notification)
+    })
+  }
   demarrerRafraichissementAuto()
 })
 
@@ -1527,6 +1681,9 @@ onBeforeUnmount(() => {
   if (debounceAdversairesEvenements.value) {
     clearTimeout(debounceAdversairesEvenements.value)
   }
+
+  stopRealtimeNotifications.value?.()
+  disconnectRealtime()
 })
 </script>
 
@@ -1622,82 +1779,19 @@ onBeforeUnmount(() => {
                     <path d="M16.25 9.25a6.25 6.25 0 1 0-1.72 4.31M16.25 9.25V5.5M16.25 9.25H12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </button>
-                <div class="relative">
-                  <button
-                    type="button"
-                    class="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#dbe2ef] bg-white text-[#1f2a44] transition hover:border-[#c7d2ea] hover:bg-[#f8fbff]"
-                    aria-label="Notifications"
-                    title="Notifications"
-                    @click="notificationOuverte = !notificationOuverte"
-                  >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M18.25 9.4c0-3.4-2.45-5.9-6.25-5.9s-6.25 2.5-6.25 5.9v2.56c0 .72-.26 1.42-.72 1.96L4 15.13h16l-1.03-1.21a3 3 0 0 1-.72-1.96V9.4ZM9.75 18.25a2.45 2.45 0 0 0 4.5 0" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <span v-if="notificationsNonLuesTotal" class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-[#ef4444] px-1 text-[9px] font-black text-white">
-                      {{ notificationsNonLuesTotal }}
-                    </span>
-                  </button>
-
-                  <div
-                    v-if="notificationOuverte"
-                    class="absolute right-0 top-10 z-50 w-[340px] overflow-hidden rounded-[24px] border border-[#e6edf8] bg-white text-left shadow-[0_22px_60px_-40px_rgba(15,23,42,0.55)]"
-                  >
-                    <div class="flex items-center justify-between border-b border-[#eef2fb] px-4 py-3">
-                      <div>
-                        <p class="text-sm font-black text-[#111827]">Notifications</p>
-                        <p class="text-[11px] font-semibold text-[#64748b]">{{ notificationsNonLuesTotal }} non lue(s)</p>
-                      </div>
-                      <button type="button" class="rounded-full bg-[#f2f6ff] px-3 py-1 text-[11px] font-black text-[#1f36bf]" @click="chargerNotificationsPresident">
-                        ?
-                      </button>
-                    </div>
-
-                    <div class="max-h-[430px] overflow-y-auto p-3">
-                      <p v-if="chargementNotifications" class="rounded-2xl bg-[#f8fbff] p-4 text-xs font-bold text-[#64748b]">Chargement des notifications...</p>
-                      <p v-else-if="!notificationsRecentes.length" class="rounded-2xl bg-[#f8fbff] p-4 text-xs font-bold text-[#64748b]">Aucune notification pour le moment.</p>
-
-                      <article
-                        v-for="notification in notificationsRecentes"
-                        v-else
-                        :key="notification.id"
-                        class="mb-2 rounded-[20px] border border-[#edf2fb] bg-[#fbfdff] p-3"
-                      >
-                        <div class="flex items-start justify-between gap-3">
-                          <div>
-                            <p class="text-sm font-black text-[#111827]">{{ notification.titre }}</p>
-                            <p class="mt-1 text-xs font-semibold leading-5 text-[#64748b]">{{ notification.contenu }}</p>
-                            <p class="mt-2 text-[11px] font-bold text-[#94a3b8]">{{ formatDateHeure(notification.created_at) }}</p>
-                          </div>
-                          <span
-                            class="rounded-full px-2.5 py-1 text-[10px] font-black"
-                            :class="notification.statut_action === 'en_attente' ? 'bg-[#fff7ed] text-[#f59e0b]' : notification.statut_action === 'accepte' ? 'bg-[#ecfdf5] text-[#16a34a]' : notification.statut_action === 'refuse' ? 'bg-[#fef2f2] text-[#ef4444]' : 'bg-[#eef2ff] text-[#1f36bf]'"
-                          >
-                            {{ notification.statut_action || notification.type_notification }}
-                          </span>
-                        </div>
-
-                        <div v-if="notification.action === 'match_invitation' && notification.statut_action === 'en_attente'" class="mt-3 grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            class="rounded-full bg-[#111827] px-3 py-2 text-[11px] font-black text-white transition hover:bg-[#1f36bf] disabled:opacity-60"
-                            :disabled="actionNotification === `${notification.id}-accepte`"
-                            @click="repondreInvitationNotification(notification, 'accepte')"
-                          >
-                            Accepter
-                          </button>
-                          <button
-                            type="button"
-                            class="rounded-full border border-[#fecaca] bg-white px-3 py-2 text-[11px] font-black text-[#ef4444] transition hover:bg-[#fef2f2] disabled:opacity-60"
-                            :disabled="actionNotification === `${notification.id}-refuse`"
-                            @click="repondreInvitationNotification(notification, 'refuse')"
-                          >
-                            Refuser
-                          </button>
-                        </div>
-                      </article>
-                    </div>
-                  </div>
-                </div>
+                <AppNotificationsDropdown
+                  :open="notificationOuverte"
+                  :loading="chargementNotifications"
+                  :unread-total="notificationsNonLuesTotal"
+                  :notifications="notificationsRecentes"
+                  :action-in-progress="actionNotification"
+                  :formatter="formatDateHeure"
+                  @toggle="basculerNotifications"
+                  @refresh="chargerNotificationsPresident"
+                  @mark-all="marquerToutesNotificationsPresidentCommeLues"
+                  @notification-click="ouvrirNotificationPresident"
+                  @decision="repondreInvitationNotification($event.notification, $event.decision)"
+                />
                 <img
                   v-if="utilisateurResume.image"
                   :src="utilisateurResume.image"
@@ -2775,6 +2869,63 @@ onBeforeUnmount(() => {
                           <p class="mt-1 text-xs font-semibold text-[#64748b]">Suivi administratif de l evenement.</p>
                         </section>
                       </div>
+
+                      <section class="mt-5 rounded-[22px] bg-white p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p class="text-sm font-black text-[#111827]">Disponibilites joueurs</p>
+                            <p class="mt-1 text-xs font-semibold text-[#64748b]">Vue rapide des reponses avant les convocations.</p>
+                          </div>
+                          <span class="rounded-full bg-[#f2f6ff] px-3 py-1 text-[11px] font-black text-[#1f36bf]">
+                            {{ evenementSelectionne.disponibilites?.total_reponses || 0 }} reponse(s)
+                          </span>
+                        </div>
+
+                        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                          <article class="rounded-[20px] border border-[#e6edf8] bg-[#f8fbff] px-4 py-3 text-center">
+                            <p class="text-[11px] font-black uppercase tracking-[0.16em] text-[#7c8aa5]">Presents</p>
+                            <p class="mt-2 text-2xl font-black text-[#16a34a]">{{ evenementSelectionne.disponibilites?.present_total || 0 }}</p>
+                          </article>
+                          <article class="rounded-[20px] border border-[#e6edf8] bg-[#f8fbff] px-4 py-3 text-center">
+                            <p class="text-[11px] font-black uppercase tracking-[0.16em] text-[#7c8aa5]">Absents</p>
+                            <p class="mt-2 text-2xl font-black text-[#ef4444]">{{ evenementSelectionne.disponibilites?.absent_total || 0 }}</p>
+                          </article>
+                          <article class="rounded-[20px] border border-[#e6edf8] bg-[#f8fbff] px-4 py-3 text-center">
+                            <p class="text-[11px] font-black uppercase tracking-[0.16em] text-[#7c8aa5]">Incertains</p>
+                            <p class="mt-2 text-2xl font-black text-[#f59e0b]">{{ evenementSelectionne.disponibilites?.incertain_total || 0 }}</p>
+                          </article>
+                          <article class="rounded-[20px] border border-[#e6edf8] bg-[#f8fbff] px-4 py-3 text-center">
+                            <p class="text-[11px] font-black uppercase tracking-[0.16em] text-[#7c8aa5]">Sans reponse</p>
+                            <p class="mt-2 text-2xl font-black text-[#1f36bf]">
+                              {{ Math.max(0, (equipeSelectionnee?.joueurs?.length || 0) - (evenementSelectionne.disponibilites?.total_reponses || 0)) }}
+                            </p>
+                          </article>
+                        </div>
+                      </section>
+
+                      <MatchCompositionSection
+                        v-if="evenementSelectionne.type === 'match'"
+                        :composition="compositionMatchEvenement"
+                        :chargement="chargementCompositionMatch"
+                        titre="Composition du match"
+                        description="Lecture seule de la composition preparee pour cette rencontre."
+                      />
+
+                      <MatchSheetSection
+                        v-if="evenementSelectionne.type === 'match'"
+                        :feuille-match="feuilleMatchEvenement"
+                        :chargement="chargementFeuilleMatch"
+                        titre="Feuille de match"
+                        description="Lecture seule du score et du resume de la rencontre."
+                      />
+
+                      <MatchStatisticsSection
+                        v-if="evenementSelectionne.type === 'match'"
+                        :statistiques="statistiquesMatchEvenement"
+                        :chargement="chargementStatistiquesMatch"
+                        titre="Statistiques du match"
+                        description="Lecture seule des statistiques individuelles de la rencontre."
+                      />
 
                       <section class="mt-5 rounded-[22px] bg-white p-4">
                         <p class="text-sm font-black text-[#111827]">Description</p>
