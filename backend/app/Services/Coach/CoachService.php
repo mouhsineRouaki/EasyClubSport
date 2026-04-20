@@ -10,7 +10,11 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\User;
 use App\Repositories\Coach\CoachRepository;
+use App\Support\CompositionMatchPresenter;
+use App\Support\FeuilleMatchPresenter;
+use App\Support\StatistiqueMatchPresenter;
 use App\Services\Evenement\MatchInvitationService;
+use App\Services\Notification\NotificationService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -20,7 +24,8 @@ class CoachService
 {
     public function __construct(
         protected CoachRepository $coachRepository,
-        protected MatchInvitationService $matchInvitationService
+        protected MatchInvitationService $matchInvitationService,
+        protected NotificationService $notificationService
     ) {
     }
 
@@ -65,6 +70,166 @@ class CoachService
         $this->verifierEquipeCoach($utilisateur, $equipe);
 
         return $this->coachRepository->listerEvenementsEquipe($equipe);
+    }
+
+    public function listerDisponibilitesEvenement(User $utilisateur, Equipe $equipe, Evenement $evenement)
+    {
+        $this->verifierEquipeCoach($utilisateur, $equipe);
+
+        if ((int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
+        }
+
+        return $this->coachRepository->listerDisponibilitesEvenement($equipe, $evenement);
+    }
+
+    public function recupererCompositionMatch(User $utilisateur, Equipe $equipe, Evenement $evenement): array
+    {
+        $this->verifierEquipeCoach($utilisateur, $equipe);
+
+        if ((int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
+        }
+
+        $evenement = $this->coachRepository->recupererEvenementAvecComposition($evenement);
+
+        return CompositionMatchPresenter::depuisEvenement($evenement) ?? [];
+    }
+
+    public function enregistrerCompositionMatch(User $utilisateur, Equipe $equipe, Evenement $evenement, array $donnees): array
+    {
+        $this->verifierEquipeCoach($utilisateur, $equipe);
+
+        if ((int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
+        }
+
+        if ($evenement->type !== 'match') {
+            throw ValidationException::withMessages([
+                'evenement' => 'La composition est disponible uniquement pour les matchs.',
+            ]);
+        }
+
+        $joueursIds = $this->coachRepository->listerJoueursEquipe($equipe)
+            ->pluck('utilisateur_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $titulaires = collect($donnees['titulaires'] ?? []);
+        $remplacants = collect($donnees['remplacants'] ?? []);
+
+        $joueursSelectionnes = $titulaires
+            ->pluck('utilisateur_id')
+            ->concat($remplacants->pluck('utilisateur_id'))
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        foreach ($joueursSelectionnes as $utilisateurId) {
+            if (! in_array($utilisateurId, $joueursIds, true)) {
+                throw ValidationException::withMessages([
+                    'composition' => 'Tous les joueurs de la composition doivent appartenir a cette equipe.',
+                ]);
+            }
+        }
+
+        if ($joueursSelectionnes->count() !== $joueursSelectionnes->unique()->count()) {
+            throw ValidationException::withMessages([
+                'composition' => 'Un joueur ne peut apparaitre qu une seule fois dans la composition.',
+            ]);
+        }
+
+        $evenement = $this->coachRepository->enregistrerCompositionMatch($evenement, $donnees);
+
+        return CompositionMatchPresenter::depuisEvenement($evenement) ?? [];
+    }
+
+    public function recupererFeuilleMatch(User $utilisateur, Equipe $equipe, Evenement $evenement): ?array
+    {
+        $this->verifierEquipeCoach($utilisateur, $equipe);
+
+        if ((int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
+        }
+
+        if ($evenement->type !== 'match') {
+            throw ValidationException::withMessages([
+                'evenement' => 'La feuille de match est disponible uniquement pour les matchs.',
+            ]);
+        }
+
+        $evenement = $this->coachRepository->recupererEvenementAvecFeuilleMatch($evenement);
+
+        return FeuilleMatchPresenter::depuisEvenement($evenement);
+    }
+
+    public function enregistrerFeuilleMatch(User $utilisateur, Equipe $equipe, Evenement $evenement, array $donnees): ?array
+    {
+        $this->verifierEquipeCoach($utilisateur, $equipe);
+
+        if ((int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
+        }
+
+        if ($evenement->type !== 'match') {
+            throw ValidationException::withMessages([
+                'evenement' => 'La feuille de match est disponible uniquement pour les matchs.',
+            ]);
+        }
+
+        $evenement = $this->coachRepository->enregistrerFeuilleMatch($evenement, $donnees);
+
+        return FeuilleMatchPresenter::depuisEvenement($evenement);
+    }
+
+    public function recupererStatistiquesMatch(User $utilisateur, Equipe $equipe, Evenement $evenement): array
+    {
+        $this->verifierEquipeCoach($utilisateur, $equipe);
+
+        if ((int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
+        }
+
+        if ($evenement->type !== 'match') {
+            throw ValidationException::withMessages([
+                'evenement' => 'Les statistiques sont disponibles uniquement pour les matchs.',
+            ]);
+        }
+
+        $evenement = $this->coachRepository->recupererEvenementAvecStatistiques($evenement);
+
+        return StatistiqueMatchPresenter::depuisEvenement($evenement);
+    }
+
+    public function enregistrerStatistiquesMatch(User $utilisateur, Equipe $equipe, Evenement $evenement, array $donnees): array
+    {
+        $this->verifierEquipeCoach($utilisateur, $equipe);
+
+        if ((int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
+        }
+
+        if ($evenement->type !== 'match') {
+            throw ValidationException::withMessages([
+                'evenement' => 'Les statistiques sont disponibles uniquement pour les matchs.',
+            ]);
+        }
+
+        $joueursIds = $this->coachRepository->listerJoueursEquipe($equipe)
+            ->pluck('utilisateur_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        foreach (($donnees['joueurs'] ?? []) as $ligne) {
+            if (! in_array((int) $ligne['utilisateur_id'], $joueursIds, true)) {
+                throw ValidationException::withMessages([
+                    'joueurs' => 'Tous les joueurs statistiques doivent appartenir a cette equipe.',
+                ]);
+            }
+        }
+
+        $evenement = $this->coachRepository->enregistrerStatistiquesMatch($evenement, $donnees);
+
+        return StatistiqueMatchPresenter::depuisEvenement($evenement);
     }
 
     public function creerEvenement(User $utilisateur, Equipe $equipe, array $donnees): Evenement
@@ -176,9 +341,13 @@ class CoachService
 
         $statut = $donnees['statut'] ?? 'convoque';
 
-        return collect($donnees['utilisateur_ids'])
+        $convocations = collect($donnees['utilisateur_ids'])
             ->map(fn ($utilisateurId) => $this->coachRepository->creerOuMettreAJourConvocation($evenement, (int) $utilisateurId, $statut))
             ->values();
+
+        $this->notificationService->notifierConvocationsCrees($evenement, $convocations);
+
+        return $convocations;
     }
 
     public function modifierConvocation(User $utilisateur, Convocation $convocation, array $donnees): Convocation
@@ -206,7 +375,10 @@ class CoachService
     {
         $this->verifierCanalCoach($utilisateur, $canal);
 
-        return $this->coachRepository->creerMessage($utilisateur, $canal, $donnees);
+        $message = $this->coachRepository->creerMessage($utilisateur, $canal, $donnees);
+        $this->notificationService->notifierNouveauMessage($message);
+
+        return $message;
     }
 
     public function modifierMessage(User $utilisateur, Message $message, array $donnees): Message
@@ -237,7 +409,7 @@ class CoachService
 
     public function listerNotifications(User $utilisateur)
     {
-        return $this->coachRepository->listerNotifications($utilisateur);
+        return $this->notificationService->listerPourUtilisateur($utilisateur);
     }
 
     public function marquerNotificationCommeLue(User $utilisateur, Notification $notification): Notification
@@ -246,12 +418,12 @@ class CoachService
             throw new AuthorizationException('Cette notification ne vous appartient pas.');
         }
 
-        return $this->coachRepository->marquerNotificationCommeLue($notification);
+        return $this->notificationService->marquerCommeLue($notification);
     }
 
     public function marquerToutesNotificationsCommeLues(User $utilisateur): int
     {
-        return $this->coachRepository->marquerToutesNotificationsCommeLues($utilisateur);
+        return $this->notificationService->marquerToutesCommeLues($utilisateur);
     }
 
     public function recupererDashboard(User $utilisateur): array
