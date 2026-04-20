@@ -54,3 +54,7 @@ Broadcast::channel('canal.{canalId}.messages', function (User $utilisateur, int 
 
     return false;
 });
+
+Broadcast::channel('user.{userId}.notifications', function (User $utilisateur, int $userId) {
+    return (int) $utilisateur->id === (int) $userId;
+});
