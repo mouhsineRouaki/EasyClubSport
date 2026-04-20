@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import blueBackground from '../../assets/Background.jpg'
+import AppModuleHeader from '../common/AppModuleHeader.vue'
 
 const props = defineProps({
   convocations: { type: Array, default: () => [] },
@@ -87,23 +88,25 @@ const repondrePuisFermer = (reponse) => {
 
 <template>
   <section class="mt-6">
-    <div class="mx-auto max-w-3xl text-center">
-      <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-[#4c6fff]">Mon espace joueur</p>
-      <h3 class="text-3xl font-black tracking-normal text-[#111827] sm:text-4xl">Convocations</h3>
+    <AppModuleHeader
+      badge="Mon espace joueur"
+      titre="Convocations"
+      :description="equipe ? '' : 'Consultez vos convocations et repondez rapidement a votre coach.'"
+    >
       <p v-if="equipe" class="mx-auto mt-1 max-w-2xl text-sm leading-6 text-[#6b7280]">
         Les convocations liees a <span class="font-black text-[#111827]">{{ equipe.nom }}</span>
       </p>
-    </div>
 
-    <div class="mx-auto mt-4 max-w-3xl rounded-[24px] border border-[#e6edf8] bg-[#f8fbff] p-2">
-      <input
-        :value="recherche"
-        type="text"
-        placeholder="Rechercher une convocation..."
-        class="h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold text-[#1f2a44] outline-none placeholder:text-[#94a3b8] focus:border-[#4c6fff]"
-        @input="emit('update:recherche', $event.target.value)"
-      />
-    </div>
+      <div class="mx-auto mt-4 max-w-3xl rounded-[24px] border border-[#e6edf8] bg-[#f8fbff] p-2">
+        <input
+          :value="recherche"
+          type="text"
+          placeholder="Rechercher une convocation..."
+          class="h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold text-[#1f2a44] outline-none placeholder:text-[#94a3b8] focus:border-[#4c6fff]"
+          @input="emit('update:recherche', $event.target.value)"
+        />
+      </div>
+    </AppModuleHeader>
 
     <div v-if="chargement" class="mt-6 grid gap-4 lg:grid-cols-2">
       <div
@@ -117,7 +120,7 @@ const repondrePuisFermer = (reponse) => {
       <article
         v-for="convocation in convocationsFiltrees"
         :key="convocation.id"
-        class="group overflow-hidden rounded-[28px] border border-[#e6edf8] bg-white transition hover:border-[#d3dcf0] hover:shadow-[0_18px_45px_rgba(36,70,216,0.08)]"
+        class="group relative overflow-hidden rounded-[26px] border border-[#edf1f7] bg-white p-4 transition duration-300 hover:-translate-y-1 hover:border-[#d7e0f5] hover:bg-[#fbfcff]"
       >
         <button
           type="button"
@@ -125,10 +128,10 @@ const repondrePuisFermer = (reponse) => {
           @click="ouvrirDetails(convocation)"
         >
           <div
-            class="relative min-h-[210px] bg-cover bg-center p-5 text-white"
+            class="relative min-h-[190px] overflow-hidden rounded-[20px] bg-cover bg-center p-5 text-white"
             :style="{ backgroundImage: styleImage(convocation) }"
           >
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.25),transparent_26%),linear-gradient(180deg,rgba(7,16,58,0.08),rgba(7,16,58,0.82))]"></div>
+            <div class="absolute inset-0 rounded-[20px] bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.25),transparent_26%),linear-gradient(180deg,rgba(7,16,58,0.08),rgba(7,16,58,0.82))]"></div>
 
             <div class="relative z-10 flex h-full min-h-[170px] flex-col justify-between">
               <div class="flex items-start justify-between gap-3">
@@ -164,7 +167,19 @@ const repondrePuisFermer = (reponse) => {
           </div>
         </button>
 
-        <div class="flex items-center gap-3 p-4">
+        <div class="mt-4 rounded-[22px] bg-[#f5f7fb] p-3">
+          <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div class="min-w-0 text-center">
+              <p class="truncate text-xs font-black text-[#111827]">{{ nomEquipeDomicile(convocation) }}</p>
+            </div>
+            <span class="rounded-full bg-[#111827] px-2.5 py-1 text-[9px] font-black text-white">VS</span>
+            <div class="min-w-0 text-center">
+              <p class="truncate text-xs font-black text-[#111827]">{{ nomEquipeAdverse(convocation) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center gap-3">
           <button
             v-if="peutRepondre(convocation.statut)"
             type="button"
@@ -190,6 +205,8 @@ const repondrePuisFermer = (reponse) => {
             Voir les details
           </button>
         </div>
+
+        <div class="pointer-events-none absolute -bottom-10 -right-10 h-28 w-28 rounded-full bg-[#2446d8]/8 transition duration-300 group-hover:scale-125 group-hover:bg-[#2446d8]/12"></div>
       </article>
     </div>
 
