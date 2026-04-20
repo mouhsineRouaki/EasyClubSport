@@ -96,6 +96,69 @@ class JoueurController extends Controller
         );
     }
 
+    public function compositionMatch(Evenement $evenement): JsonResponse
+    {
+        try {
+            $composition = $this->joueurService->recupererCompositionMatch(request()->user(), $evenement);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Composition du match recuperee avec succes.',
+                'data' => [
+                    'composition' => $composition,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ], 403);
+        }
+    }
+
+    public function feuilleMatch(Evenement $evenement): JsonResponse
+    {
+        try {
+            $feuilleMatch = $this->joueurService->recupererFeuilleMatch(request()->user(), $evenement);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Feuille de match recuperee avec succes.',
+                'data' => [
+                    'feuille_match' => $feuilleMatch,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ], 403);
+        }
+    }
+
+    public function statistiquesMatch(Evenement $evenement): JsonResponse
+    {
+        try {
+            $statistiques = $this->joueurService->recupererStatistiquesMatchEvenement(request()->user(), $evenement);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Statistiques du match recuperees avec succes.',
+                'data' => [
+                    'statistiques' => $statistiques,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ], 403);
+        }
+    }
+
     public function repondreDisponibilite(RepondreDisponibiliteRequest $request, Evenement $evenement): JsonResponse
     {
         try {
