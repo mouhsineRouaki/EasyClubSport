@@ -7,6 +7,9 @@ use App\Models\Evenement;
 use App\Models\User;
 use App\Repositories\President\Evenement\EvenementRepository;
 use App\Services\Evenement\MatchInvitationService;
+use App\Support\CompositionMatchPresenter;
+use App\Support\FeuilleMatchPresenter;
+use App\Support\StatistiqueMatchPresenter;
 
 class EvenementService
 {
@@ -67,6 +70,27 @@ class EvenementService
         $this->evenementRepository->supprimer($evenement);
     }
 
+    public function recupererCompositionMatch(Evenement $evenement): array
+    {
+        $evenement = $this->evenementRepository->recupererAvecComposition($evenement);
+
+        return CompositionMatchPresenter::depuisEvenement($evenement) ?? [];
+    }
+
+    public function recupererFeuilleMatch(Evenement $evenement): ?array
+    {
+        $evenement = $this->evenementRepository->recupererAvecFeuilleMatch($evenement);
+
+        return FeuilleMatchPresenter::depuisEvenement($evenement);
+    }
+
+    public function recupererStatistiquesMatch(Evenement $evenement): array
+    {
+        $evenement = $this->evenementRepository->recupererAvecStatistiques($evenement);
+
+        return StatistiqueMatchPresenter::depuisEvenement($evenement);
+    }
+
     protected function synchroniserAdversaire(array $donnees, ?Evenement $evenement = null): array
     {
         $type = $donnees['type'] ?? $evenement?->type;
@@ -124,4 +148,3 @@ class EvenementService
         return $ancienType !== 'match' || (int) $nouvelAdversaireEquipeId !== (int) $ancienAdversaireEquipeId;
     }
 }
-
