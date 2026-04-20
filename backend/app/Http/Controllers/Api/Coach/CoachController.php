@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\Coach;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Coach\CreerConvocationCoachRequest;
 use App\Http\Requests\Coach\CreerEvenementCoachRequest;
+use App\Http\Requests\Coach\EnregistrerCompositionMatchCoachRequest;
+use App\Http\Requests\Coach\EnregistrerFeuilleMatchCoachRequest;
+use App\Http\Requests\Coach\EnregistrerStatistiquesMatchCoachRequest;
 use App\Http\Requests\Coach\EnvoyerMessageCoachRequest;
 use App\Http\Requests\Coach\ModifierConvocationCoachRequest;
 use App\Http\Requests\Coach\ModifierEvenementCoachRequest;
@@ -92,6 +95,152 @@ class CoachController extends Controller
             );
         } catch (AuthorizationException $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        }
+    }
+
+    public function disponibilitesEvenement(Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        try {
+            $disponibilites = $this->coachService->listerDisponibilitesEvenement(request()->user(), $equipe, $evenement);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Disponibilites recuperees avec succes.',
+                'data' => [
+                    'disponibilites' => $disponibilites,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        }
+    }
+
+    public function compositionMatch(Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        try {
+            $composition = $this->coachService->recupererCompositionMatch(request()->user(), $equipe, $evenement);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Composition du match recuperee avec succes.',
+                'data' => [
+                    'composition' => $composition,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
+        }
+    }
+
+    public function enregistrerCompositionMatch(EnregistrerCompositionMatchCoachRequest $request, Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        try {
+            $composition = $this->coachService->enregistrerCompositionMatch(
+                $request->user(),
+                $equipe,
+                $evenement,
+                $request->validated()
+            );
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Composition du match enregistree avec succes.',
+                'data' => [
+                    'composition' => $composition,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
+        }
+    }
+
+    public function feuilleMatch(Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        try {
+            $feuilleMatch = $this->coachService->recupererFeuilleMatch(request()->user(), $equipe, $evenement);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Feuille de match recuperee avec succes.',
+                'data' => [
+                    'feuille_match' => $feuilleMatch,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
+        }
+    }
+
+    public function enregistrerFeuilleMatch(EnregistrerFeuilleMatchCoachRequest $request, Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        try {
+            $feuilleMatch = $this->coachService->enregistrerFeuilleMatch(
+                $request->user(),
+                $equipe,
+                $evenement,
+                $request->validated()
+            );
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Feuille de match enregistree avec succes.',
+                'data' => [
+                    'feuille_match' => $feuilleMatch,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
+        }
+    }
+
+    public function statistiquesMatch(Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        try {
+            $statistiques = $this->coachService->recupererStatistiquesMatch(request()->user(), $equipe, $evenement);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Statistiques du match recuperees avec succes.',
+                'data' => [
+                    'statistiques' => $statistiques,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
+        }
+    }
+
+    public function enregistrerStatistiquesMatch(EnregistrerStatistiquesMatchCoachRequest $request, Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        try {
+            $statistiques = $this->coachService->enregistrerStatistiquesMatch(
+                $request->user(),
+                $equipe,
+                $evenement,
+                $request->validated()
+            );
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Statistiques du match enregistrees avec succes.',
+                'data' => [
+                    'statistiques' => $statistiques,
+                ],
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage(), 'data' => null], 403);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Erreur de validation.', 'data' => $e->errors()], 422);
         }
     }
 
