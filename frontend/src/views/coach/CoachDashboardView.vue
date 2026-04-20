@@ -5,12 +5,14 @@ import blueBackground from '../../assets/Background.jpg'
 import logoMark from '../../assets/logo-easyclubsport-mark.svg'
 import { authGet, authPost, authPut, authDelete } from '../../services/api'
 import { notifyError, notifySuccess } from '../../stores/toast'
-import { subscribeToCanalMessages, disconnectRealtime } from '../../services/realtime'
+import { subscribeToCanalMessages, subscribeToNotifications, disconnectRealtime } from '../../services/realtime'
+import AppNotificationsDropdown from '../../components/common/AppNotificationsDropdown.vue'
 
 import CoachDashboardHome from '../../components/coach/CoachDashboardHome.vue'
 import CoachEquipes from '../../components/coach/CoachEquipes.vue'
 import CoachJoueurs from '../../components/coach/CoachJoueurs.vue'
 import CoachEvenements from '../../components/coach/CoachEvenements.vue'
+import CoachDisponibilites from '../../components/coach/CoachDisponibilites.vue'
 import CoachConvocations from '../../components/coach/CoachConvocations.vue'
 import CoachMessagerie from '../../components/coach/CoachMessagerie.vue'
 
@@ -30,6 +32,7 @@ const actionNotification = ref('')
 const rafraichissementAuto = ref(true)
 const derniereMiseAJour = ref(null)
 const intervalRafraichissement = ref(null)
+const stopRealtimeNotifications = ref(() => {})
 
 // ─── équipes ───────────────────────────────────────────────────────────────────
 const chargementEquipes = ref(false)
@@ -50,12 +53,29 @@ const evenementsEquipe = ref([])
 const equipeEvenementId = ref('')
 const rechercheEvenements = ref('')
 const debounceEvenements = ref(null)
+const chargementCompositionMatch = ref(false)
+const enregistrementCompositionMatch = ref(false)
+const compositionMatchEvenement = ref(null)
+const chargementFeuilleMatch = ref(false)
+const enregistrementFeuilleMatch = ref(false)
+const feuilleMatchEvenement = ref(null)
+const chargementStatistiquesMatch = ref(false)
+const enregistrementStatistiquesMatch = ref(false)
+const statistiquesMatchEvenement = ref({ resume: {}, joueurs: [] })
 
 // ─── convocations ──────────────────────────────────────────────────────────────
 const chargementConvocations = ref(false)
 const convocationsEquipe = ref([])
 const equipeConvocationId = ref('')
+const evenementConvocationId = ref('')
 const rechercheConvocations = ref('')
+
+// disponibilites
+const chargementDisponibilites = ref(false)
+const disponibilitesEvenement = ref([])
+const equipeDisponibiliteId = ref('')
+const evenementDisponibiliteId = ref('')
+const rechercheDisponibilites = ref('')
 
 // ─── messagerie ────────────────────────────────────────────────────────────────
 const chargementCanaux = ref(false)
@@ -88,6 +108,7 @@ const liensFonctionnalites = [
   { key: 'equipes', label: 'Equipes' },
   { key: 'joueurs', label: 'Joueurs' },
   { key: 'evenements', label: 'Evenements' },
+  { key: 'disponibilites', label: 'Disponibilites' },
   { key: 'convocations', label: 'Convocations' },
   { key: 'messagerie', label: 'Messagerie' },
 ]
@@ -112,6 +133,7 @@ const rechercheNavigation = computed({
     if (moduleActif.value === 'equipes') return rechercheEquipes.value
     if (moduleActif.value === 'joueurs') return rechercheJoueurs.value
     if (moduleActif.value === 'evenements') return rechercheEvenements.value
+    if (moduleActif.value === 'disponibilites') return rechercheDisponibilites.value
     if (moduleActif.value === 'convocations') return rechercheConvocations.value
     if (moduleActif.value === 'messagerie') return rechercheMessagerie.value
     return ''
@@ -120,6 +142,7 @@ const rechercheNavigation = computed({
     if (moduleActif.value === 'equipes') { rechercheEquipes.value = value; return }
     if (moduleActif.value === 'joueurs') { rechercheJoueurs.value = value; return }
     if (moduleActif.value === 'evenements') { rechercheEvenements.value = value; return }
+    if (moduleActif.value === 'disponibilites') { rechercheDisponibilites.value = value; return }
     if (moduleActif.value === 'convocations') { rechercheConvocations.value = value; return }
     if (moduleActif.value === 'messagerie') { rechercheMessagerie.value = value }
   },
@@ -191,6 +214,7 @@ const afficherModule = async (key) => {
   if (key === 'equipes') await chargerEquipes()
   if (key === 'joueurs') await initialiserJoueurs()
   if (key === 'evenements') await initialiserEvenements()
+  if (key === 'disponibilites') await initialiserDisponibilites()
   if (key === 'convocations') await initialiserConvocations()
   if (key === 'messagerie') await chargerCanaux()
 }
@@ -202,6 +226,7 @@ const actualiserModuleActif = async () => {
     else if (moduleActif.value === 'equipes') await chargerEquipes()
     else if (moduleActif.value === 'joueurs') await chargerJoueurs()
     else if (moduleActif.value === 'evenements') await chargerEvenements()
+    else if (moduleActif.value === 'disponibilites') await chargerDisponibilites()
     else if (moduleActif.value === 'convocations') await chargerConvocations()
     else if (moduleActif.value === 'messagerie') await chargerCanaux()
     derniereMiseAJour.value = new Date().toISOString()
@@ -224,6 +249,7 @@ const chargerDashboard = async () => {
     if (equipeDashboardId) {
       equipeJoueurId.value = equipeDashboardId
       equipeEvenementId.value = equipeDashboardId
+      equipeDisponibiliteId.value = equipeDashboardId
       equipeConvocationId.value = equipeDashboardId
     }
     derniereMiseAJour.value = new Date().toISOString()
@@ -277,6 +303,73 @@ const repondreInvitation = async (notification, reponse) => {
   }
 }
 
+const basculerNotifications = async () => {
+  notificationOuverte.value = !notificationOuverte.value
+
+  if (notificationOuverte.value) {
+    await chargerNotifications()
+  }
+}
+
+const integrerNotification = (notification) => {
+  if (!notification?.id) return
+
+  const indexExistant = notificationsCoach.value.findIndex((item) => String(item.id) === String(notification.id))
+  if (indexExistant >= 0) {
+    const copie = [...notificationsCoach.value]
+    copie[indexExistant] = { ...copie[indexExistant], ...notification }
+    notificationsCoach.value = copie
+  } else {
+    notificationsCoach.value = [notification, ...notificationsCoach.value]
+  }
+
+  notificationsNonLuesTotal.value = notificationsCoach.value.filter((item) => !item.est_lue).length
+}
+
+const marquerToutesNotificationsCommeLues = async () => {
+  try {
+    await authPut('/coach/notifications/lecture/toutes')
+    notificationsCoach.value = notificationsCoach.value.map((notification) => ({
+      ...notification,
+      est_lue: true,
+      date_lecture: notification.date_lecture || new Date().toISOString(),
+    }))
+    notificationsNonLuesTotal.value = 0
+  } catch {
+    // silencieux
+  }
+}
+
+const ouvrirNotificationCoach = async (notification) => {
+  await marquerNotificationLue(notification)
+
+  if (notification?.module_cible === 'messagerie') {
+    moduleActif.value = 'messagerie'
+    await chargerCanaux()
+    if (notification.canal_id) {
+      const canal = canaux.value.find((item) => String(item.id) === String(notification.canal_id))
+      if (canal) {
+        await selectionnerCanal(canal)
+      }
+    }
+    return
+  }
+
+  if (notification?.module_cible === 'convocations') {
+    moduleActif.value = 'convocations'
+    await initialiserConvocations()
+    return
+  }
+
+  if (notification?.module_cible === 'evenements') {
+    moduleActif.value = 'evenements'
+    if (notification?.evenement?.equipe?.id) {
+      equipeEvenementId.value = String(notification.evenement.equipe.id)
+    }
+    await initialiserEvenements()
+  }
+}
+
 // ─── equipes ────────────────────────────────────────────────────────────────────
 const chargerEquipes = async () => {
   chargementEquipes.value = true
@@ -285,6 +378,7 @@ const chargerEquipes = async () => {
     equipesCoach.value = rep?.data?.equipes || []
     if (!equipeJoueurId.value && equipesCoach.value.length) equipeJoueurId.value = String(equipesCoach.value[0].id)
     if (!equipeEvenementId.value && equipesCoach.value.length) equipeEvenementId.value = String(equipesCoach.value[0].id)
+    if (!equipeDisponibiliteId.value && equipesCoach.value.length) equipeDisponibiliteId.value = String(equipesCoach.value[0].id)
     if (!equipeConvocationId.value && equipesCoach.value.length) equipeConvocationId.value = String(equipesCoach.value[0].id)
   } catch (error) {
     notifyError(error?.response?.message || error.message || 'Impossible de charger les equipes.')
@@ -329,6 +423,150 @@ const chargerEvenements = async () => {
 const initialiserEvenements = async () => {
   if (!equipesCoach.value.length) await chargerEquipes()
   if (equipeEvenementId.value) await chargerEvenements()
+}
+
+const ouvrirDetailEvenement = async (evenement) => {
+  if (!evenement) return
+  equipeDisponibiliteId.value = String(equipeEvenementId.value || evenement.equipe?.id || '')
+  evenementDisponibiliteId.value = String(evenement.id)
+  await chargerDisponibilites()
+  await chargerCompositionMatch(evenement)
+  await chargerFeuilleMatch(evenement)
+  await chargerStatistiquesMatch(evenement)
+}
+
+const chargerCompositionMatch = async (evenement) => {
+  if (!evenement || evenement.type !== 'match') {
+    compositionMatchEvenement.value = null
+    return
+  }
+
+  chargementCompositionMatch.value = true
+  try {
+    const rep = await authGet(`/coach/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/composition`)
+    compositionMatchEvenement.value = rep?.data?.composition || null
+  } catch (error) {
+    compositionMatchEvenement.value = null
+    notifyError(error?.response?.message || error.message || 'Impossible de charger la composition du match.')
+  } finally {
+    chargementCompositionMatch.value = false
+  }
+}
+
+const enregistrerCompositionMatch = async ({ evenement, payload }) => {
+  enregistrementCompositionMatch.value = true
+  try {
+    const rep = await authPut(`/coach/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/composition`, payload)
+    compositionMatchEvenement.value = rep?.data?.composition || null
+    notifySuccess(rep?.message || 'Composition du match enregistree.')
+    await chargerEvenements()
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible d enregistrer la composition du match.')
+  } finally {
+    enregistrementCompositionMatch.value = false
+  }
+}
+
+const chargerFeuilleMatch = async (evenement) => {
+  if (!evenement || evenement.type !== 'match') {
+    feuilleMatchEvenement.value = null
+    return
+  }
+
+  chargementFeuilleMatch.value = true
+  try {
+    const rep = await authGet(`/coach/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/feuille-match`)
+    feuilleMatchEvenement.value = rep?.data?.feuille_match || null
+  } catch (error) {
+    feuilleMatchEvenement.value = null
+    notifyError(error?.response?.message || error.message || 'Impossible de charger la feuille de match.')
+  } finally {
+    chargementFeuilleMatch.value = false
+  }
+}
+
+const enregistrerFeuilleMatch = async ({ evenement, payload }) => {
+  enregistrementFeuilleMatch.value = true
+  try {
+    const rep = await authPut(`/coach/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/feuille-match`, payload)
+    feuilleMatchEvenement.value = rep?.data?.feuille_match || null
+    notifySuccess(rep?.message || 'Feuille de match enregistree.')
+    await chargerEvenements()
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible d enregistrer la feuille de match.')
+  } finally {
+    enregistrementFeuilleMatch.value = false
+  }
+}
+
+const chargerStatistiquesMatch = async (evenement) => {
+  if (!evenement || evenement.type !== 'match') {
+    statistiquesMatchEvenement.value = { resume: {}, joueurs: [] }
+    return
+  }
+
+  chargementStatistiquesMatch.value = true
+  try {
+    const rep = await authGet(`/coach/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/statistiques-match`)
+    statistiquesMatchEvenement.value = rep?.data?.statistiques || { resume: {}, joueurs: [] }
+  } catch (error) {
+    statistiquesMatchEvenement.value = { resume: {}, joueurs: [] }
+    notifyError(error?.response?.message || error.message || 'Impossible de charger les statistiques du match.')
+  } finally {
+    chargementStatistiquesMatch.value = false
+  }
+}
+
+const enregistrerStatistiquesMatch = async ({ evenement, payload }) => {
+  enregistrementStatistiquesMatch.value = true
+  try {
+    const rep = await authPut(`/coach/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/statistiques-match`, payload)
+    statistiquesMatchEvenement.value = rep?.data?.statistiques || { resume: {}, joueurs: [] }
+    notifySuccess(rep?.message || 'Statistiques du match enregistrees.')
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible d enregistrer les statistiques du match.')
+  } finally {
+    enregistrementStatistiquesMatch.value = false
+  }
+}
+
+const chargerDisponibilites = async () => {
+  if (!equipeDisponibiliteId.value) return
+  if (!evenementDisponibiliteId.value) {
+    disponibilitesEvenement.value = []
+    return
+  }
+
+  chargementDisponibilites.value = true
+  try {
+    const rep = await authGet(`/coach/equipes/${equipeDisponibiliteId.value}/evenements/${evenementDisponibiliteId.value}/disponibilites`)
+    disponibilitesEvenement.value = rep?.data?.disponibilites || []
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible de charger les disponibilites.')
+  } finally {
+    chargementDisponibilites.value = false
+  }
+}
+
+const initialiserDisponibilites = async () => {
+  if (!equipesCoach.value.length) await chargerEquipes()
+
+  if (!equipeDisponibiliteId.value && equipesCoach.value.length) {
+    equipeDisponibiliteId.value = String(equipesCoach.value[0].id)
+  }
+
+  if (!evenementsEquipe.value.length || String(equipeEvenementId.value) !== String(equipeDisponibiliteId.value)) {
+    equipeEvenementId.value = equipeDisponibiliteId.value
+    await chargerEvenements()
+  }
+
+  if (!evenementDisponibiliteId.value && evenementsEquipe.value.length) {
+    evenementDisponibiliteId.value = String(evenementsEquipe.value[0].id)
+  }
+
+  if (evenementDisponibiliteId.value) {
+    await chargerDisponibilites()
+  }
 }
 
 const creerEvenement = async ({ payload, onErreur }) => {
@@ -384,7 +622,29 @@ const chargerConvocations = async () => {
 
 const initialiserConvocations = async () => {
   if (!equipesCoach.value.length) await chargerEquipes()
-  if (equipeConvocationId.value) await chargerConvocations()
+
+  if (!equipeConvocationId.value && equipesCoach.value.length) {
+    equipeConvocationId.value = String(equipesCoach.value[0].id)
+  }
+
+  if (!equipeConvocationId.value) {
+    convocationsEquipe.value = []
+    evenementConvocationId.value = ''
+    return
+  }
+
+  if (String(equipeEvenementId.value) !== String(equipeConvocationId.value)) {
+    equipeEvenementId.value = equipeConvocationId.value
+    await chargerEvenements()
+  } else if (!evenementsEquipe.value.length) {
+    await chargerEvenements()
+  }
+
+  if (!evenementsEquipe.value.some((evenement) => String(evenement.id) === String(evenementConvocationId.value))) {
+    evenementConvocationId.value = evenementsEquipe.value[0] ? String(evenementsEquipe.value[0].id) : ''
+  }
+
+  await chargerConvocations()
 }
 
 const modifierStatutConvocation = async ({ convocation, statut }) => {
@@ -394,6 +654,24 @@ const modifierStatutConvocation = async ({ convocation, statut }) => {
     notifySuccess('Convocation mise a jour.')
   } catch (error) {
     notifyError(error?.response?.message || error.message || 'Erreur mise a jour convocation.')
+  }
+}
+
+const convoquerJoueurDepuisDisponibilite = async ({ evenement, item }) => {
+  try {
+    const rep = await authPost(`/coach/equipes/${equipeEvenementId.value}/evenements/${evenement.id}/convocations`, {
+      utilisateur_ids: [item.utilisateur_id],
+      statut: 'convoque',
+    })
+    notifySuccess(rep?.message || 'Convocation creee avec succes.')
+    await chargerDisponibilites()
+    if (equipeConvocationId.value !== equipeEvenementId.value) {
+      equipeConvocationId.value = equipeEvenementId.value
+    }
+    evenementConvocationId.value = String(evenement.id)
+    await chargerConvocations()
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible de creer cette convocation.')
   }
 }
 
@@ -488,14 +766,54 @@ watch(rechercheEvenements, () => {
 })
 
 watch(equipeJoueurId, () => { if (moduleActif.value === 'joueurs') chargerJoueurs() })
-watch(equipeEvenementId, () => { if (moduleActif.value === 'evenements') chargerEvenements() })
-watch(equipeConvocationId, () => { if (moduleActif.value === 'convocations') chargerConvocations() })
+watch(equipeEvenementId, async () => {
+  if (moduleActif.value === 'evenements') {
+    await chargerEvenements()
+  }
+
+  compositionMatchEvenement.value = null
+  feuilleMatchEvenement.value = null
+  statistiquesMatchEvenement.value = { resume: {}, joueurs: [] }
+
+  if (String(equipeDisponibiliteId.value) === String(equipeEvenementId.value) && moduleActif.value === 'disponibilites') {
+    if (!evenementsEquipe.value.some((evenement) => String(evenement.id) === String(evenementDisponibiliteId.value))) {
+      evenementDisponibiliteId.value = evenementsEquipe.value[0] ? String(evenementsEquipe.value[0].id) : ''
+    }
+  }
+})
+watch(equipeDisponibiliteId, async () => {
+  if (moduleActif.value !== 'disponibilites') return
+  equipeEvenementId.value = equipeDisponibiliteId.value
+  await chargerEvenements()
+  evenementDisponibiliteId.value = evenementsEquipe.value[0] ? String(evenementsEquipe.value[0].id) : ''
+  await chargerDisponibilites()
+})
+watch(evenementDisponibiliteId, () => { if (moduleActif.value === 'disponibilites') chargerDisponibilites() })
+watch(equipeConvocationId, async () => {
+  if (moduleActif.value !== 'convocations') return
+
+  if (!equipeConvocationId.value) {
+    evenementConvocationId.value = ''
+    convocationsEquipe.value = []
+    return
+  }
+
+  equipeEvenementId.value = equipeConvocationId.value
+  await chargerEvenements()
+  evenementConvocationId.value = evenementsEquipe.value[0] ? String(evenementsEquipe.value[0].id) : ''
+  await chargerConvocations()
+})
 
 // ─── lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
   await chargerDashboard()
   await chargerNotifications()
   await chargerEquipes()
+  if (utilisateurConnecte.value?.id) {
+    stopRealtimeNotifications.value = subscribeToNotifications(utilisateurConnecte.value.id, (notification) => {
+      integrerNotification(notification)
+    })
+  }
   demarrerRafraichissementAuto()
 })
 
@@ -505,6 +823,7 @@ onBeforeUnmount(() => {
   clearTimeout(debounceJoueurs.value)
   clearTimeout(debounceEvenements.value)
   stopRealtimeCoach.value()
+  stopRealtimeNotifications.value()
   disconnectRealtime()
 })
 </script>
@@ -586,7 +905,7 @@ onBeforeUnmount(() => {
             <div class="flex items-center gap-2">
               <label class="relative hidden sm:block">
                 <input v-model="rechercheNavigation" type="text"
-                  :placeholder="moduleActif === 'equipes' ? 'Rechercher une equipe' : moduleActif === 'joueurs' ? 'Rechercher un joueur' : moduleActif === 'evenements' ? 'Rechercher un evenement' : moduleActif === 'convocations' ? 'Rechercher une convocation' : moduleActif === 'messagerie' ? 'Rechercher une conversation' : 'Search'"
+                  :placeholder="moduleActif === 'equipes' ? 'Rechercher une equipe' : moduleActif === 'joueurs' ? 'Rechercher un joueur' : moduleActif === 'evenements' ? 'Rechercher un evenement' : moduleActif === 'disponibilites' ? 'Rechercher une disponibilite' : moduleActif === 'convocations' ? 'Rechercher une convocation' : moduleActif === 'messagerie' ? 'Rechercher une conversation' : 'Search'"
                   class="h-8 w-[165px] rounded-full border border-[#dbe2ef] bg-white px-3 py-1 text-xs text-[#1f2a44] outline-none placeholder:text-[#94a3b8]" />
               </label>
 
@@ -603,71 +922,20 @@ onBeforeUnmount(() => {
               </button>
 
               <!-- notifications -->
-              <div class="relative">
-                <button type="button"
-                  class="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#dbe2ef] bg-white text-[#1f2a44] transition hover:border-[#c7d2ea] hover:bg-[#f8fbff]"
-                  @click="notificationOuverte = !notificationOuverte; chargerNotifications()">
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M18.25 9.4c0-3.4-2.45-5.9-6.25-5.9s-6.25 2.5-6.25 5.9v2.56c0 .72-.26 1.42-.72 1.96L4 15.13h16l-1.03-1.21a3 3 0 0 1-.72-1.96V9.4ZM9.75 18.25a2.45 2.45 0 0 0 4.5 0"
-                      stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                  <span v-if="notificationsNonLuesTotal"
-                    class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-[#ef4444] px-1 text-[9px] font-black text-white">
-                    {{ notificationsNonLuesTotal }}
-                  </span>
-                </button>
-
-                <div v-if="notificationOuverte"
-                  class="absolute right-0 top-10 z-50 w-[340px] overflow-hidden rounded-[24px] border border-[#e6edf8] bg-white text-left shadow-[0_22px_60px_-40px_rgba(15,23,42,0.55)]">
-                  <div class="flex items-center justify-between border-b border-[#eef2fb] px-4 py-3">
-                    <div>
-                      <p class="text-sm font-black text-[#111827]">Notifications</p>
-                      <p class="text-[11px] font-semibold text-[#64748b]">{{ notificationsNonLuesTotal }} non lue(s)</p>
-                    </div>
-                    <button type="button"
-                      class="rounded-full bg-[#f2f6ff] px-3 py-1 text-[11px] font-black text-[#1f36bf]"
-                      @click="chargerNotifications">↻</button>
-                  </div>
-
-                  <div class="max-h-[430px] overflow-y-auto p-3">
-                    <p v-if="chargementNotifications"
-                      class="rounded-2xl bg-[#f8fbff] p-4 text-xs font-bold text-[#64748b]">Chargement...</p>
-                    <p v-else-if="!notificationsRecentes.length"
-                      class="rounded-2xl bg-[#f8fbff] p-4 text-xs font-bold text-[#64748b]">Aucune notification.</p>
-
-                    <article v-for="notif in notificationsRecentes" v-else :key="notif.id"
-                      class="mb-2 cursor-pointer rounded-[20px] border border-[#edf2fb] bg-[#fbfdff] p-3"
-                      @click="marquerNotificationLue(notif)">
-                      <div class="flex items-start justify-between gap-3">
-                        <div>
-                          <p class="text-sm font-black text-[#111827]" :class="notif.est_lue ? 'opacity-60' : ''">{{
-                            notif.titre }}</p>
-                          <p class="mt-1 text-xs font-semibold leading-5 text-[#64748b]">{{ notif.contenu }}</p>
-                          <p class="mt-2 text-[11px] font-bold text-[#94a3b8]">{{ formatDateHeure(notif.created_at) }}
-                          </p>
-                        </div>
-                        <span class="rounded-full px-2.5 py-1 text-[10px] font-black"
-                          :class="notif.statut_action === 'en_attente' ? 'bg-[#fff7ed] text-[#f59e0b]' : notif.statut_action === 'accepte' ? 'bg-[#ecfdf5] text-[#16a34a]' : notif.statut_action === 'refuse' ? 'bg-[#fef2f2] text-[#ef4444]' : 'bg-[#eef2ff] text-[#1f36bf]'">
-                          {{ notif.statut_action || notif.type_notification }}
-                        </span>
-                      </div>
-
-                      <div v-if="notif.action === 'match_invitation' && notif.statut_action === 'en_attente'"
-                        class="mt-3 grid grid-cols-2 gap-2">
-                        <button type="button"
-                          class="rounded-full bg-[#111827] px-3 py-2 text-[11px] font-black text-white transition hover:bg-[#1f36bf] disabled:opacity-60"
-                          :disabled="actionNotification === `${notif.id}-accepte`"
-                          @click.stop="repondreInvitation(notif, 'accepte')">Accepter</button>
-                        <button type="button"
-                          class="rounded-full border border-[#fecaca] bg-white px-3 py-2 text-[11px] font-black text-[#ef4444] transition hover:bg-[#fef2f2] disabled:opacity-60"
-                          :disabled="actionNotification === `${notif.id}-refuse`"
-                          @click.stop="repondreInvitation(notif, 'refuse')">Refuser</button>
-                      </div>
-                    </article>
-                  </div>
-                </div>
-              </div>
+              <AppNotificationsDropdown
+                :open="notificationOuverte"
+                :loading="chargementNotifications"
+                :unread-total="notificationsNonLuesTotal"
+                :notifications="notificationsRecentes"
+                :action-in-progress="actionNotification"
+                :formatter="formatDateHeure"
+                empty-text="Aucune notification."
+                @toggle="basculerNotifications"
+                @refresh="chargerNotifications"
+                @mark-all="marquerToutesNotificationsCommeLues"
+                @notification-click="ouvrirNotificationCoach"
+                @decision="repondreInvitation($event.notification, $event.decision)"
+              />
 
               <!-- avatar -->
               <img v-if="utilisateurResume.image" :src="utilisateurResume.image" :alt="utilisateurResume.nom"
@@ -704,12 +972,32 @@ onBeforeUnmount(() => {
 
               <CoachEvenements v-else-if="moduleActif === 'evenements'" :evenements="evenementsEquipe"
                 :equipes="equipesOptions" :equipe-id="equipeEvenementId" :chargement="chargementEvenements"
+                :disponibilites-evenement="disponibilitesEvenement" :chargement-disponibilites="chargementDisponibilites"
+                :composition-match="compositionMatchEvenement" :chargement-composition="chargementCompositionMatch"
+                :enregistrement-composition="enregistrementCompositionMatch"
+                :feuille-match="feuilleMatchEvenement" :chargement-feuille-match="chargementFeuilleMatch"
+                :enregistrement-feuille-match="enregistrementFeuilleMatch"
+                :statistiques-match="statistiquesMatchEvenement" :chargement-statistiques-match="chargementStatistiquesMatch"
+                :enregistrement-statistiques-match="enregistrementStatistiquesMatch"
                 @update:equipe-id="equipeEvenementId = $event" @creer="creerEvenement" @modifier="modifierEvenement"
-                @supprimer="supprimerEvenement" />
+                @supprimer="supprimerEvenement" @ouvrir-detail="ouvrirDetailEvenement"
+                @convoquer-joueur="convoquerJoueurDepuisDisponibilite"
+                @enregistrer-composition="enregistrerCompositionMatch"
+                @enregistrer-feuille-match="enregistrerFeuilleMatch"
+                @enregistrer-statistiques-match="enregistrerStatistiquesMatch" />
+
+              <CoachDisponibilites v-else-if="moduleActif === 'disponibilites'" :disponibilites="disponibilitesEvenement"
+                :equipes="equipesOptions" :equipe-id="equipeDisponibiliteId" :evenements="evenementsEquipe"
+                :evenement-id="evenementDisponibiliteId" :chargement="chargementDisponibilites"
+                :recherche="rechercheDisponibilites" @update:equipe-id="equipeDisponibiliteId = $event"
+                @update:evenement-id="evenementDisponibiliteId = $event" @update:recherche="rechercheDisponibilites = $event"
+                @aller-convocations="afficherModule('convocations')" />
 
               <CoachConvocations v-else-if="moduleActif === 'convocations'" :convocations="convocationsEquipe"
-                :equipes="equipesOptions" :equipe-id="equipeConvocationId" :chargement="chargementConvocations"
+                :equipes="equipesOptions" :equipe-id="equipeConvocationId" :evenements="evenementsEquipe"
+                :evenement-id="evenementConvocationId" :chargement="chargementConvocations"
                 :recherche="rechercheConvocations" @update:equipe-id="equipeConvocationId = $event"
+                @update:evenement-id="evenementConvocationId = $event"
                 @update:recherche="rechercheConvocations = $event" @modifier-statut="modifierStatutConvocation" />
 
               <CoachMessagerie v-else-if="moduleActif === 'messagerie'" :canaux="canaux" :messages="messages"
