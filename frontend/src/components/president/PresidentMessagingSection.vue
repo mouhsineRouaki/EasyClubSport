@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PresidentConversationItem from './PresidentConversationItem.vue'
+import PresidentConversationCreateModal from './PresidentConversationCreateModal.vue'
 import PresidentMessageBubble from './PresidentMessageBubble.vue'
 import { authDelete, authGet, authPost, authPut } from '../../services/api'
 import { disconnectRealtime, subscribeToCanalMessages } from '../../services/realtime'
@@ -21,10 +22,13 @@ const chargementClubs = ref(false)
 const chargementEquipes = ref(false)
 const chargementCanaux = ref(false)
 const chargementMessages = ref(false)
+const chargementEquipesCreation = ref(false)
+const chargementParticipantsCreation = ref(false)
 const creationCanal = ref(false)
 const envoiMessage = ref(false)
 const clubs = ref([])
 const equipes = ref([])
+const equipesCreation = ref([])
 const canaux = ref([])
 const messages = ref([])
 const paginationCanaux = ref(null)
@@ -34,6 +38,7 @@ const selectedEquipeId = ref('')
 const selectedCanalId = ref('')
 const utilisateurConnecte = ref(null)
 const afficherCreationCanal = ref(false)
+const participantsCreation = ref([])
 const erreursValidationCanal = ref({})
 const erreursValidationMessage = ref({})
 const erreurCanaux = ref('')
@@ -41,6 +46,7 @@ const erreurMessages = ref('')
 const editionMessageId = ref(null)
 const editionContenu = ref('')
 const searchDebounce = ref(null)
+const searchParticipantsDebounce = ref(null)
 const stopRealtimeSubscription = ref(() => {})
 const unreadByCanal = ref({})
 const messagesViewport = ref(null)
@@ -51,8 +57,10 @@ const filtresCanaux = reactive({
 })
 
 const formulaireCanal = reactive({
-  nom: '',
-  description: '',
+  club_id: '',
+  equipe_id: '',
+  recherche_participant: '',
+  utilisateur_ids: [],
 })
 
 const formulaireMessage = reactive({
@@ -63,7 +71,6 @@ const clubActuel = computed(() => clubs.value.find((club) => String(club.id) ===
 const equipeActuelle = computed(() => equipes.value.find((equipe) => String(equipe.id) === String(selectedEquipeId.value)) || null)
 const canalActuel = computed(() => canaux.value.find((canal) => String(canal.id) === String(selectedCanalId.value)) || null)
 const utilisateurIdActuel = computed(() => utilisateurConnecte.value?.id ?? null)
-const peutCreerCanal = computed(() => Boolean(selectedClubId.value && selectedEquipeId.value))
 
 const lireErreurCanal = (champ) => erreursValidationCanal.value?.[champ]?.[0] || ''
 const lireErreurMessage = (champ) => erreursValidationMessage.value?.[champ]?.[0] || ''
@@ -102,8 +109,12 @@ const scrollToBottom = async (behavior = 'smooth') => {
 }
 
 const reinitialiserFormulaireCanal = () => {
-  formulaireCanal.nom = ''
-  formulaireCanal.description = ''
+  formulaireCanal.club_id = ''
+  formulaireCanal.equipe_id = ''
+  formulaireCanal.recherche_participant = ''
+  formulaireCanal.utilisateur_ids = []
+  equipesCreation.value = []
+  participantsCreation.value = []
   erreursValidationCanal.value = {}
 }
 
@@ -215,6 +226,88 @@ const chargerEquipes = async () => {
   }
 }
 
+const chargerEquipesCreation = async () => {
+  if (!formulaireCanal.club_id) {
+    formulaireCanal.equipe_id = ''
+    equipesCreation.value = []
+    participantsCreation.value = []
+    return
+  }
+
+  chargementEquipesCreation.value = true
+
+  try {
+    const reponse = await authGet(`/president/clubs/${formulaireCanal.club_id}/equipes`, {
+      page: 1,
+      per_page: 100,
+    })
+
+    const equipesDisponibles = reponse?.data?.equipes || []
+    equipesCreation.value = equipesDisponibles
+    const equipeExiste = equipesDisponibles.some((equipe) => String(equipe.id) === String(formulaireCanal.equipe_id))
+    formulaireCanal.equipe_id = equipeExiste ? formulaireCanal.equipe_id : (equipesDisponibles[0] ? String(equipesDisponibles[0].id) : '')
+  } catch (error) {
+    if (!gerer401(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les equipes pour cette conversation.')
+    }
+  } finally {
+    chargementEquipesCreation.value = false
+  }
+}
+
+const chargerParticipantsCreation = async () => {
+  if (!afficherCreationCanal.value || !formulaireCanal.club_id || !formulaireCanal.equipe_id) {
+    participantsCreation.value = []
+    return
+  }
+
+  chargementParticipantsCreation.value = true
+
+  try {
+    const reponse = await authGet(
+      `/president/clubs/${formulaireCanal.club_id}/equipes/${formulaireCanal.equipe_id}/canaux/participants`,
+      {
+        q: formulaireCanal.recherche_participant,
+      }
+    )
+
+    participantsCreation.value = reponse?.data?.participants || []
+    formulaireCanal.utilisateur_ids = formulaireCanal.utilisateur_ids.filter((id) =>
+      participantsCreation.value.some((participant) => Number(participant.id) === Number(id))
+    )
+  } catch (error) {
+    if (!gerer401(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les personnes de cette equipe.')
+    }
+  } finally {
+    chargementParticipantsCreation.value = false
+  }
+}
+
+const basculerParticipantCreation = (participantId) => {
+  const id = Number(participantId)
+
+  if (formulaireCanal.utilisateur_ids.includes(id)) {
+    formulaireCanal.utilisateur_ids = formulaireCanal.utilisateur_ids.filter((currentId) => Number(currentId) !== id)
+    return
+  }
+
+  formulaireCanal.utilisateur_ids = [...formulaireCanal.utilisateur_ids, id]
+}
+
+const basculerTousParticipantsCreation = () => {
+  if (participantsCreation.value.length === 0) {
+    return
+  }
+
+  if (formulaireCanal.utilisateur_ids.length === participantsCreation.value.length) {
+    formulaireCanal.utilisateur_ids = []
+    return
+  }
+
+  formulaireCanal.utilisateur_ids = participantsCreation.value.map((participant) => Number(participant.id))
+}
+
 const chargerCanaux = async (page = 1) => {
   chargementCanaux.value = true
   erreurCanaux.value = ''
@@ -304,13 +397,14 @@ const refreshCurrent = async () => {
 }
 
 const ouvrirCreationCanal = () => {
-  if (!peutCreerCanal.value) {
-    notifyError('Choisissez d abord un club puis une equipe.')
-    return
-  }
-
   reinitialiserFormulaireCanal()
+  formulaireCanal.club_id = selectedClubId.value
+  formulaireCanal.equipe_id = selectedEquipeId.value
   afficherCreationCanal.value = true
+
+  if (formulaireCanal.club_id) {
+    chargerEquipesCreation().then(() => chargerParticipantsCreation())
+  }
 }
 
 const fermerCreationCanal = () => {
@@ -319,8 +413,15 @@ const fermerCreationCanal = () => {
 }
 
 const creerCanal = async () => {
-  if (!selectedClubId.value || !selectedEquipeId.value) {
+  if (!formulaireCanal.club_id || !formulaireCanal.equipe_id) {
     notifyError('Selection de club ou equipe invalide.')
+    return
+  }
+
+  if (!formulaireCanal.utilisateur_ids.length) {
+    erreursValidationCanal.value = {
+      utilisateur_ids: ['Selectionnez au moins une personne pour commencer la conversation.'],
+    }
     return
   }
 
@@ -328,15 +429,19 @@ const creerCanal = async () => {
   erreursValidationCanal.value = {}
 
   try {
-    const reponse = await authPost(`/president/clubs/${selectedClubId.value}/equipes/${selectedEquipeId.value}/canaux`, {
-      nom: formulaireCanal.nom,
-      description: formulaireCanal.description || null,
-      type_canal: 'equipe',
+    const reponse = await authPost(`/president/clubs/${formulaireCanal.club_id}/equipes/${formulaireCanal.equipe_id}/canaux`, {
+      type_canal: 'prive',
+      utilisateur_ids: formulaireCanal.utilisateur_ids,
     })
 
     notifySuccess(reponse?.message || 'Conversation creee avec succes.')
+    selectedClubId.value = formulaireCanal.club_id
+    selectedEquipeId.value = formulaireCanal.equipe_id
     fermerCreationCanal()
     await chargerCanaux(1)
+    if (reponse?.data?.canal?.id) {
+      selectedCanalId.value = String(reponse.data.canal.id)
+    }
   } catch (error) {
     if (gerer401(error)) {
       return
@@ -475,6 +580,55 @@ watch(selectedCanalId, async () => {
   synchroniserRealtime()
 })
 
+watch(
+  () => formulaireCanal.club_id,
+  async (nouveauClubId) => {
+    if (!afficherCreationCanal.value) {
+      return
+    }
+
+    formulaireCanal.utilisateur_ids = []
+
+    if (!nouveauClubId) {
+      formulaireCanal.equipe_id = ''
+      participantsCreation.value = []
+      return
+    }
+
+    await chargerEquipesCreation()
+    await chargerParticipantsCreation()
+  }
+)
+
+watch(
+  () => formulaireCanal.equipe_id,
+  async () => {
+    if (!afficherCreationCanal.value) {
+      return
+    }
+
+    formulaireCanal.utilisateur_ids = []
+    await chargerParticipantsCreation()
+  }
+)
+
+watch(
+  () => formulaireCanal.recherche_participant,
+  () => {
+    if (!afficherCreationCanal.value) {
+      return
+    }
+
+    if (searchParticipantsDebounce.value) {
+      clearTimeout(searchParticipantsDebounce.value)
+    }
+
+    searchParticipantsDebounce.value = setTimeout(() => {
+      chargerParticipantsCreation()
+    }, 250)
+  }
+)
+
 onMounted(async () => {
   const utilisateurStocke = localStorage.getItem('utilisateur_api')
 
@@ -492,6 +646,10 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   if (searchDebounce.value) {
     clearTimeout(searchDebounce.value)
+  }
+
+  if (searchParticipantsDebounce.value) {
+    clearTimeout(searchParticipantsDebounce.value)
   }
 
   stopRealtimeSubscription.value?.()
@@ -723,63 +881,26 @@ defineExpose({
       </section>
     </div>
 
-    <div
-      v-if="afficherCreationCanal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-[2px]"
-      @click.self="fermerCreationCanal"
-    >
-      <section class="w-full max-w-lg rounded-[32px] border border-[#e7edf7] bg-white p-6 shadow-[0_30px_60px_rgba(15,23,42,0.18)]">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="text-2xl font-black text-[#0f172a]">Nouvelle conversation</p>
-            <p class="mt-1 text-sm text-[#64748b]">
-              {{ clubActuel?.nom || 'Club' }} · {{ equipeActuelle?.nom || 'Equipe' }}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            class="rounded-full border border-[#d7e1fb] px-4 py-2 text-xs font-semibold text-[#334155]"
-            @click="fermerCreationCanal"
-          >
-            Fermer
-          </button>
-        </div>
-
-        <form class="mt-6 space-y-4" @submit.prevent="creerCanal">
-          <label class="block">
-            <span class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-[#64748b]">Nom</span>
-            <input
-              v-model="formulaireCanal.nom"
-              type="text"
-              class="h-12 w-full rounded-2xl border border-[#dbe3f1] bg-[#fbfcff] px-4 text-sm font-semibold text-[#1e293b] outline-none focus:border-[#4c6fff]"
-            />
-            <span v-if="lireErreurCanal('nom')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreurCanal('nom') }}</span>
-          </label>
-
-          <label class="block">
-            <span class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-[#64748b]">Description</span>
-            <textarea
-              v-model="formulaireCanal.description"
-              rows="4"
-              class="w-full rounded-2xl border border-[#dbe3f1] bg-[#fbfcff] px-4 py-3 text-sm font-medium text-[#1e293b] outline-none focus:border-[#4c6fff]"
-            ></textarea>
-            <span v-if="lireErreurCanal('description')" class="mt-2 block text-xs font-semibold text-[#e11d48]">
-              {{ lireErreurCanal('description') }}
-            </span>
-          </label>
-
-          <div class="flex justify-end">
-            <button
-              type="submit"
-              class="rounded-full bg-[#0f172a] px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="creationCanal"
-            >
-              {{ creationCanal ? 'Creation...' : 'Creer la conversation' }}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+    <PresidentConversationCreateModal
+      :visible="afficherCreationCanal"
+      :clubs="clubs"
+      :equipes="equipesCreation"
+      :participants="participantsCreation"
+      :club-id="formulaireCanal.club_id"
+      :equipe-id="formulaireCanal.equipe_id"
+      :search="formulaireCanal.recherche_participant"
+      :selected-ids="formulaireCanal.utilisateur_ids"
+      :loading-equipes="chargementEquipesCreation"
+      :loading-participants="chargementParticipantsCreation"
+      :submitting="creationCanal"
+      :errors="erreursValidationCanal"
+      @close="fermerCreationCanal"
+      @submit="creerCanal"
+      @update:club-id="formulaireCanal.club_id = $event"
+      @update:equipe-id="formulaireCanal.equipe_id = $event"
+      @update:search="formulaireCanal.recherche_participant = $event"
+      @toggle-participant="basculerParticipantCreation"
+      @toggle-all="basculerTousParticipantsCreation"
+    />
   </section>
 </template>
