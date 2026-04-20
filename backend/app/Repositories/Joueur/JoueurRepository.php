@@ -82,11 +82,40 @@ class JoueurRepository
             ->where('equipe_id', $equipe->id)
             ->with([
                 'equipe.club',
+                'adversaireEquipe.club',
                 'disponibilites' => fn ($query) => $query->where('utilisateur_id', $utilisateur->id),
                 'convocations' => fn ($query) => $query->where('utilisateur_id', $utilisateur->id),
             ])
             ->orderBy('date_debut')
             ->get();
+    }
+
+    public function recupererEvenementAvecComposition(Evenement $evenement): Evenement
+    {
+        return $evenement->fresh([
+            'equipe.club',
+            'adversaireEquipe.club',
+            'feuilleMatch.compositions.utilisateur',
+            'equipe.membreEquipes.utilisateur',
+        ]);
+    }
+
+    public function recupererEvenementAvecFeuilleMatch(Evenement $evenement): Evenement
+    {
+        return $evenement->fresh([
+            'equipe.club',
+            'adversaireEquipe.club',
+            'feuilleMatch',
+        ]);
+    }
+
+    public function recupererEvenementAvecStatistiques(Evenement $evenement): Evenement
+    {
+        return $evenement->fresh([
+            'equipe.club',
+            'adversaireEquipe.club',
+            'feuilleMatch.statistiquesMatchs.utilisateur',
+        ]);
     }
 
     public function enregistrerDisponibilite(User $utilisateur, Evenement $evenement, array $donnees): Disponibilite
