@@ -1,5 +1,6 @@
-<script setup>
+﻿<script setup>
 import { computed } from 'vue'
+import AppModuleHeader from '../common/AppModuleHeader.vue'
 
 const props = defineProps({
   joueurs: { type: Array, default: () => [] },
@@ -22,12 +23,12 @@ const joueursFiltres = computed(() => {
 
 <template>
   <section class="mt-6">
-    <div class="mx-auto max-w-3xl text-center">
-      <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-[#4c6fff]">Gestion coach</p>
-      <h3 class="text-3xl font-black tracking-normal text-[#111827] sm:text-4xl">Joueurs de l'equipe</h3>
-      <p class="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#6b7280]">Choisissez une equipe pour voir ses joueurs.</p>
-
-      <div class="mx-auto mt-5 max-w-2xl">
+    <AppModuleHeader
+      badge="Gestion coach"
+      titre="Joueurs de l'equipe"
+      description="Retrouvez les joueurs avec les memes cartes et surfaces que dans l espace president."
+    >
+      <div class="mx-auto mt-5 max-w-2xl space-y-3">
         <select
           :value="equipeId"
           class="h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold text-[#1f2a44] outline-none focus:border-[#4c6fff]"
@@ -36,39 +37,59 @@ const joueursFiltres = computed(() => {
           <option value="">Choisir une equipe</option>
           <option v-for="eq in equipes" :key="eq.id" :value="String(eq.id)">{{ eq.nom }}</option>
         </select>
+
+        <div class="rounded-[24px] border border-[#e6edf8] bg-[#f8fbff] p-2">
+          <input
+            :value="recherche"
+            type="text"
+            placeholder="Rechercher un joueur..."
+            class="h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold text-[#1f2a44] outline-none placeholder:text-[#94a3b8] focus:border-[#4c6fff]"
+            @input="emit('update:recherche', $event.target.value)"
+          />
+        </div>
       </div>
-    </div>
+    </AppModuleHeader>
 
     <div v-if="chargement" class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <div v-for="n in 8" :key="n" class="h-[140px] animate-pulse rounded-[26px] bg-[linear-gradient(120deg,#f8fbff,#eef3ff,#f8fbff)]"></div>
+      <div v-for="n in 8" :key="n" class="h-[170px] animate-pulse rounded-[26px] bg-[linear-gradient(120deg,#f8fbff,#eef3ff,#f8fbff)]"></div>
     </div>
 
     <div v-else-if="joueursFiltres.length" class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <article
         v-for="joueur in joueursFiltres"
         :key="joueur.id"
-        class="rounded-[26px] border border-[#e6edf8] bg-white p-4 transition hover:border-[#cfdaf2] hover:shadow-sm"
+        class="group relative overflow-hidden rounded-[26px] border border-[#edf1f7] bg-white p-4 text-left transition duration-300 hover:-translate-y-1 hover:border-[#d7e0f5] hover:bg-[#fbfcff]"
       >
-        <div class="flex items-center gap-3">
-          <img v-if="joueur.photo_url || joueur.photo" :src="joueur.photo_url || joueur.photo" :alt="joueur.nom" class="h-12 w-12 rounded-2xl object-cover" />
-          <span v-else class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[radial-gradient(circle_at_35%_25%,#ffffff,#dbe7ff_28%,#2446d8_72%)] text-lg font-black text-white">
-            {{ (joueur.prenom || joueur.name || 'J')[0] }}
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-3">
+            <img v-if="joueur.photo_url || joueur.photo" :src="joueur.photo_url || joueur.photo" :alt="joueur.nom" class="h-12 w-12 rounded-2xl object-cover" />
+            <span v-else class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[radial-gradient(circle_at_35%_25%,#ffffff,#dbe7ff_28%,#2446d8_72%)] text-lg font-black text-white">
+              {{ (joueur.prenom || joueur.name || 'J')[0] }}
+            </span>
+            <div class="min-w-0">
+              <p class="truncate text-[10px] font-black uppercase tracking-[0.14em] text-[#6b7280]">Joueur</p>
+              <h4 class="mt-2 truncate text-lg font-black leading-tight text-[#111827]">
+                {{ [joueur.prenom, joueur.nom].filter(Boolean).join(' ') || joueur.name || 'Joueur' }}
+              </h4>
+            </div>
+          </div>
+          <span class="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em]" :class="joueur.statut === 'actif' ? 'bg-[#ecfdf5] text-[#16a34a]' : joueur.statut === 'blesse' ? 'bg-[#fef2f2] text-[#ef4444]' : 'bg-[#f8fafc] text-[#64748b]'">
+            {{ joueur.statut || 'Actif' }}
           </span>
-          <div class="min-w-0">
-            <p class="truncate text-sm font-black text-[#111827]">
-              {{ [joueur.prenom, joueur.nom].filter(Boolean).join(' ') || joueur.name || 'Joueur' }}
-            </p>
-            <p class="truncate text-[11px] font-semibold text-[#64748b]">{{ joueur.email || '—' }}</p>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-2">
+          <div class="rounded-[14px] bg-[#f5f7fb] px-3 py-2">
+            <p class="truncate text-xs font-black text-[#111827]">{{ joueur.email || '-' }}</p>
+            <p class="text-[9px] font-black uppercase tracking-[0.1em] text-[#6b7280]">Email</p>
+          </div>
+          <div class="rounded-[14px] bg-[#f5f7fb] px-3 py-2">
+            <p class="truncate text-xs font-black text-[#111827]">{{ joueur.telephone || '-' }}</p>
+            <p class="text-[9px] font-black uppercase tracking-[0.1em] text-[#6b7280]">Telephone</p>
           </div>
         </div>
-        <div class="mt-3 flex items-center justify-between">
-          <span class="rounded-full px-2.5 py-1 text-[10px] font-black"
-            :class="joueur.statut === 'actif' ? 'bg-[#ecfdf5] text-[#16a34a]' : joueur.statut === 'blesse' ? 'bg-[#fef2f2] text-[#ef4444]' : 'bg-[#f1f5f9] text-[#64748b]'"
-          >
-            {{ joueur.statut || 'actif' }}
-          </span>
-          <span class="text-[11px] font-semibold text-[#94a3b8]">{{ joueur.telephone || '' }}</span>
-        </div>
+
+        <div class="pointer-events-none absolute -bottom-10 -right-10 h-28 w-28 rounded-full bg-[#2446d8]/8 transition duration-300 group-hover:scale-125 group-hover:bg-[#2446d8]/12"></div>
       </article>
     </div>
 
@@ -82,3 +103,4 @@ const joueursFiltres = computed(() => {
     </div>
   </section>
 </template>
+
