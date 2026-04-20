@@ -1,6 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue'
+import AppModuleHeader from '../common/AppModuleHeader.vue'
 import PresidentConversationItem from '../president/PresidentConversationItem.vue'
+import PresidentMessageBubble from '../president/PresidentMessageBubble.vue'
 
 const props = defineProps({
   canaux: { type: Array, default: () => [] },
@@ -70,13 +72,11 @@ const envoyer = () => {
 
 <template>
   <section class="mt-6 space-y-6">
-    <header class="mx-auto max-w-3xl text-center">
-      <p class="text-sm font-bold uppercase tracking-[0.35em] text-[#4c6fff]">Mon espace joueur</p>
-      <h2 class="mt-3 text-5xl font-black tracking-[-0.05em] text-[#0f172a]">Gestion des messages</h2>
-      <p class="mt-4 text-lg font-medium text-[#64748b]">
-        A gauche les conversations, a droite le fil de discussion en temps reel.
-      </p>
-    </header>
+    <AppModuleHeader
+      badge="Mon espace joueur"
+      titre="Gestion des messages"
+      description="A gauche les conversations, a droite le fil de discussion en temps reel."
+    />
 
     <div class="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
       <aside class="overflow-hidden rounded-[32px] border border-[#e7edf7] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
@@ -166,35 +166,12 @@ const envoyer = () => {
               </span>
             </div>
 
-            <article
+            <PresidentMessageBubble
               v-for="message in messages"
               :key="message.id"
-              class="flex"
-              :class="utilisateurIdActuel && message.expediteur_id === utilisateurIdActuel ? 'justify-end' : 'justify-start'"
-            >
-              <div class="max-w-[78%]">
-                <div
-                  class="mb-1 flex items-center gap-2 px-1"
-                  :class="utilisateurIdActuel && message.expediteur_id === utilisateurIdActuel ? 'justify-end' : 'justify-start'"
-                >
-                  <p class="text-[11px] font-semibold text-[#64748b]">
-                    {{ nomExpediteur(message) }}
-                  </p>
-                  <span class="text-[10px] text-[#94a3b8]">{{ formatHeure(message.created_at) }}</span>
-                </div>
-
-                <div
-                  class="rounded-[24px] px-4 py-3 shadow-[0_18px_35px_rgba(15,23,42,0.06)]"
-                  :class="
-                    utilisateurIdActuel && message.expediteur_id === utilisateurIdActuel
-                      ? 'rounded-br-md bg-[linear-gradient(135deg,#2446d8_0%,#4c6fff_100%)] text-white'
-                      : 'rounded-bl-md border border-[#e8edf6] bg-white text-[#0f172a]'
-                  "
-                >
-                  <p class="whitespace-pre-wrap text-sm leading-6">{{ message.contenu }}</p>
-                </div>
-              </div>
-            </article>
+              :message="{ ...message, expediteur: { ...(message.expediteur || {}), nom: nomExpediteur(message) } }"
+              :own="utilisateurIdActuel && message.expediteur_id === utilisateurIdActuel"
+            />
           </div>
         </div>
 
