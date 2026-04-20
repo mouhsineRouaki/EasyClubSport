@@ -14,7 +14,13 @@ class EvenementRepository
         $query = Evenement::with(['equipe.club', 'adversaireEquipe.club'])
             ->whereHas('equipe.club', function ($query) use ($utilisateur) {
                 $query->where('president_id', $utilisateur->id);
-            });
+            })
+            ->withCount([
+                'disponibilites as disponibilites_present_total' => fn ($query) => $query->where('reponse', 'present'),
+                'disponibilites as disponibilites_absent_total' => fn ($query) => $query->where('reponse', 'absent'),
+                'disponibilites as disponibilites_incertain_total' => fn ($query) => $query->where('reponse', 'incertain'),
+                'disponibilites as disponibilites_total' => fn ($query) => $query,
+            ]);
 
         if (! empty($filtres['q'])) {
             $terme = $filtres['q'];
@@ -58,7 +64,13 @@ class EvenementRepository
     public function listerParEquipe(Equipe $equipe, array $filtres = []): LengthAwarePaginator
     {
         $query = Evenement::with(['equipe.club', 'adversaireEquipe.club'])
-            ->where('equipe_id', $equipe->id);
+            ->where('equipe_id', $equipe->id)
+            ->withCount([
+                'disponibilites as disponibilites_present_total' => fn ($query) => $query->where('reponse', 'present'),
+                'disponibilites as disponibilites_absent_total' => fn ($query) => $query->where('reponse', 'absent'),
+                'disponibilites as disponibilites_incertain_total' => fn ($query) => $query->where('reponse', 'incertain'),
+                'disponibilites as disponibilites_total' => fn ($query) => $query,
+            ]);
 
         if (! empty($filtres['q'])) {
             $terme = $filtres['q'];
@@ -101,19 +113,73 @@ class EvenementRepository
 
     public function creer(array $donnees): Evenement
     {
-        return Evenement::create($donnees)->fresh(['equipe.club', 'equipe.coach', 'adversaireEquipe.club', 'adversaireEquipe.coach', 'createur']);
+        return Evenement::create($donnees)->fresh(['equipe.club', 'equipe.coach', 'adversaireEquipe.club', 'adversaireEquipe.coach', 'createur'])
+            ->loadCount([
+                'disponibilites as disponibilites_present_total' => fn ($query) => $query->where('reponse', 'present'),
+                'disponibilites as disponibilites_absent_total' => fn ($query) => $query->where('reponse', 'absent'),
+                'disponibilites as disponibilites_incertain_total' => fn ($query) => $query->where('reponse', 'incertain'),
+                'disponibilites as disponibilites_total' => fn ($query) => $query,
+            ]);
     }
 
     public function mettreAJour(Evenement $evenement, array $donnees): Evenement
     {
         $evenement->update($donnees);
 
-        return $evenement->fresh(['equipe.club', 'equipe.coach', 'adversaireEquipe.club', 'adversaireEquipe.coach', 'createur']);
+        return $evenement->fresh(['equipe.club', 'equipe.coach', 'adversaireEquipe.club', 'adversaireEquipe.coach', 'createur'])
+            ->loadCount([
+                'disponibilites as disponibilites_present_total' => fn ($query) => $query->where('reponse', 'present'),
+                'disponibilites as disponibilites_absent_total' => fn ($query) => $query->where('reponse', 'absent'),
+                'disponibilites as disponibilites_incertain_total' => fn ($query) => $query->where('reponse', 'incertain'),
+                'disponibilites as disponibilites_total' => fn ($query) => $query,
+            ]);
     }
 
     public function supprimer(Evenement $evenement): void
     {
         $evenement->delete();
     }
-}
 
+    public function recupererAvecComposition(Evenement $evenement): Evenement
+    {
+        return $evenement->fresh([
+            'equipe.club',
+            'adversaireEquipe.club',
+            'feuilleMatch.compositions.utilisateur',
+            'equipe.membreEquipes.utilisateur',
+        ])->loadCount([
+            'disponibilites as disponibilites_present_total' => fn ($query) => $query->where('reponse', 'present'),
+            'disponibilites as disponibilites_absent_total' => fn ($query) => $query->where('reponse', 'absent'),
+            'disponibilites as disponibilites_incertain_total' => fn ($query) => $query->where('reponse', 'incertain'),
+            'disponibilites as disponibilites_total' => fn ($query) => $query,
+        ]);
+    }
+
+    public function recupererAvecFeuilleMatch(Evenement $evenement): Evenement
+    {
+        return $evenement->fresh([
+            'equipe.club',
+            'adversaireEquipe.club',
+            'feuilleMatch',
+        ])->loadCount([
+            'disponibilites as disponibilites_present_total' => fn ($query) => $query->where('reponse', 'present'),
+            'disponibilites as disponibilites_absent_total' => fn ($query) => $query->where('reponse', 'absent'),
+            'disponibilites as disponibilites_incertain_total' => fn ($query) => $query->where('reponse', 'incertain'),
+            'disponibilites as disponibilites_total' => fn ($query) => $query,
+        ]);
+    }
+
+    public function recupererAvecStatistiques(Evenement $evenement): Evenement
+    {
+        return $evenement->fresh([
+            'equipe.club',
+            'adversaireEquipe.club',
+            'feuilleMatch.statistiquesMatchs.utilisateur',
+        ])->loadCount([
+            'disponibilites as disponibilites_present_total' => fn ($query) => $query->where('reponse', 'present'),
+            'disponibilites as disponibilites_absent_total' => fn ($query) => $query->where('reponse', 'absent'),
+            'disponibilites as disponibilites_incertain_total' => fn ($query) => $query->where('reponse', 'incertain'),
+            'disponibilites as disponibilites_total' => fn ($query) => $query,
+        ]);
+    }
+}
