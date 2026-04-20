@@ -103,11 +103,6 @@ class User extends Authenticatable
         return $this->hasMany(Document::class, 'utilisateur_id');
     }
 
-    public function cotisations(): HasMany
-    {
-        return $this->hasMany(Cotisation::class, 'utilisateur_id');
-    }
-
     public function canaux(): BelongsToMany
     {
         return $this->belongsToMany(Canal::class, 'canal_utilisateurs', 'utilisateur_id', 'canal_id')
@@ -127,10 +122,5 @@ class User extends Authenticatable
     public function annoncesPubliees(): HasMany
     {
         return $this->hasMany(Annonce::class, 'auteur_id');
-    }
-
-    public function historiqueBlessures(): HasMany
-    {
-        return $this->hasMany(HistoriqueBlessure::class, 'utilisateur_id');
     }
 }
