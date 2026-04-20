@@ -42,14 +42,14 @@ const parametresApplication = [
 const conversations = [
   { nom: 'Coach principal', message: 'Planning entrainement a valider.', couleur: '#fbbf24' },
   { nom: 'Responsable joueurs', message: 'Deux nouveaux joueurs a confirmer.', couleur: '#ef4444' },
-  { nom: 'Tresorerie club', message: 'Cotisations en attente cette semaine.', couleur: '#334155' },
+  { nom: 'Documents club', message: 'Un nouveau document interne a ete ajoute.', couleur: '#334155' },
   { nom: 'Equipe U19', message: 'Match amical propose samedi.', couleur: '#0ea5e9' },
 ]
 
 const modules = [
   { titre: 'Gestion des equipes', description: 'Creer et suivre les equipes du club.', image: 'linear-gradient(135deg,#0f172a,#1e293b)' },
   { titre: 'Evenements sportifs', description: 'Planifier matchs, reunions et stages.', image: 'linear-gradient(135deg,#1d4ed8,#0ea5e9)' },
-  { titre: 'Cotisations membres', description: 'Suivre les paiements des joueurs.', image: 'linear-gradient(135deg,#14532d,#16a34a)' },
+  { titre: 'Documents du club', description: 'Centraliser les fichiers et pieces partagees.', image: 'linear-gradient(135deg,#14532d,#16a34a)' },
 ]
 
 const nomComplet = computed(() => [formulaire.prenom, formulaire.nom].filter(Boolean).join(' ') || formulaire.email || 'President')
