@@ -66,6 +66,21 @@ export const subscribeToCanalMessages = (canalId, callback) => {
   }
 }
 
+export const subscribeToNotifications = (userId, callback) => {
+  const echo = creerEcho()
+
+  if (!echo || !userId || typeof callback !== 'function') {
+    return () => {}
+  }
+
+  const channelName = `user.${userId}.notifications`
+  echo.private(channelName).listen('.notification.creee', callback)
+
+  return () => {
+    echo.leave(channelName)
+  }
+}
+
 export const disconnectRealtime = () => {
   if (echoInstance) {
     echoInstance.disconnect()
