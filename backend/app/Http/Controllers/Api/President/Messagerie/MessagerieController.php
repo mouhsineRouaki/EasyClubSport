@@ -61,6 +61,23 @@ class MessagerieController extends Controller
         ]);
     }
 
+    public function participantsEquipe(Club $club, Equipe $equipe): JsonResponse
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('creer', [Canal::class, $equipe]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Participants de l equipe recuperes avec succes.',
+            'data' => [
+                'participants' => $this->messagerieService->listerParticipantsEquipe(
+                    $equipe,
+                    (string) request()->query('q', '')
+                ),
+            ],
+        ]);
+    }
+
     public function showCanal(Canal $canal): CanalResource
     {
         $this->authorize('voir', $canal);
