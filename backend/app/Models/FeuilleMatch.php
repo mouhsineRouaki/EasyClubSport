@@ -18,12 +18,17 @@ class FeuilleMatch extends Model
         'formation',
         'notes',
         'est_validee',
+        'score_equipe',
+        'score_adversaire',
+        'resume_match',
     ];
 
     protected function casts(): array
     {
         return [
             'est_validee' => 'boolean',
+            'score_equipe' => 'integer',
+            'score_adversaire' => 'integer',
         ];
     }
 
