@@ -1,8 +1,12 @@
-﻿<script setup>
+<script setup>
 import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import imageHero from '../assets/hero.png'
 import logoEasyClubSport from '../assets/logo-easyclubsport.svg'
+import { post } from '../services/api'
 import { notifyError } from '../stores/toast'
+
+const router = useRouter()
 
 const roles = [
   { label: 'President', value: 'president' },
@@ -24,6 +28,7 @@ const formulaire = reactive({
 const chargement = ref(false)
 const succes = ref('')
 const token = ref('')
+const utilisateur = ref(null)
 const erreursValidation = ref({})
 
 const motDePasseDifferent = computed(() => {
@@ -51,8 +56,30 @@ const soumettre = async () => {
     const reponse = await post('/auth/inscription', { ...formulaire })
     succes.value = reponse.message || 'Compte cree avec succes.'
     token.value = reponse?.data?.token || ''
+    utilisateur.value = reponse?.data?.utilisateur || null
+
+    if (token.value) {
+      localStorage.setItem('token_api', token.value)
+    }
+
+    if (utilisateur.value) {
+      localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur.value))
+    }
+
+    if (utilisateur.value?.role === 'president') {
+      router.push('/president')
+    } else if (utilisateur.value?.role === 'coach') {
+      router.push('/coach')
+    } else if (utilisateur.value?.role === 'joueur') {
+      router.push('/joueur')
+    } else {
+      router.push('/')
+    }
   } catch (error) {
     const reponseErreur = error.response || {}
+    if (!reponseErreur?.message && error?.message) {
+      notifyError(error.message)
+    }
     erreursValidation.value = reponseErreur.data || {}
   } finally {
     chargement.value = false
@@ -243,3 +270,5 @@ const soumettre = async () => {
     </div>
   </main>
 </template>
+
+
