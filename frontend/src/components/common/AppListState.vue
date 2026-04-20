@@ -32,11 +32,9 @@ const emit = defineEmits(['retry'])
 <template>
   <template v-if="loading">
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <div
-        v-for="index in skeletonCount"
-        :key="index"
-        class="h-36 animate-pulse rounded-2xl border border-[#eef2f7] bg-[linear-gradient(110deg,#f7f9fc_8%,#f0f4f9_18%,#f7f9fc_33%)] bg-[length:200%_100%]"
-      ></div>
+      <div v-for="index in skeletonCount" :key="index"
+        class="h-36 animate-pulse rounded-2xl border border-[#eef2f7] bg-[linear-gradient(110deg,#f7f9fc_8%,#f0f4f9_18%,#f7f9fc_33%)] bg-[length:200%_100%]">
+      </div>
     </div>
   </template>
 
