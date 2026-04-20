@@ -7,6 +7,7 @@ use App\Models\Canal;
 use App\Models\Equipe;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class MessagerieRepository
@@ -74,6 +75,63 @@ class MessagerieRepository
     public function attacherUtilisateurs(Canal $canal, array $utilisateurIds): void
     {
         $canal->utilisateurs()->syncWithoutDetaching($utilisateurIds);
+    }
+
+    public function listerParticipantsEquipe(Equipe $equipe, string $recherche = ''): Collection
+    {
+        $joueurs = $equipe->utilisateurs()
+            ->select('users.*', 'membre_equipes.role_equipe', 'membre_equipes.date_affectation')
+            ->when($recherche, function ($query) use ($recherche) {
+                $query->where(function ($subQuery) use ($recherche) {
+                    $subQuery->where('users.nom', 'like', "%{$recherche}%")
+                        ->orWhere('users.prenom', 'like', "%{$recherche}%")
+                        ->orWhere('users.email', 'like', "%{$recherche}%");
+                });
+            })
+            ->orderBy('users.nom')
+            ->orderBy('users.prenom')
+            ->get()
+            ->map(function ($utilisateur) {
+                return [
+                    'id' => $utilisateur->id,
+                    'name' => $utilisateur->name,
+                    'nom' => $utilisateur->nom,
+                    'prenom' => $utilisateur->prenom,
+                    'email' => $utilisateur->email,
+                    'telephone' => $utilisateur->telephone,
+                    'photo' => $utilisateur->photo,
+                    'photo_url' => $utilisateur->photo ? asset('storage/'.$utilisateur->photo) : null,
+                    'role' => $utilisateur->role,
+                    'role_equipe' => $utilisateur->role_equipe ?? $utilisateur->pivot?->role_equipe,
+                    'date_affectation' => $utilisateur->date_affectation ?? $utilisateur->pivot?->date_affectation,
+                ];
+            });
+
+        $coach = $equipe->coach;
+        if ($coach) {
+            $nomComplet = trim(($coach->prenom ?? '').' '.($coach->nom ?? ''));
+            $correspond = ! $recherche
+                || str_contains(mb_strtolower($nomComplet), mb_strtolower($recherche))
+                || str_contains(mb_strtolower((string) $coach->email), mb_strtolower($recherche));
+
+            if ($correspond && ! $joueurs->contains(fn ($utilisateur) => (int) $utilisateur['id'] === (int) $coach->id)) {
+                $joueurs->prepend([
+                    'id' => $coach->id,
+                    'name' => $coach->name,
+                    'nom' => $coach->nom,
+                    'prenom' => $coach->prenom,
+                    'email' => $coach->email,
+                    'telephone' => $coach->telephone,
+                    'photo' => $coach->photo,
+                    'photo_url' => $coach->photo ? asset('storage/'.$coach->photo) : null,
+                    'role' => $coach->role,
+                    'role_equipe' => 'coach',
+                    'date_affectation' => null,
+                ]);
+            }
+        }
+
+        return $joueurs->values();
     }
 
     public function listerMessagesParCanal(Canal $canal, array $filtres = []): LengthAwarePaginator
