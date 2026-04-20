@@ -55,6 +55,7 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::post('/clubs/{club}/annonces', [AnnonceController::class, 'store']);
     Route::get('/clubs/{club}/equipes/{equipe}/canaux', [MessagerieController::class, 'indexCanauxParEquipe']);
     Route::post('/clubs/{club}/equipes/{equipe}/canaux', [MessagerieController::class, 'storeCanal']);
+    Route::get('/clubs/{club}/equipes/{equipe}/canaux/participants', [MessagerieController::class, 'participantsEquipe']);
     Route::get('/clubs/{club}/documents', [DocumentController::class, 'indexParClub']);
     Route::post('/clubs/{club}/documents', [DocumentController::class, 'store']);
 
@@ -72,6 +73,9 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::get('/clubs/{club}/equipes/{equipe}/evenements', [EvenementController::class, 'indexParEquipe']);
     Route::post('/clubs/{club}/equipes/{equipe}/evenements', [EvenementController::class, 'store']);
     Route::get('/clubs/{club}/equipes/{equipe}/evenements/{evenement}', [EvenementController::class, 'show']);
+    Route::get('/clubs/{club}/equipes/{equipe}/evenements/{evenement}/composition', [EvenementController::class, 'composition']);
+    Route::get('/clubs/{club}/equipes/{equipe}/evenements/{evenement}/feuille-match', [EvenementController::class, 'feuilleMatch']);
+    Route::get('/clubs/{club}/equipes/{equipe}/evenements/{evenement}/statistiques', [EvenementController::class, 'statistiquesMatch']);
     Route::put('/clubs/{club}/equipes/{equipe}/evenements/{evenement}', [EvenementController::class, 'update']);
     Route::delete('/clubs/{club}/equipes/{equipe}/evenements/{evenement}', [EvenementController::class, 'destroy']);
 
@@ -95,6 +99,9 @@ Route::middleware(['auth:sanctum', 'role:joueur'])->prefix('joueur')->group(func
     Route::put('/profil', [JoueurController::class, 'modifierProfil']);
     Route::get('/equipe', [JoueurController::class, 'equipe']);
     Route::get('/evenements', [JoueurController::class, 'evenements']);
+    Route::get('/evenements/{evenement}/composition', [JoueurController::class, 'compositionMatch']);
+    Route::get('/evenements/{evenement}/feuille-match', [JoueurController::class, 'feuilleMatch']);
+    Route::get('/evenements/{evenement}/statistiques-match', [JoueurController::class, 'statistiquesMatch']);
     Route::put('/evenements/{evenement}/disponibilite', [JoueurController::class, 'repondreDisponibilite']);
     Route::get('/convocations', [JoueurController::class, 'convocations']);
     Route::put('/convocations/{convocation}', [JoueurController::class, 'repondreConvocation']);
@@ -117,6 +124,13 @@ Route::middleware(['auth:sanctum', 'role:coach'])->prefix('coach')->group(functi
     Route::get('/equipes', [CoachController::class, 'equipes']);
     Route::get('/equipes/{equipe}/joueurs', [CoachController::class, 'joueursEquipe']);
     Route::get('/equipes/{equipe}/evenements', [CoachController::class, 'evenementsEquipe']);
+    Route::get('/equipes/{equipe}/evenements/{evenement}/disponibilites', [CoachController::class, 'disponibilitesEvenement']);
+    Route::get('/equipes/{equipe}/evenements/{evenement}/composition', [CoachController::class, 'compositionMatch']);
+    Route::put('/equipes/{equipe}/evenements/{evenement}/composition', [CoachController::class, 'enregistrerCompositionMatch']);
+    Route::get('/equipes/{equipe}/evenements/{evenement}/feuille-match', [CoachController::class, 'feuilleMatch']);
+    Route::put('/equipes/{equipe}/evenements/{evenement}/feuille-match', [CoachController::class, 'enregistrerFeuilleMatch']);
+    Route::get('/equipes/{equipe}/evenements/{evenement}/statistiques-match', [CoachController::class, 'statistiquesMatch']);
+    Route::put('/equipes/{equipe}/evenements/{evenement}/statistiques-match', [CoachController::class, 'enregistrerStatistiquesMatch']);
     Route::post('/equipes/{equipe}/evenements', [CoachController::class, 'creerEvenement']);
     Route::put('/equipes/{equipe}/evenements/{evenement}', [CoachController::class, 'modifierEvenement']);
     Route::delete('/equipes/{equipe}/evenements/{evenement}', [CoachController::class, 'supprimerEvenement']);
