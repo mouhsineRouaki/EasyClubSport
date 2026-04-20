@@ -9,6 +9,10 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\User;
 use App\Repositories\Joueur\JoueurRepository;
+use App\Services\Notification\NotificationService;
+use App\Support\CompositionMatchPresenter;
+use App\Support\FeuilleMatchPresenter;
+use App\Support\StatistiqueMatchPresenter;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +21,8 @@ use Illuminate\Validation\ValidationException;
 class JoueurService
 {
     public function __construct(
-        protected JoueurRepository $joueurRepository
+        protected JoueurRepository $joueurRepository,
+        protected NotificationService $notificationService
     ) {
     }
 
@@ -60,6 +65,45 @@ class JoueurService
         return $this->joueurRepository->listerEvenements($utilisateur);
     }
 
+    public function recupererCompositionMatch(User $utilisateur, Evenement $evenement): array
+    {
+        $equipe = $this->joueurRepository->recupererEquipeActive($utilisateur);
+
+        if (! $equipe || (int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Vous ne pouvez voir que la composition des matchs de votre equipe.');
+        }
+
+        $evenement = $this->joueurRepository->recupererEvenementAvecComposition($evenement);
+
+        return CompositionMatchPresenter::depuisEvenement($evenement) ?? [];
+    }
+
+    public function recupererFeuilleMatch(User $utilisateur, Evenement $evenement): ?array
+    {
+        $equipe = $this->joueurRepository->recupererEquipeActive($utilisateur);
+
+        if (! $equipe || (int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Vous ne pouvez voir que la feuille de match de votre equipe.');
+        }
+
+        $evenement = $this->joueurRepository->recupererEvenementAvecFeuilleMatch($evenement);
+
+        return FeuilleMatchPresenter::depuisEvenement($evenement);
+    }
+
+    public function recupererStatistiquesMatchEvenement(User $utilisateur, Evenement $evenement): array
+    {
+        $equipe = $this->joueurRepository->recupererEquipeActive($utilisateur);
+
+        if (! $equipe || (int) $evenement->equipe_id !== (int) $equipe->id) {
+            throw new AuthorizationException('Vous ne pouvez voir que les statistiques des matchs de votre equipe.');
+        }
+
+        $evenement = $this->joueurRepository->recupererEvenementAvecStatistiques($evenement);
+
+        return StatistiqueMatchPresenter::depuisEvenement($evenement);
+    }
+
     public function repondreDisponibilite(User $utilisateur, Evenement $evenement, array $donnees)
     {
         $equipe = $this->joueurRepository->recupererEquipeActive($utilisateur);
@@ -82,7 +126,10 @@ class JoueurService
             throw new AuthorizationException('Cette convocation ne vous appartient pas.');
         }
 
-        return $this->joueurRepository->mettreAJourConvocation($convocation, $donnees);
+        $convocation = $this->joueurRepository->mettreAJourConvocation($convocation, $donnees);
+        $this->notificationService->notifierReponseConvocation($convocation);
+
+        return $convocation;
     }
 
     public function listerDocuments(User $utilisateur)
@@ -106,7 +153,10 @@ class JoueurService
     {
         $this->verifierAccesCanal($utilisateur, $canal);
 
-        return $this->joueurRepository->creerMessage($utilisateur, $canal, $donnees);
+        $message = $this->joueurRepository->creerMessage($utilisateur, $canal, $donnees);
+        $this->notificationService->notifierNouveauMessage($message);
+
+        return $message;
     }
 
     public function modifierMessage(User $utilisateur, Message $message, array $donnees): Message
@@ -129,7 +179,7 @@ class JoueurService
 
     public function listerNotifications(User $utilisateur)
     {
-        return $this->joueurRepository->listerNotifications($utilisateur);
+        return $this->notificationService->listerPourUtilisateur($utilisateur);
     }
 
     public function marquerNotificationCommeLue(User $utilisateur, Notification $notification): Notification
@@ -138,12 +188,12 @@ class JoueurService
             throw new AuthorizationException('Cette notification ne vous appartient pas.');
         }
 
-        return $this->joueurRepository->marquerNotificationCommeLue($notification);
+        return $this->notificationService->marquerCommeLue($notification);
     }
 
     public function marquerToutesNotificationsCommeLues(User $utilisateur): int
     {
-        return $this->joueurRepository->marquerToutesNotificationsCommeLues($utilisateur);
+        return $this->notificationService->marquerToutesCommeLues($utilisateur);
     }
 
     public function listerStatistiques(User $utilisateur)
