@@ -30,8 +30,6 @@ Le projet est compose de ces modules :
 11. Documents
 12. Messages
 13. Notifications
-14. Cotisations
-
 ---
 
 ## 3. Arborescence Recommandee
@@ -332,8 +330,6 @@ Pour avancer proprement, on suit cet ordre :
 12. Documents
 13. Messages
 14. Notifications
-15. Cotisations
-
 ---
 
 ## 8. Regles De Travail Pour Le Projet
@@ -365,8 +361,6 @@ Les modeles principaux du projet seront :
 - `Message`
 - `Notification`
 - `Document`
-- `Cotisation`
-
 ---
 
 ## 10. Premier Module A Construire
