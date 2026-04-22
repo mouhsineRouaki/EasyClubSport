@@ -1,18 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { lireUtilisateurStocke } from '../composables/useAuthSession'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import PresidentDashboardView from '../views/president/PresidentDashboardView.vue'
-import CoachDashboardView from '../views/coach/CoachDashboardView.vue'
-import JoueurDashboardView from '../views/joueur/JoueurDashboardView.vue'
+import { lireTokenStocke, lireUtilisateurStocke } from '@/shared/session/sessionStorage'
+import LoginView from '@/features/auth/views/LoginPage.vue'
+import RegisterView from '@/features/auth/views/RegisterPage.vue'
+import PresidentDashboardView from '@/roles/president/dashboard/views/PresidentDashboardPage.vue'
+import CoachDashboardView from '@/roles/coach/dashboard/views/CoachDashboardPage.vue'
+import JoueurDashboardView from '@/roles/joueur/dashboard/views/JoueurDashboardPage.vue'
 
 const ROLE_HOME = {
   president: '/president',
   coach: '/coach',
   joueur: '/joueur',
 }
-
-const lireUtilisateur = () => lireUtilisateurStocke()
 
 const routeRole = (role) => ROLE_HOME[role] || '/login'
 
@@ -86,12 +84,12 @@ const registerAuthGuard = (router) => {
       return true
     }
 
-    const token = localStorage.getItem('token_api')
+    const token = lireTokenStocke()
     if (!token) {
       return '/login'
     }
 
-    const utilisateur = lireUtilisateur()
+    const utilisateur = lireUtilisateurStocke()
     const roleAttendu = to.meta.role
 
     if (!utilisateur?.role) {
