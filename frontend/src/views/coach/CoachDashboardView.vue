@@ -1,6 +1,5 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
 import blueBackground from '../../assets/Background.jpg'
 import logoMark from '../../assets/logo-easyclubsport-mark.svg'
 import { authGet, authPost, authPut, authDelete } from '../../services/api'
@@ -8,7 +7,8 @@ import { notifyError, notifySuccess } from '../../stores/toast'
 import { subscribeToCanalMessages, subscribeToNotifications, disconnectRealtime } from '../../services/realtime'
 import AppNotificationsDropdown from '../../components/common/AppNotificationsDropdown.vue'
 import AppProfileManager from '../../components/common/AppProfileManager.vue'
-
+import AppRoleHeroBanner from '../../components/common/AppRoleHeroBanner.vue'
+import { useAuthSession } from '../../composables/useAuthSession'
 import CoachDashboardHome from '../../components/coach/CoachDashboardHome.vue'
 import CoachEquipes from '../../components/coach/CoachEquipes.vue'
 import CoachJoueurs from '../../components/coach/CoachJoueurs.vue'
@@ -17,14 +17,13 @@ import CoachDisponibilites from '../../components/coach/CoachDisponibilites.vue'
 import CoachConvocations from '../../components/coach/CoachConvocations.vue'
 import CoachMessagerie from '../../components/coach/CoachMessagerie.vue'
 
-const router = useRouter()
+const { utilisateur: utilisateurConnecte, deconnecter, gererErreurAuthentification, sauvegarderUtilisateur } = useAuthSession()
 
 // ─── état global ───────────────────────────────────────────────────────────────
 const chargement = ref(true)
 const chargementRafraichissement = ref(false)
 const moduleActif = ref('dashboard')
 const dashboard = ref(null)
-const utilisateurConnecte = ref(null)
 const notificationsCoach = ref([])
 const notificationsNonLuesTotal = ref(0)
 const chargementNotifications = ref(false)
@@ -121,6 +120,15 @@ const liensGlobaux = [
   { label: 'Contact us', href: '#contact-support' },
 ]
 
+const placeholdersRecherche = {
+  equipes: 'Rechercher une equipe',
+  joueurs: 'Rechercher un joueur',
+  evenements: 'Rechercher un evenement',
+  disponibilites: 'Rechercher une disponibilite',
+  convocations: 'Rechercher une convocation',
+  messagerie: 'Rechercher une conversation',
+}
+
 const utilisateurResume = computed(() => {
   const u = utilisateurConnecte.value || {}
   return {
@@ -136,26 +144,30 @@ const mettreAJourProfilCoach = (payload) => {
   if (!utilisateur) return
 
   utilisateurConnecte.value = utilisateur
-  localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur))
+  sauvegarderUtilisateur(utilisateur)
 }
+
+const champsRechercheParModule = {
+  equipes: rechercheEquipes,
+  joueurs: rechercheJoueurs,
+  evenements: rechercheEvenements,
+  disponibilites: rechercheDisponibilites,
+  convocations: rechercheConvocations,
+  messagerie: rechercheMessagerie,
+}
+
+const placeholderRecherche = computed(() => placeholdersRecherche[moduleActif.value] || 'Search')
 
 const rechercheNavigation = computed({
   get() {
-    if (moduleActif.value === 'equipes') return rechercheEquipes.value
-    if (moduleActif.value === 'joueurs') return rechercheJoueurs.value
-    if (moduleActif.value === 'evenements') return rechercheEvenements.value
-    if (moduleActif.value === 'disponibilites') return rechercheDisponibilites.value
-    if (moduleActif.value === 'convocations') return rechercheConvocations.value
-    if (moduleActif.value === 'messagerie') return rechercheMessagerie.value
-    return ''
+    return champsRechercheParModule[moduleActif.value]?.value || ''
   },
   set(value) {
-    if (moduleActif.value === 'equipes') { rechercheEquipes.value = value; return }
-    if (moduleActif.value === 'joueurs') { rechercheJoueurs.value = value; return }
-    if (moduleActif.value === 'evenements') { rechercheEvenements.value = value; return }
-    if (moduleActif.value === 'disponibilites') { rechercheDisponibilites.value = value; return }
-    if (moduleActif.value === 'convocations') { rechercheConvocations.value = value; return }
-    if (moduleActif.value === 'messagerie') { rechercheMessagerie.value = value }
+    const champRecherche = champsRechercheParModule[moduleActif.value]
+
+    if (champRecherche) {
+      champRecherche.value = value
+    }
   },
 })
 
@@ -255,7 +267,7 @@ const chargerDashboard = async () => {
       authGet('/auth/moi'),
     ])
     dashboard.value = repDash?.data || null
-    utilisateurConnecte.value = repProfil?.data?.utilisateur || repProfil?.data || null
+    sauvegarderUtilisateur(repProfil?.data?.utilisateur || repProfil?.data || null)
     const equipeDashboardId = repDash?.data?.equipe?.id ? String(repDash.data.equipe.id) : ''
     if (equipeDashboardId) {
       equipeJoueurId.value = equipeDashboardId
@@ -265,10 +277,7 @@ const chargerDashboard = async () => {
     }
     derniereMiseAJour.value = new Date().toISOString()
   } catch (error) {
-    if (error?.response?.code === 401 || error?.status === 401) {
-      localStorage.removeItem('token_api')
-      localStorage.removeItem('utilisateur_api')
-      router.push('/login')
+    if (gererErreurAuthentification(error)) {
       return
     }
     notifyError(error?.response?.message || error.message || 'Impossible de charger le dashboard.')
@@ -756,11 +765,6 @@ const arreterRafraichissementAuto = () => {
   }
 }
 
-const deconnecter = () => {
-  localStorage.removeItem('token_api')
-  localStorage.removeItem('utilisateur_api')
-  router.push('/login')
-}
 
 // ─── watchers ──────────────────────────────────────────────────────────────────
 watch(rechercheEquipes, () => {
@@ -843,57 +847,40 @@ onBeforeUnmount(() => {
     <div class="mx-auto max-w-[1450px] px-2 pb-5 pt-2 sm:px-4 sm:pt-3">
 
       <!-- ── HERO BANNER ─────────────────────────────────────────────────────── -->
-      <section
-        class="relative overflow-hidden rounded-[28px] border border-[#2a43cd] bg-[#2446d8] px-4 pb-[180px] pt-4 text-white sm:px-7 sm:pb-[196px] sm:pt-5">
-        <img :src="blueBackground" alt="Background" class="absolute inset-0 h-full w-full object-cover" />
+      <AppRoleHeroBanner
+        :background-src="blueBackground"
+        :logo-src="logoMark"
+        home-route="/coach/dashboard"
+        :global-links="liensGlobaux"
+        @logout="deconnecter"
+      >
+        <template #title>
+          Gerez vos equipes
+          <br class="hidden sm:block" />
+          avec une interface claire
+        </template>
 
-        <header
-          class="relative z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
-          <RouterLink to="/coach/dashboard" class="flex items-center gap-2.5">
-            <img :src="logoMark" alt="EasySportClub" class="h-10 w-10 rounded-xl bg-white/95 p-2" />
-            <span class="text-lg font-bold">EasySportClub</span>
-          </RouterLink>
+        <template #description>
+          Votre espace coach centralise equipes, evenements, convocations et messagerie en un seul endroit.
+        </template>
 
-          <nav class="flex flex-wrap items-center gap-2">
-            <RouterLink v-for="item in liensGlobaux.filter((l) => l.to)" :key="item.to" :to="item.to"
-              class="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[11px] font-semibold text-white/95 transition hover:bg-white/20">
-              {{ item.label }}
-            </RouterLink>
-            <a v-for="item in liensGlobaux.filter((l) => l.href)" :key="item.href" :href="item.href"
-              class="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[11px] font-semibold text-white/95 transition hover:bg-white/20">
-              {{ item.label }}
-            </a>
-            <button type="button"
-              class="rounded-full bg-white px-4 py-1.5 text-[11px] font-bold text-[#1f36bf] transition hover:bg-[#eef2ff]"
-              @click="deconnecter">
-              Deconnexion
-            </button>
-          </nav>
-        </header>
-
-        <div class="relative z-10 mx-auto mt-10 max-w-4xl text-center sm:mt-14">
-          <h1 class="text-3xl font-black leading-[1.16] sm:text-6xl">
-            Gerez vos equipes
-            <br class="hidden sm:block" />
-            avec une interface claire
-          </h1>
-          <p class="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/80 sm:text-base">
-            Votre espace coach centralise equipes, evenements, convocations et messagerie en un seul endroit.
-          </p>
-          <div class="mt-6 flex flex-wrap items-center justify-center gap-2.5">
-            <button type="button"
-              class="rounded-full bg-white px-6 py-2 text-sm font-bold text-[#1f36bf] transition hover:bg-[#eef2ff]"
-              @click="afficherModule('equipes')">
-              Mes equipes
-            </button>
-            <button type="button"
-              class="rounded-full border border-white/35 bg-white/8 px-6 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
-              @click="afficherModule('evenements')">
-              Voir les evenements
-            </button>
-          </div>
-        </div>
-      </section>
+        <template #actions>
+          <button
+            type="button"
+            class="rounded-full bg-white px-6 py-2 text-sm font-bold text-[#1f36bf] transition hover:bg-[#eef2ff]"
+            @click="afficherModule('equipes')"
+          >
+            Mes equipes
+          </button>
+          <button
+            type="button"
+            class="rounded-full border border-white/35 bg-white/8 px-6 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+            @click="afficherModule('evenements')"
+          >
+            Voir les evenements
+          </button>
+        </template>
+      </AppRoleHeroBanner>
 
       <!-- ── WORKSPACE CARD ──────────────────────────────────────────────────── -->
       <section class="relative -mt-[154px] z-30 min-h-screen pb-0">
@@ -914,8 +901,7 @@ onBeforeUnmount(() => {
 
             <div class="flex items-center gap-2">
               <label class="relative hidden sm:block">
-                <input v-model="rechercheNavigation" type="text"
-                  :placeholder="moduleActif === 'equipes' ? 'Rechercher une equipe' : moduleActif === 'joueurs' ? 'Rechercher un joueur' : moduleActif === 'evenements' ? 'Rechercher un evenement' : moduleActif === 'disponibilites' ? 'Rechercher une disponibilite' : moduleActif === 'convocations' ? 'Rechercher une convocation' : moduleActif === 'messagerie' ? 'Rechercher une conversation' : 'Search'"
+                <input v-model="rechercheNavigation" type="text" :placeholder="placeholderRecherche"
                   class="h-8 w-[165px] rounded-full border border-[#dbe2ef] bg-white px-3 py-1 text-xs text-[#1f2a44] outline-none placeholder:text-[#94a3b8]" />
               </label>
 

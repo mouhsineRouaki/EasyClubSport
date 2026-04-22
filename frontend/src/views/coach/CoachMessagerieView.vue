@@ -1,16 +1,14 @@
-﻿<script setup>
+<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import CoachShellLayout from '../../components/coach/CoachShellLayout.vue'
 import PresidentConversationItem from '../../components/president/PresidentConversationItem.vue'
 import PresidentMessageBubble from '../../components/president/PresidentMessageBubble.vue'
-import { useStoredUser } from '../../composables/useStoredUser'
+import { useAuthSession } from '../../composables/useAuthSession'
 import { authDelete, authGet, authPost, authPut } from '../../services/api'
 import { disconnectRealtime, subscribeToCanalMessages } from '../../services/realtime'
 import { notifyError, notifySuccess } from '../../stores/toast'
 
-const router = useRouter()
-const { utilisateur, chargerUtilisateur } = useStoredUser()
+const { utilisateur, chargerUtilisateur, deconnecter, gererErreurAuthentification } = useAuthSession()
 const chargementCanaux = ref(true)
 const chargementMessages = ref(false)
 const canaux = ref([])
@@ -27,25 +25,39 @@ const stopRealtimeSubscription = ref(() => {})
 
 const canauxFiltres = computed(() => {
   const terme = recherche.value.trim().toLowerCase()
-  if (!terme) return canaux.value
-  return canaux.value.filter((canal) => [canal.nom, canal.description, canal.equipe?.nom, canal.club?.nom].filter(Boolean).join(' ').toLowerCase().includes(terme))
+
+  if (!terme) {
+    return canaux.value
+  }
+
+  return canaux.value.filter((canal) => {
+    const contenuRecherche = [canal.nom, canal.description, canal.equipe?.nom, canal.club?.nom]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    return contenuRecherche.includes(terme)
+  })
 })
-const canalActuel = computed(() => canaux.value.find((canal) => String(canal.id) === String(selectedCanalId.value)) || null)
+
+const canalActuel = computed(() => {
+  return canaux.value.find((canal) => String(canal.id) === String(selectedCanalId.value)) || null
+})
+
 const utilisateurIdActuel = computed(() => utilisateur.value?.id ?? null)
 
-const gerer401 = (error) => {
-  if (error?.response?.code === 401) {
-    localStorage.removeItem('token_api')
-    localStorage.removeItem('utilisateur_api')
+const gererErreurMessagerie = (error) => {
+  if (gererErreurAuthentification(error)) {
     disconnectRealtime()
-    router.push('/login')
     return true
   }
+
   return false
 }
 
 const scrollToBottom = async () => {
   await nextTick()
+
   if (messagesViewport.value) {
     messagesViewport.value.scrollTo({ top: messagesViewport.value.scrollHeight, behavior: 'smooth' })
   }
@@ -65,14 +77,18 @@ const normaliserMessage = (message) => ({
 
 const chargerCanaux = async () => {
   chargementCanaux.value = true
+
   try {
     const reponse = await authGet('/coach/canaux')
     canaux.value = reponse?.data?.canaux || []
+
     if (!selectedCanalId.value && canaux.value.length) {
       selectedCanalId.value = String(canaux.value[0].id)
     }
   } catch (error) {
-    if (!gerer401(error)) notifyError(error?.response?.message || error.message || 'Impossible de charger les canaux coach.')
+    if (!gererErreurMessagerie(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les canaux coach.')
+    }
   } finally {
     chargementCanaux.value = false
   }
@@ -85,12 +101,15 @@ const chargerMessages = async () => {
   }
 
   chargementMessages.value = true
+
   try {
     const reponse = await authGet(`/coach/canaux/${selectedCanalId.value}/messages`)
     messages.value = reponse?.data?.messages || []
     await scrollToBottom()
   } catch (error) {
-    if (!gerer401(error)) notifyError(error?.response?.message || error.message || 'Impossible de charger les messages coach.')
+    if (!gererErreurMessagerie(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les messages coach.')
+    }
   } finally {
     chargementMessages.value = false
   }
@@ -99,48 +118,43 @@ const chargerMessages = async () => {
 const synchroniserRealtime = () => {
   stopRealtimeSubscription.value?.()
   stopRealtimeSubscription.value = () => {}
-  if (!canalActuel.value?.id) return
+
+  if (!canalActuel.value?.id) {
+    return
+  }
 
   stopRealtimeSubscription.value = subscribeToCanalMessages(canalActuel.value.id, async (payload) => {
     const message = normaliserMessage(payload)
+
     if (messages.value.some((item) => item.id === message.id)) return
     if (String(message.canal_id) !== String(canalActuel.value?.id)) return
+
     messages.value = [...messages.value, message]
     await scrollToBottom()
   })
 }
 
-watch(selectedCanalId, async () => {
-  editionMessageId.value = null
-  editionContenu.value = ''
-  await chargerMessages()
-  synchroniserRealtime()
-})
-
-watch(recherche, () => {
-  if (searchDebounce.value) clearTimeout(searchDebounce.value)
-  searchDebounce.value = setTimeout(() => {
-    if (!canauxFiltres.value.some((canal) => String(canal.id) === String(selectedCanalId.value))) {
-      selectedCanalId.value = canauxFiltres.value[0] ? String(canauxFiltres.value[0].id) : ''
-    }
-  }, 150)
-})
-
 const envoyer = async () => {
   if (!selectedCanalId.value || !formulaire.value.trim()) return
+
   erreurs.value = {}
 
   try {
     const reponse = await authPost(`/coach/canaux/${selectedCanalId.value}/messages`, { contenu: formulaire.value })
     const message = reponse?.data?.message
+
     if (message && !messages.value.some((item) => item.id === message.id)) {
       messages.value = [...messages.value, message]
     }
+
     formulaire.value = ''
     notifySuccess(reponse?.message || 'Message envoye avec succes.')
     await scrollToBottom()
   } catch (error) {
-    if (gerer401(error)) return
+    if (gererErreurMessagerie(error)) {
+      return
+    }
+
     erreurs.value = error?.response?.data || {}
     notifyError(error?.response?.message || error.message || 'Impossible d envoyer le message.')
   }
@@ -159,31 +173,54 @@ const annulerEdition = () => {
 const enregistrerEdition = async (message) => {
   try {
     const reponse = await authPut(`/coach/messages/${message.id}`, { contenu: editionContenu.value })
-    const messageMaj = reponse?.data?.message || { ...message, contenu: editionContenu.value }
-    messages.value = messages.value.map((item) => (item.id === message.id ? normaliserMessage(messageMaj) : item))
+    const messageMisAJour = reponse?.data?.message || { ...message, contenu: editionContenu.value }
+    messages.value = messages.value.map((item) => (item.id === message.id ? normaliserMessage(messageMisAJour) : item))
     annulerEdition()
     notifySuccess(reponse?.message || 'Message modifie avec succes.')
   } catch (error) {
-    if (!gerer401(error)) notifyError(error?.response?.message || error.message || 'Impossible de modifier le message.')
+    if (!gererErreurMessagerie(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de modifier le message.')
+    }
   }
 }
 
 const supprimerMessage = async (message) => {
   if (!window.confirm('Supprimer ce message ?')) return
+
   try {
     const reponse = await authDelete(`/coach/messages/${message.id}`)
     messages.value = messages.value.filter((item) => item.id !== message.id)
     notifySuccess(reponse?.message || 'Message supprime avec succes.')
   } catch (error) {
-    if (!gerer401(error)) notifyError(error?.response?.message || error.message || 'Impossible de supprimer le message.')
+    if (!gererErreurMessagerie(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de supprimer le message.')
+    }
   }
 }
 
-const deconnecter = () => {
-  localStorage.removeItem('token_api')
-  localStorage.removeItem('utilisateur_api')
-  router.push('/login')
+const deconnecterMessagerie = () => {
+  disconnectRealtime()
+  deconnecter()
 }
+
+watch(selectedCanalId, async () => {
+  editionMessageId.value = null
+  editionContenu.value = ''
+  await chargerMessages()
+  synchroniserRealtime()
+})
+
+watch(recherche, () => {
+  if (searchDebounce.value) {
+    clearTimeout(searchDebounce.value)
+  }
+
+  searchDebounce.value = setTimeout(() => {
+    if (!canauxFiltres.value.some((canal) => String(canal.id) === String(selectedCanalId.value))) {
+      selectedCanalId.value = canauxFiltres.value[0] ? String(canauxFiltres.value[0].id) : ''
+    }
+  }, 150)
+})
 
 onMounted(async () => {
   chargerUtilisateur()
@@ -192,13 +229,22 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  if (searchDebounce.value) clearTimeout(searchDebounce.value)
+  if (searchDebounce.value) {
+    clearTimeout(searchDebounce.value)
+  }
+
   stopRealtimeSubscription.value?.()
 })
 </script>
 
 <template>
-  <CoachShellLayout title="Messagerie coach" subtitle="Conversations de vos equipes avec mise a jour en temps reel." active-tab="messagerie" :user="utilisateur" @logout="deconnecter">
+  <CoachShellLayout
+    title="Messagerie coach"
+    subtitle="Conversations de vos equipes avec mise a jour en temps reel."
+    active-tab="messagerie"
+    :user="utilisateur"
+    @logout="deconnecterMessagerie"
+  >
     <div class="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
       <aside class="overflow-hidden rounded-[28px] border border-[#e5ecfb] bg-white">
         <div class="border-b border-[#edf2ff] p-5">

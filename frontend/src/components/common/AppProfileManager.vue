@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import AppModuleHeader from './AppModuleHeader.vue'
+import { useAuthSession } from '../../composables/useAuthSession'
 import { authGet, authPut } from '../../services/api'
 import { notifyError, notifySuccess } from '../../stores/toast'
 
@@ -13,6 +14,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['saved'])
+const { gererErreurAuthentification, sauvegarderUtilisateur } = useAuthSession()
 
 const chargement = ref(false)
 const enregistrement = ref(false)
@@ -74,9 +76,16 @@ const chargerProfil = async () => {
     const data = reponse?.data || {}
     const utilisateur = data.utilisateur || {}
     remplirFormulaire(utilisateur)
+    if (Object.keys(utilisateur).length) {
+      sauvegarderUtilisateur(utilisateur)
+    }
     dejaCharge.value = true
     emit('saved', data)
   } catch (error) {
+    if (gererErreurAuthentification(error)) {
+      return
+    }
+
     notifyError(error?.response?.message || error.message || 'Impossible de charger le profil.')
   } finally {
     chargement.value = false
@@ -119,12 +128,19 @@ const enregistrerProfil = async () => {
     const utilisateur = data.utilisateur || {}
 
     remplirFormulaire(utilisateur)
+    if (Object.keys(utilisateur).length) {
+      sauvegarderUtilisateur(utilisateur)
+    }
     photoFichier.value = null
     photoPreview.value = ''
     dejaCharge.value = true
     emit('saved', data)
     notifySuccess(reponse?.message || 'Profil mis a jour avec succes.')
   } catch (error) {
+    if (gererErreurAuthentification(error)) {
+      return
+    }
+
     erreurs.value = error?.response?.data || {}
     if (!Object.keys(erreurs.value).length) {
       notifyError(error?.response?.message || error.message || 'Impossible de mettre a jour le profil.')

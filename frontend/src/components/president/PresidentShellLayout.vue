@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import logoEasyClubSportMark from '../../assets/logo-easyclubsport-mark.svg'
+import { lireUtilisateurStocke } from '../../composables/useAuthSession'
 
 const props = defineProps({
   breadcrumb: {
@@ -55,18 +56,7 @@ const profilConnecte = computed(() => {
 })
 
 const rafraichirUtilisateurLocal = () => {
-  const utilisateurStocke = localStorage.getItem('utilisateur_api')
-
-  if (!utilisateurStocke) {
-    utilisateurLocal.value = null
-    return
-  }
-
-  try {
-    utilisateurLocal.value = JSON.parse(utilisateurStocke)
-  } catch {
-    utilisateurLocal.value = null
-  }
+  utilisateurLocal.value = lireUtilisateurStocke()
 }
 
 watch(

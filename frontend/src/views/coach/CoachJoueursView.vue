@@ -1,37 +1,27 @@
-﻿<script setup>
+<script setup>
 import { onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import CoachShellLayout from '../../components/coach/CoachShellLayout.vue'
-import { useStoredUser } from '../../composables/useStoredUser'
+import AppSelectField from '../../components/common/AppSelectField.vue'
+import { useAuthSession } from '../../composables/useAuthSession'
 import { authGet } from '../../services/api'
 import { notifyError } from '../../stores/toast'
 
-const router = useRouter()
-const { utilisateur, chargerUtilisateur } = useStoredUser()
+const { utilisateur, chargerUtilisateur, deconnecter, gererErreurAuthentification } = useAuthSession()
 const chargementEquipes = ref(true)
 const chargementJoueurs = ref(false)
 const equipes = ref([])
 const joueurs = ref([])
-const selectedEquipeId = ref('')
-
-const gerer401 = (error) => {
-  if (error?.response?.code === 401) {
-    localStorage.removeItem('token_api')
-    localStorage.removeItem('utilisateur_api')
-    router.push('/login')
-    return true
-  }
-  return false
-}
+const equipeSelectionneeId = ref('')
 
 const chargerEquipes = async () => {
   chargementEquipes.value = true
+
   try {
     const reponse = await authGet('/coach/equipes')
     equipes.value = reponse?.data?.equipes || []
-    selectedEquipeId.value = equipes.value[0] ? String(equipes.value[0].id) : ''
+    equipeSelectionneeId.value = equipes.value[0] ? String(equipes.value[0].id) : ''
   } catch (error) {
-    if (!gerer401(error)) {
+    if (!gererErreurAuthentification(error)) {
       notifyError(error?.response?.message || error.message || 'Impossible de charger les equipes.')
     }
   } finally {
@@ -40,17 +30,18 @@ const chargerEquipes = async () => {
 }
 
 const chargerJoueurs = async () => {
-  if (!selectedEquipeId.value) {
+  if (!equipeSelectionneeId.value) {
     joueurs.value = []
     return
   }
 
   chargementJoueurs.value = true
+
   try {
-    const reponse = await authGet(`/coach/equipes/${selectedEquipeId.value}/joueurs`)
+    const reponse = await authGet(`/coach/equipes/${equipeSelectionneeId.value}/joueurs`)
     joueurs.value = reponse?.data?.joueurs || []
   } catch (error) {
-    if (!gerer401(error)) {
+    if (!gererErreurAuthentification(error)) {
       notifyError(error?.response?.message || error.message || 'Impossible de charger les joueurs.')
     }
   } finally {
@@ -58,13 +49,7 @@ const chargerJoueurs = async () => {
   }
 }
 
-watch(selectedEquipeId, chargerJoueurs)
-
-const deconnecter = () => {
-  localStorage.removeItem('token_api')
-  localStorage.removeItem('utilisateur_api')
-  router.push('/login')
-}
+watch(equipeSelectionneeId, chargerJoueurs)
 
 onMounted(async () => {
   chargerUtilisateur()
@@ -74,12 +59,24 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CoachShellLayout title="Joueurs coach" subtitle="Suivez les joueurs de chaque equipe que vous encadrez." active-tab="joueurs" :user="utilisateur" @logout="deconnecter">
-    <div class="flex flex-wrap items-center gap-3">
-      <select v-model="selectedEquipeId" class="h-12 min-w-[280px] rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" :disabled="chargementEquipes">
-        <option value="">Choisir une equipe</option>
-        <option v-for="equipe in equipes" :key="equipe.id" :value="String(equipe.id)">{{ equipe.nom }}</option>
-      </select>
+  <CoachShellLayout
+    title="Joueurs coach"
+    subtitle="Suivez les joueurs de chaque equipe que vous encadrez."
+    active-tab="joueurs"
+    :user="utilisateur"
+    @logout="deconnecter"
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="min-w-[280px]">
+        <AppSelectField
+          v-model="equipeSelectionneeId"
+          label="Equipe"
+          :options="equipes"
+          placeholder="Choisir une equipe"
+          :disabled="chargementEquipes"
+          select-class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]"
+        />
+      </div>
     </div>
 
     <div v-if="chargementJoueurs" class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -91,7 +88,7 @@ onMounted(async () => {
         <div class="flex items-center gap-4">
           <img v-if="joueur.photo_url" :src="joueur.photo_url" :alt="joueur.nom" class="h-16 w-16 rounded-2xl object-cover" />
           <div v-else class="grid h-16 w-16 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2446d8_0%,#4c6fff_100%)] text-sm font-black text-white">
-            {{ joueur.nom?.slice(0,2).toUpperCase() }}
+            {{ joueur.nom?.slice(0, 2).toUpperCase() }}
           </div>
           <div>
             <h2 class="text-lg font-black text-[#0f172a]">{{ joueur.nom }}</h2>

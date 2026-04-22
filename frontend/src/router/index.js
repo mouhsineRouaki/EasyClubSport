@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { lireUtilisateurStocke } from '../composables/useAuthSession'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import PresidentDashboardView from '../views/president/PresidentDashboardView.vue'
@@ -11,19 +12,7 @@ const ROLE_HOME = {
   joueur: '/joueur',
 }
 
-const lireUtilisateur = () => {
-  const utilisateurStocke = localStorage.getItem('utilisateur_api')
-
-  if (!utilisateurStocke) {
-    return null
-  }
-
-  try {
-    return JSON.parse(utilisateurStocke)
-  } catch {
-    return null
-  }
-}
+const lireUtilisateur = () => lireUtilisateurStocke()
 
 const routeRole = (role) => ROLE_HOME[role] || '/login'
 

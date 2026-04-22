@@ -1,28 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import PresidentMessagingSection from '../../components/president/PresidentMessagingSection.vue'
 import PresidentShellLayout from '../../components/president/PresidentShellLayout.vue'
+import { useAuthSession } from '../../composables/useAuthSession'
 
-const router = useRouter()
-const utilisateurConnecte = ref(null)
+const { utilisateur, deconnecter } = useAuthSession()
 const recherche = ref('')
-
-const utilisateurStocke = localStorage.getItem('utilisateur_api')
-
-if (utilisateurStocke) {
-  try {
-    utilisateurConnecte.value = JSON.parse(utilisateurStocke)
-  } catch {
-    utilisateurConnecte.value = null
-  }
-}
-
-const deconnecter = () => {
-  localStorage.removeItem('token_api')
-  localStorage.removeItem('utilisateur_api')
-  router.push('/login')
-}
 </script>
 
 <template>
@@ -30,7 +13,7 @@ const deconnecter = () => {
     title="Gestion des messages"
     subtitle="Conversations a gauche, fil de discussion a droite, et temps reel par websocket."
     active-section="messagerie"
-    :utilisateur="utilisateurConnecte"
+    :utilisateur="utilisateur"
     @logout="deconnecter"
   >
     <PresidentMessagingSection v-model:search-term="recherche" />

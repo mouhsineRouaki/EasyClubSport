@@ -1,46 +1,29 @@
-﻿<script setup>
+<script setup>
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import CoachShellLayout from '../../components/coach/CoachShellLayout.vue'
-import { useStoredUser } from '../../composables/useStoredUser'
+import { useAuthSession } from '../../composables/useAuthSession'
 import { authGet } from '../../services/api'
 import { notifyError } from '../../stores/toast'
 
-const router = useRouter()
-const { utilisateur, chargerUtilisateur } = useStoredUser()
+const { utilisateur, chargerUtilisateur, deconnecter, gererErreurAuthentification } = useAuthSession()
 const chargement = ref(true)
 const equipes = ref([])
 const equipeSelectionnee = ref(null)
 
-const gerer401 = (error) => {
-  if (error?.response?.code === 401) {
-    localStorage.removeItem('token_api')
-    localStorage.removeItem('utilisateur_api')
-    router.push('/login')
-    return true
-  }
-  return false
-}
-
 const chargerEquipes = async () => {
   chargement.value = true
+
   try {
     const reponse = await authGet('/coach/equipes')
     equipes.value = reponse?.data?.equipes || []
     equipeSelectionnee.value = equipes.value[0] || null
   } catch (error) {
-    if (!gerer401(error)) {
+    if (!gererErreurAuthentification(error)) {
       notifyError(error?.response?.message || error.message || 'Impossible de charger les equipes du coach.')
     }
   } finally {
     chargement.value = false
   }
-}
-
-const deconnecter = () => {
-  localStorage.removeItem('token_api')
-  localStorage.removeItem('utilisateur_api')
-  router.push('/login')
 }
 
 onMounted(async () => {
@@ -50,7 +33,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CoachShellLayout title="Equipes coach" subtitle="Consultez vos equipes, leur club et leur effectif actuel." active-tab="equipes" :user="utilisateur" @logout="deconnecter">
+  <CoachShellLayout
+    title="Equipes coach"
+    subtitle="Consultez vos equipes, leur club et leur effectif actuel."
+    active-tab="equipes"
+    :user="utilisateur"
+    @logout="deconnecter"
+  >
     <div v-if="chargement" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       <div v-for="item in 3" :key="item" class="h-56 animate-pulse rounded-[28px] border border-[#edf2ff] bg-[#f8fbff]"></div>
     </div>

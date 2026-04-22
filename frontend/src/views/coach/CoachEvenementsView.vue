@@ -1,19 +1,18 @@
-﻿<script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+<script setup>
+import { onMounted, reactive, ref, watch } from 'vue'
 import CoachShellLayout from '../../components/coach/CoachShellLayout.vue'
-import { useStoredUser } from '../../composables/useStoredUser'
+import AppSelectField from '../../components/common/AppSelectField.vue'
+import { useAuthSession } from '../../composables/useAuthSession'
 import { authDelete, authGet, authPost, authPut } from '../../services/api'
 import { notifyError, notifySuccess } from '../../stores/toast'
 
-const router = useRouter()
-const { utilisateur, chargerUtilisateur } = useStoredUser()
+const { utilisateur, chargerUtilisateur, deconnecter, gererErreurAuthentification } = useAuthSession()
 const chargementEquipes = ref(true)
 const chargementEvenements = ref(false)
 const envoi = ref(false)
 const equipes = ref([])
 const evenements = ref([])
-const selectedEquipeId = ref('')
+const equipeSelectionneeId = ref('')
 const modalOuvert = ref(false)
 const mode = ref('creation')
 const evenementSelectionne = ref(null)
@@ -31,24 +30,18 @@ const formulaire = reactive({
   statut: 'planifie',
 })
 
-const equipeActuelle = computed(() => equipes.value.find((equipe) => String(equipe.id) === String(selectedEquipeId.value)) || null)
-
-const gerer401 = (error) => {
-  if (error?.response?.code === 401) {
-    localStorage.removeItem('token_api')
-    localStorage.removeItem('utilisateur_api')
-    router.push('/login')
-    return true
-  }
-  return false
-}
-
 const formatDate = (value) => {
   if (!value) return '-'
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value))
 }
 
-const resetForm = () => {
+const lireErreur = (champ) => erreurs.value?.[champ]?.[0] || ''
+
+const reinitialiserFormulaire = () => {
   formulaire.titre = ''
   formulaire.type = 'entrainement'
   formulaire.date_debut = ''
@@ -61,7 +54,7 @@ const resetForm = () => {
   erreurs.value = {}
 }
 
-const remplirForm = (evenement) => {
+const remplirFormulaire = (evenement) => {
   formulaire.titre = evenement.titre || ''
   formulaire.type = evenement.type || 'entrainement'
   formulaire.date_debut = evenement.date_debut ? String(evenement.date_debut).slice(0, 16) : ''
@@ -76,38 +69,42 @@ const remplirForm = (evenement) => {
 
 const chargerEquipes = async () => {
   chargementEquipes.value = true
+
   try {
     const reponse = await authGet('/coach/equipes')
     equipes.value = reponse?.data?.equipes || []
-    selectedEquipeId.value = equipes.value[0] ? String(equipes.value[0].id) : ''
+    equipeSelectionneeId.value = equipes.value[0] ? String(equipes.value[0].id) : ''
   } catch (error) {
-    if (!gerer401(error)) notifyError(error?.response?.message || error.message || 'Impossible de charger les equipes.')
+    if (!gererErreurAuthentification(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les equipes.')
+    }
   } finally {
     chargementEquipes.value = false
   }
 }
 
 const chargerEvenements = async () => {
-  if (!selectedEquipeId.value) {
+  if (!equipeSelectionneeId.value) {
     evenements.value = []
     return
   }
 
   chargementEvenements.value = true
+
   try {
-    const reponse = await authGet(`/coach/equipes/${selectedEquipeId.value}/evenements`)
+    const reponse = await authGet(`/coach/equipes/${equipeSelectionneeId.value}/evenements`)
     evenements.value = reponse?.data?.evenements || []
   } catch (error) {
-    if (!gerer401(error)) notifyError(error?.response?.message || error.message || 'Impossible de charger les evenements.')
+    if (!gererErreurAuthentification(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les evenements.')
+    }
   } finally {
     chargementEvenements.value = false
   }
 }
 
-watch(selectedEquipeId, chargerEvenements)
-
 const ouvrirCreation = () => {
-  resetForm()
+  reinitialiserFormulaire()
   mode.value = 'creation'
   evenementSelectionne.value = null
   modalOuvert.value = true
@@ -115,7 +112,7 @@ const ouvrirCreation = () => {
 
 const ouvrirEdition = (evenement) => {
   evenementSelectionne.value = evenement
-  remplirForm(evenement)
+  remplirFormulaire(evenement)
   mode.value = 'edition'
   modalOuvert.value = true
 }
@@ -126,7 +123,7 @@ const fermerModal = () => {
 }
 
 const enregistrer = async () => {
-  if (!selectedEquipeId.value) {
+  if (!equipeSelectionneeId.value) {
     notifyError('Choisissez une equipe.')
     return
   }
@@ -148,17 +145,21 @@ const enregistrer = async () => {
 
   try {
     let reponse
+
     if (mode.value === 'edition' && evenementSelectionne.value) {
-      reponse = await authPut(`/coach/equipes/${selectedEquipeId.value}/evenements/${evenementSelectionne.value.id}`, payload)
+      reponse = await authPut(`/coach/equipes/${equipeSelectionneeId.value}/evenements/${evenementSelectionne.value.id}`, payload)
     } else {
-      reponse = await authPost(`/coach/equipes/${selectedEquipeId.value}/evenements`, payload)
+      reponse = await authPost(`/coach/equipes/${equipeSelectionneeId.value}/evenements`, payload)
     }
 
     notifySuccess(reponse?.message || 'Evenement enregistre avec succes.')
     fermerModal()
     await chargerEvenements()
   } catch (error) {
-    if (gerer401(error)) return
+    if (gererErreurAuthentification(error)) {
+      return
+    }
+
     erreurs.value = error?.response?.data || {}
     notifyError(error?.response?.message || error.message || 'Impossible d enregistrer cet evenement.')
   } finally {
@@ -170,21 +171,17 @@ const supprimerEvenement = async (evenement) => {
   if (!window.confirm('Supprimer cet evenement ?')) return
 
   try {
-    const reponse = await authDelete(`/coach/equipes/${selectedEquipeId.value}/evenements/${evenement.id}`)
+    const reponse = await authDelete(`/coach/equipes/${equipeSelectionneeId.value}/evenements/${evenement.id}`)
     notifySuccess(reponse?.message || 'Evenement supprime avec succes.')
     await chargerEvenements()
   } catch (error) {
-    if (!gerer401(error)) notifyError(error?.response?.message || error.message || 'Impossible de supprimer cet evenement.')
+    if (!gererErreurAuthentification(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de supprimer cet evenement.')
+    }
   }
 }
 
-const lireErreur = (champ) => erreurs.value?.[champ]?.[0] || ''
-
-const deconnecter = () => {
-  localStorage.removeItem('token_api')
-  localStorage.removeItem('utilisateur_api')
-  router.push('/login')
-}
+watch(equipeSelectionneeId, chargerEvenements)
 
 onMounted(async () => {
   chargerUtilisateur()
@@ -194,12 +191,24 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CoachShellLayout title="Evenements coach" subtitle="Planifiez et suivez les activites de vos equipes." active-tab="evenements" :user="utilisateur" @logout="deconnecter">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <select v-model="selectedEquipeId" class="h-12 min-w-[280px] rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" :disabled="chargementEquipes">
-        <option value="">Choisir une equipe</option>
-        <option v-for="equipe in equipes" :key="equipe.id" :value="String(equipe.id)">{{ equipe.nom }}</option>
-      </select>
+  <CoachShellLayout
+    title="Evenements coach"
+    subtitle="Planifiez et suivez les activites de vos equipes."
+    active-tab="evenements"
+    :user="utilisateur"
+    @logout="deconnecter"
+  >
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div class="min-w-[280px]">
+        <AppSelectField
+          v-model="equipeSelectionneeId"
+          label="Equipe"
+          :options="equipes"
+          placeholder="Choisir une equipe"
+          :disabled="chargementEquipes"
+          select-class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]"
+        />
+      </div>
 
       <button type="button" class="rounded-full bg-[#0f172a] px-5 py-3 text-sm font-semibold text-white" @click="ouvrirCreation">
         Nouvel evenement
