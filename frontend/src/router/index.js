@@ -5,6 +5,28 @@ import PresidentDashboardView from '../views/president/PresidentDashboardView.vu
 import CoachDashboardView from '../views/coach/CoachDashboardView.vue'
 import JoueurDashboardView from '../views/joueur/JoueurDashboardView.vue'
 
+const ROLE_HOME = {
+  president: '/president',
+  coach: '/coach',
+  joueur: '/joueur',
+}
+
+const lireUtilisateur = () => {
+  const utilisateurStocke = localStorage.getItem('utilisateur_api')
+
+  if (!utilisateurStocke) {
+    return null
+  }
+
+  try {
+    return JSON.parse(utilisateurStocke)
+  } catch {
+    return null
+  }
+}
+
+const routeRole = (role) => ROLE_HOME[role] || '/login'
+
 const routes = [
   {
     path: '/',
@@ -26,7 +48,12 @@ const routes = [
     component: PresidentDashboardView,
     meta: {
       requiresAuth: true,
+      role: 'president',
     },
+  },
+  {
+    path: '/president/dashboard',
+    redirect: '/president',
   },
   {
     path: '/coach',
@@ -34,7 +61,12 @@ const routes = [
     component: CoachDashboardView,
     meta: {
       requiresAuth: true,
+      role: 'coach',
     },
+  },
+  {
+    path: '/coach/dashboard',
+    redirect: '/coach',
   },
   {
     path: '/joueur',
@@ -42,7 +74,12 @@ const routes = [
     component: JoueurDashboardView,
     meta: {
       requiresAuth: true,
+      role: 'joueur',
     },
+  },
+  {
+    path: '/joueur/dashboard',
+    redirect: '/joueur',
   },
   {
     path: '/:pathMatch(.*)*',
@@ -63,6 +100,17 @@ const registerAuthGuard = (router) => {
     const token = localStorage.getItem('token_api')
     if (!token) {
       return '/login'
+    }
+
+    const utilisateur = lireUtilisateur()
+    const roleAttendu = to.meta.role
+
+    if (!utilisateur?.role) {
+      return '/login'
+    }
+
+    if (roleAttendu && utilisateur.role !== roleAttendu) {
+      return routeRole(utilisateur.role)
     }
 
     return true

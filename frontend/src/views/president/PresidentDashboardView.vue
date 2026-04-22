@@ -17,6 +17,7 @@ import MatchCompositionSection from '../../components/common/MatchCompositionSec
 import MatchSheetSection from '../../components/common/MatchSheetSection.vue'
 import MatchStatisticsSection from '../../components/common/MatchStatisticsSection.vue'
 import AppNotificationsDropdown from '../../components/common/AppNotificationsDropdown.vue'
+import AppProfileManager from '../../components/common/AppProfileManager.vue'
 import { authDelete, authGet, authPost, authPut } from '../../services/api'
 import { notifyError, notifySuccess } from '../../stores/toast'
 import { subscribeToNotifications, disconnectRealtime } from '../../services/realtime'
@@ -42,6 +43,7 @@ const clubsGestion = ref([])
 const paginationClubs = ref(null)
 const erreurClubs = ref('')
 const rechercheClubs = ref('')
+const rechercheCoachsClub = ref('')
 const clubSelectionne = ref(null)
 const equipeSelectionnee = ref(null)
 const modeClubs = ref('liste')
@@ -50,6 +52,11 @@ const erreursClub = ref({})
 const logoClubFichier = ref(null)
 const logoClubPreview = ref('')
 const debounceClubs = ref(null)
+const debounceCoachsClub = ref(null)
+const modalCoachClubOuvert = ref(false)
+const chargementCoachsClub = ref(false)
+const envoiCoachClub = ref(false)
+const coachsClubDisponibles = ref([])
 const chargementClubsOptions = ref(false)
 const clubsOptions = ref([])
 const chargementEquipes = ref(false)
@@ -158,6 +165,7 @@ const liensFonctionnalites = [
   { key: 'annonces', label: 'Annonces' },
   { key: 'documents', label: 'Documents' },
   { key: 'messagerie', label: 'Messagerie' },
+  { key: 'profil', label: 'Profil' },
 ]
 
 const statsCards = computed(() => [
@@ -252,6 +260,7 @@ const rechercheNavigation = computed({
   },
 })
 const equipesClubSelectionne = computed(() => clubSelectionne.value?.equipes || [])
+const texteBoutonCoachEquipe = computed(() => (equipeGestionSelectionnee.value?.coach ? 'Changer le coach' : 'Assigner un coach'))
 const clubEquipeSelectionne = computed(() => {
   return clubsOptions.value.find((club) => String(club.id) === String(clubEquipeId.value)) || null
 })
@@ -338,6 +347,15 @@ const utilisateurResume = computed(() => {
     image: utilisateur.photo_url || utilisateur.photo || '',
   }
 })
+
+const mettreAJourProfilPresident = (payload) => {
+  const utilisateur = payload?.utilisateur || payload?.data?.utilisateur || null
+
+  if (!utilisateur) return
+
+  utilisateurConnecte.value = utilisateur
+  localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur))
+}
 
 const formatDate = (date) => {
   if (!date) return '-'
@@ -880,6 +898,51 @@ const selectionnerEquipeClub = (equipe) => {
   equipeSelectionnee.value = equipe
 }
 
+const ouvrirModalCoachClub = async () => {
+  if (!clubEquipeId.value) {
+    return
+  }
+
+  if (!equipeGestionSelectionnee.value) {
+    notifyError('Ouvrez d abord le detail d une equipe avant d assigner un coach.')
+    return
+  }
+
+  rechercheCoachsClub.value = ''
+  modalCoachClubOuvert.value = true
+  await chargerCoachsClubDisponibles()
+}
+
+const fermerModalCoachClub = () => {
+  modalCoachClubOuvert.value = false
+  envoiCoachClub.value = false
+  rechercheCoachsClub.value = ''
+  coachsClubDisponibles.value = []
+}
+
+const assignerCoachAuClub = async (coach) => {
+  if (!clubEquipeId.value || !equipeGestionSelectionnee.value || !coach?.id) {
+    return
+  }
+
+  envoiCoachClub.value = true
+
+  try {
+    const reponse = await authPut(
+      `/president/clubs/${clubEquipeId.value}/equipes/${equipeGestionSelectionnee.value.id}/coach`,
+      { coach_id: coach.id },
+    )
+
+    notifySuccess(reponse?.message || 'Coach assigne avec succes.')
+    await chargerEquipesGestion(paginationEquipes.value?.current_page || 1)
+    fermerModalCoachClub()
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible d assigner ce coach.')
+  } finally {
+    envoiCoachClub.value = false
+  }
+}
+
 const ouvrirEditionClub = () => {
   if (!clubSelectionne.value) {
     return
@@ -1205,6 +1268,22 @@ const chargerCompositionMatchEvenement = async (evenement) => {
     notifyError(error?.response?.message || error.message || 'Impossible de charger la composition du match.')
   } finally {
     chargementCompositionMatch.value = false
+  }
+}
+
+const chargerCoachsClubDisponibles = async () => {
+  chargementCoachsClub.value = true
+
+  try {
+    const reponse = await authGet('/president/equipes/coachs', {
+      q: rechercheCoachsClub.value,
+    })
+
+    coachsClubDisponibles.value = reponse?.data?.coachs || []
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible de charger les coachs disponibles.')
+  } finally {
+    chargementCoachsClub.value = false
   }
 }
 
@@ -1623,9 +1702,27 @@ watch(rechercheClubs, () => {
   }, 350)
 })
 
+watch(rechercheCoachsClub, () => {
+  if (!modalCoachClubOuvert.value) {
+    return
+  }
+
+  if (debounceCoachsClub.value) {
+    clearTimeout(debounceCoachsClub.value)
+  }
+
+  debounceCoachsClub.value = setTimeout(() => {
+    chargerCoachsClubDisponibles()
+  }, 300)
+})
+
 watch(rechercheEquipes, () => {
   if (debounceEquipes.value) {
     clearTimeout(debounceEquipes.value)
+  }
+
+  if (debounceCoachsClub.value) {
+    clearTimeout(debounceCoachsClub.value)
   }
 
   debounceEquipes.value = setTimeout(() => {
@@ -1792,13 +1889,20 @@ onBeforeUnmount(() => {
                   @notification-click="ouvrirNotificationPresident"
                   @decision="repondreInvitationNotification($event.notification, $event.decision)"
                 />
-                <img
-                  v-if="utilisateurResume.image"
-                  :src="utilisateurResume.image"
-                  :alt="utilisateurResume.nom"
-                  class="h-8 w-8 rounded-full object-cover"
-                />
-                <span v-else class="block h-8 w-8 rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#dbe7ff_28%,#2446d8_72%)] ring-1 ring-[#dbe2ef]"></span>
+                <button
+                  type="button"
+                  class="rounded-full transition hover:scale-[1.03]"
+                  title="Ouvrir le profil"
+                  @click="afficherModule('profil')"
+                >
+                  <img
+                    v-if="utilisateurResume.image"
+                    :src="utilisateurResume.image"
+                    :alt="utilisateurResume.nom"
+                    class="h-8 w-8 rounded-full object-cover"
+                  />
+                  <span v-else class="block h-8 w-8 rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#dbe7ff_28%,#2446d8_72%)] ring-1 ring-[#dbe2ef]"></span>
+                </button>
               </div>
             </div>
 
@@ -2230,6 +2334,7 @@ onBeforeUnmount(() => {
                         </section>
                       </section>
                     </div>
+
                   </template>
 
                   <template v-else-if="modeClubs === 'creation'">
@@ -2461,7 +2566,19 @@ onBeforeUnmount(() => {
 
                       <div class="mt-5 grid gap-4 lg:grid-cols-3">
                         <section class="rounded-[22px] bg-white p-4">
-                          <p class="text-sm font-black text-[#111827]">Coach</p>
+                          <div class="flex items-start justify-between gap-3">
+                            <div>
+                              <p class="text-sm font-black text-[#111827]">Coach</p>
+                              <p class="mt-1 text-xs font-semibold text-[#64748b]">Affectez un coach existant a cette equipe.</p>
+                            </div>
+                            <button
+                              type="button"
+                              class="rounded-full border border-[#dbe2ef] px-4 py-2 text-[11px] font-black text-[#2446d8] transition hover:bg-[#f8fbff]"
+                              @click="ouvrirModalCoachClub"
+                            >
+                              {{ texteBoutonCoachEquipe }}
+                            </button>
+                          </div>
                           <div v-if="equipeGestionSelectionnee.coach" class="mt-4">
                             <p class="text-sm font-black text-[#111827]">{{ [equipeGestionSelectionnee.coach.prenom, equipeGestionSelectionnee.coach.nom].filter(Boolean).join(' ') || equipeGestionSelectionnee.coach.name || 'Coach' }}</p>
                             <p class="mt-1 text-xs font-semibold text-[#64748b]">{{ equipeGestionSelectionnee.coach.email || '-' }}</p>
@@ -2472,6 +2589,78 @@ onBeforeUnmount(() => {
                         <section class="rounded-[22px] bg-white p-4 lg:col-span-2">
                           <p class="text-sm font-black text-[#111827]">Description</p>
                           <p class="mt-2 text-sm font-semibold leading-6 text-[#64748b]">{{ equipeGestionSelectionnee.description || 'Aucune description disponible pour cette equipe.' }}</p>
+                        </section>
+                      </div>
+
+                      <div
+                        v-if="modalCoachClubOuvert"
+                        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[2px]"
+                        @click.self="fermerModalCoachClub"
+                      >
+                        <section class="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[28px] border border-[#e5edf9] bg-white p-5 shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-6">
+                          <div class="flex items-start justify-between gap-4">
+                            <div>
+                              <p class="text-[11px] font-black uppercase tracking-[0.22em] text-[#3b5bfd]">Gestion de coach equipe</p>
+                              <h3 class="mt-2 text-2xl font-black text-[#111827]">Assigner un coach a cette equipe</h3>
+                              <p class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#64748b]">
+                                Choisissez un coach existant dans la plateforme pour l equipe
+                                <span class="font-black text-[#111827]">{{ equipeGestionSelectionnee?.nom || 'non selectionnee' }}</span>.
+                              </p>
+                            </div>
+                            <button type="button" class="rounded-full border border-[#dbe2ef] px-4 py-2 text-xs font-black text-[#1f2a44] transition hover:bg-[#f8fbff]" @click="fermerModalCoachClub">
+                              Fermer
+                            </button>
+                          </div>
+
+                          <div class="mt-5 rounded-[24px] border border-[#e8edf5] bg-[#f8fbff] p-4">
+                            <label class="block">
+                              <span class="text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Recherche coach</span>
+                              <input
+                                v-model="rechercheCoachsClub"
+                                type="text"
+                                placeholder="Nom, prenom ou email du coach..."
+                                class="mt-2 h-12 w-full rounded-2xl border border-[#d7e2f0] bg-white px-4 text-sm font-semibold text-[#111827] outline-none transition focus:border-[#3b5bfd] focus:ring-4 focus:ring-[rgba(59,91,253,0.12)]"
+                              />
+                            </label>
+                          </div>
+
+                          <div class="mt-5 space-y-3">
+                            <div v-if="chargementCoachsClub" class="rounded-[24px] border border-dashed border-[#d7e2f0] px-4 py-8 text-center text-sm font-semibold text-[#64748b]">
+                              Chargement des coachs...
+                            </div>
+                            <div v-else-if="!coachsClubDisponibles.length" class="rounded-[24px] border border-dashed border-[#d7e2f0] px-4 py-8 text-center text-sm font-semibold text-[#64748b]">
+                              Aucun coach disponible pour cette recherche.
+                            </div>
+                            <article
+                              v-for="coach in coachsClubDisponibles"
+                              :key="coach.id"
+                              class="relative overflow-hidden rounded-[24px] border border-[#e8edf5] bg-white p-4"
+                            >
+                              <div class="absolute -bottom-10 -right-6 h-24 w-24 rounded-full bg-[#dfe8ff] opacity-80"></div>
+                              <div class="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div class="flex items-center gap-3">
+                                  <img v-if="coach.photo_url" :src="coach.photo_url" :alt="[coach.prenom, coach.nom].filter(Boolean).join(' ') || coach.name || 'Coach'" class="h-14 w-14 rounded-2xl object-cover" />
+                                  <span v-else class="grid h-14 w-14 place-items-center rounded-2xl bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#dbe7ff_28%,#2446d8_72%)] text-sm font-black text-white">
+                                    {{ (coach.prenom?.[0] || coach.nom?.[0] || 'C').toUpperCase() }}
+                                  </span>
+                                  <div class="min-w-0">
+                                    <p class="truncate text-base font-black text-[#111827]">{{ [coach.prenom, coach.nom].filter(Boolean).join(' ') || coach.name || 'Coach' }}</p>
+                                    <p class="truncate text-sm font-semibold text-[#64748b]">{{ coach.email || '-' }}</p>
+                                    <p class="mt-1 text-xs font-semibold text-[#94a3b8]">{{ coach.telephone || 'Telephone non renseigne' }}</p>
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  class="rounded-full bg-[#0f172a] px-5 py-3 text-sm font-black text-white transition hover:bg-[#111c36] disabled:cursor-not-allowed disabled:opacity-60"
+                                  :disabled="envoiCoachClub"
+                                  @click="assignerCoachAuClub(coach)"
+                                >
+                                  {{ envoiCoachClub ? 'Assignation...' : 'Assigner ce coach' }}
+                                </button>
+                              </div>
+                            </article>
+                          </div>
                         </section>
                       </div>
                     </div>
@@ -3006,6 +3195,14 @@ onBeforeUnmount(() => {
                   ref="messagerieSectionRef"
                   v-model:search-term="rechercheMessagerie"
                   class="mt-6"
+                />
+
+                <AppProfileManager
+                  v-else-if="moduleActif === 'profil'"
+                  :visible="moduleActif === 'profil'"
+                  role-label="President"
+                  profile-endpoint="/president/profil"
+                  @saved="mettreAJourProfilPresident"
                 />
 
                 <section v-else class="mt-6 rounded-[32px] border border-dashed border-[#cfdaf2] bg-[#f8fbff] px-5 py-14 text-center">

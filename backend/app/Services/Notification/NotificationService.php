@@ -4,10 +4,12 @@ namespace App\Services\Notification;
 
 use App\Events\NotificationCreee;
 use App\Models\Canal;
+use App\Models\Disponibilite;
 use App\Models\Convocation;
 use App\Models\Evenement;
 use App\Models\Message;
 use App\Models\Notification;
+use App\Models\Annonce;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -133,8 +135,9 @@ class NotificationService
         $evenement->loadMissing(['equipe.club']);
 
         $convocations
-            ->loadMissing(['utilisateur'])
             ->each(function (Convocation $convocation) use ($evenement) {
+                $convocation->loadMissing(['utilisateur']);
+
                 if (! $convocation->utilisateur) {
                     return;
                 }
@@ -184,5 +187,103 @@ class NotificationService
                 'cible_id' => $convocation->id,
             ]);
         });
+    }
+
+    public function notifierNouvelleAnnonce(Annonce $annonce): void
+    {
+        $annonce->loadMissing(['club.equipes.utilisateurs', 'club.president', 'auteur']);
+
+        $club = $annonce->club;
+        if (! $club) {
+            return;
+        }
+
+        $destinataires = $club->equipes
+            ->flatMap(fn ($equipe) => $equipe->utilisateurs)
+            ->push($club->president)
+            ->filter()
+            ->reject(fn (User $utilisateur) => (int) $utilisateur->id === (int) $annonce->auteur_id)
+            ->unique('id')
+            ->values();
+
+        $this->creerPourUtilisateurs($destinataires, [
+            'titre' => 'Nouvelle annonce',
+            'contenu' => "Une nouvelle annonce a ete publiee : {$annonce->titre}.",
+            'type_notification' => 'info',
+            'action' => 'ouvrir_annonce',
+            'module_cible' => 'annonces',
+            'cible_id' => $annonce->id,
+        ]);
+    }
+
+    public function notifierDisponibiliteMiseAJour(Disponibilite $disponibilite): void
+    {
+        $disponibilite->loadMissing(['utilisateur', 'evenement.equipe.club', 'evenement.equipe.coach']);
+
+        $evenement = $disponibilite->evenement;
+        if (! $evenement) {
+            return;
+        }
+
+        $joueurNom = trim(($disponibilite->utilisateur?->prenom ?? '').' '.($disponibilite->utilisateur?->nom ?? ''));
+        $joueurNom = $joueurNom ?: ($disponibilite->utilisateur?->name ?? 'Le joueur');
+
+        $destinataires = collect([
+            $evenement->equipe?->coach,
+            $evenement->equipe?->club?->president,
+        ])->filter()->unique('id')->values();
+
+        $this->creerPourUtilisateurs($destinataires, [
+            'evenement_id' => $evenement->id,
+            'titre' => 'Disponibilite mise a jour',
+            'contenu' => "{$joueurNom} a indique sa disponibilite : {$disponibilite->statut}.",
+            'type_notification' => 'info',
+            'action' => 'ouvrir_evenement',
+            'statut_action' => $disponibilite->statut,
+            'module_cible' => 'evenements',
+            'cible_id' => $evenement->id,
+        ]);
+    }
+
+    public function notifierFeuilleMatchPubliee(Evenement $evenement): void
+    {
+        $evenement->loadMissing(['equipe.club.president', 'equipe.utilisateurs']);
+
+        $destinataires = $evenement->equipe?->utilisateurs
+            ?->push($evenement->equipe?->club?->president)
+            ->filter()
+            ->unique('id')
+            ->values() ?? collect();
+
+        $this->creerPourUtilisateurs($destinataires, [
+            'evenement_id' => $evenement->id,
+            'titre' => 'Feuille de match mise a jour',
+            'contenu' => "La feuille de match de {$evenement->titre} a ete enregistree.",
+            'type_notification' => 'info',
+            'action' => 'ouvrir_evenement',
+            'module_cible' => 'evenements',
+            'cible_id' => $evenement->id,
+        ]);
+    }
+
+    public function notifierStatistiquesMatchPubliees(Evenement $evenement): void
+    {
+        $evenement->loadMissing(['equipe.club.president', 'equipe.utilisateurs']);
+
+        $destinataires = $evenement->equipe?->utilisateurs
+            ?->push($evenement->equipe?->club?->president)
+            ->filter()
+            ->unique('id')
+            ->values() ?? collect();
+
+        $this->creerPourUtilisateurs($destinataires, [
+            'evenement_id' => $evenement->id,
+            'titre' => 'Statistiques du match disponibles',
+            'contenu' => "Les statistiques de {$evenement->titre} ont ete publiees.",
+            'type_notification' => 'info',
+            'action' => 'ouvrir_evenement',
+            'module_cible' => 'evenements',
+            'cible_id' => $evenement->id,
+        ]);
     }
 }

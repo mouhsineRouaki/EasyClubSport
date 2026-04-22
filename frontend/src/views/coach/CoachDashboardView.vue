@@ -7,6 +7,7 @@ import { authGet, authPost, authPut, authDelete } from '../../services/api'
 import { notifyError, notifySuccess } from '../../stores/toast'
 import { subscribeToCanalMessages, subscribeToNotifications, disconnectRealtime } from '../../services/realtime'
 import AppNotificationsDropdown from '../../components/common/AppNotificationsDropdown.vue'
+import AppProfileManager from '../../components/common/AppProfileManager.vue'
 
 import CoachDashboardHome from '../../components/coach/CoachDashboardHome.vue'
 import CoachEquipes from '../../components/coach/CoachEquipes.vue'
@@ -111,6 +112,7 @@ const liensFonctionnalites = [
   { key: 'disponibilites', label: 'Disponibilites' },
   { key: 'convocations', label: 'Convocations' },
   { key: 'messagerie', label: 'Messagerie' },
+  { key: 'profil', label: 'Profil' },
 ]
 
 const liensGlobaux = [
@@ -127,6 +129,15 @@ const utilisateurResume = computed(() => {
     image: u.photo_url || u.photo || '',
   }
 })
+
+const mettreAJourProfilCoach = (payload) => {
+  const utilisateur = payload?.utilisateur || payload?.data?.utilisateur || null
+
+  if (!utilisateur) return
+
+  utilisateurConnecte.value = utilisateur
+  localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur))
+}
 
 const rechercheNavigation = computed({
   get() {
@@ -675,7 +686,6 @@ const convoquerJoueurDepuisDisponibilite = async ({ evenement, item }) => {
   }
 }
 
-// ─── messagerie ────────────────────────────────────────────────────────────────
 const chargerCanaux = async () => {
   chargementCanaux.value = true
   try {
@@ -937,18 +947,20 @@ onBeforeUnmount(() => {
                 @decision="repondreInvitation($event.notification, $event.decision)"
               />
 
-              <!-- avatar -->
-              <img v-if="utilisateurResume.image" :src="utilisateurResume.image" :alt="utilisateurResume.nom"
-                class="h-8 w-8 rounded-full object-cover" />
-              <span v-else
-                class="block h-8 w-8 rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#dbe7ff_28%,#2446d8_72%)] ring-1 ring-[#dbe2ef]"></span>
+              <button
+                type="button"
+                class="rounded-full transition hover:scale-[1.03]"
+                title="Ouvrir le profil"
+                @click="afficherModule('profil')"
+              >
+                <img v-if="utilisateurResume.image" :src="utilisateurResume.image" :alt="utilisateurResume.nom"
+                  class="h-8 w-8 rounded-full object-cover" />
+                <span v-else
+                  class="block h-8 w-8 rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#dbe7ff_28%,#2446d8_72%)] ring-1 ring-[#dbe2ef]"></span>
+              </button>
             </div>
           </div>
-
-          <!-- ── CONTENU MODULES ──────────────────────────────────────────────── -->
           <div class="px-3 py-4 sm:px-5 sm:py-5">
-
-            <!-- skeleton global -->
             <div v-if="chargement" class="space-y-4">
               <div class="h-28 animate-pulse rounded-3xl bg-[linear-gradient(120deg,#f8fbff,#eef3ff,#f8fbff)]"></div>
               <div class="h-56 animate-pulse rounded-3xl bg-[linear-gradient(120deg,#f8fbff,#eef3ff,#f8fbff)]"></div>
@@ -1004,6 +1016,15 @@ onBeforeUnmount(() => {
                 :canal-selectionne="canalSelectionne" :chargement-canaux="chargementCanaux"
                 :chargement-messages="chargementMessages" :envoi-message="envoiMessage"
                 @selectionner-canal="selectionnerCanal" @envoyer-message="envoyerMessage" />
+
+              <AppProfileManager
+                v-else-if="moduleActif === 'profil'"
+                :visible="moduleActif === 'profil'"
+                role-label="Coach"
+                profile-endpoint="/coach/profil"
+                :show-status="true"
+                @saved="mettreAJourProfilCoach"
+              />
             </template>
           </div>
         </article>

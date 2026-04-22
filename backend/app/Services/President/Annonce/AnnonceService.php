@@ -6,13 +6,15 @@ use App\Models\Annonce;
 use App\Models\Club;
 use App\Models\User;
 use App\Repositories\President\Annonce\AnnonceRepository;
+use App\Services\Notification\NotificationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class AnnonceService
 {
     public function __construct(
-        protected AnnonceRepository $annonceRepository
+        protected AnnonceRepository $annonceRepository,
+        protected NotificationService $notificationService
     ) {
     }
 
@@ -38,7 +40,10 @@ class AnnonceService
             $donnees['image'] = $image->store('annonces', 'public');
         }
 
-        return $this->annonceRepository->creer($donnees);
+        $annonce = $this->annonceRepository->creer($donnees);
+        $this->notificationService->notifierNouvelleAnnonce($annonce);
+
+        return $annonce;
     }
 
     public function mettreAJour(Annonce $annonce, array $donnees, ?UploadedFile $image = null): Annonce

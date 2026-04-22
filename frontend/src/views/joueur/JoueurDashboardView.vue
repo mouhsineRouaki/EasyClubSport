@@ -7,6 +7,7 @@ import { authGet, authPost, authPut } from '../../services/api'
 import { notifyError, notifySuccess } from '../../stores/toast'
 import { subscribeToCanalMessages, subscribeToNotifications, disconnectRealtime } from '../../services/realtime'
 import AppNotificationsDropdown from '../../components/common/AppNotificationsDropdown.vue'
+import AppProfileManager from '../../components/common/AppProfileManager.vue'
 
 import JoueurDashboardHome from '../../components/joueur/JoueurDashboardHome.vue'
 import JoueurEvenements from '../../components/joueur/JoueurEvenements.vue'
@@ -62,6 +63,7 @@ const liensFonctionnalites = [
   { key: 'evenements', label: 'Evenements' },
   { key: 'convocations', label: 'Convocations' },
   { key: 'messagerie', label: 'Messagerie' },
+  { key: 'profil', label: 'Profil' },
 ]
 
 const liensGlobaux = [
@@ -78,6 +80,20 @@ const utilisateurResume = computed(() => {
     image: u.photo_url || u.photo || '',
   }
 })
+
+const mettreAJourProfilJoueur = (payload) => {
+  const utilisateur = payload?.utilisateur || payload?.data?.utilisateur || null
+  const equipeProfil = payload?.equipe || payload?.data?.equipe || null
+
+  if (utilisateur) {
+    utilisateurConnecte.value = utilisateur
+    localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur))
+  }
+
+  if (equipeProfil) {
+    equipe.value = equipeProfil
+  }
+}
 
 const rechercheNavigation = computed({
   get() {
@@ -653,10 +669,17 @@ onBeforeUnmount(() => {
                 @notification-click="ouvrirNotificationJoueur"
               />
 
-              <img v-if="utilisateurResume.image" :src="utilisateurResume.image" :alt="utilisateurResume.nom"
-                class="h-8 w-8 rounded-full object-cover" />
-              <span v-else
-                class="block h-8 w-8 rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#dbe7ff_28%,#2446d8_72%)] ring-1 ring-[#dbe2ef]"></span>
+              <button
+                type="button"
+                class="rounded-full transition hover:scale-[1.03]"
+                title="Ouvrir le profil"
+                @click="afficherModule('profil')"
+              >
+                <img v-if="utilisateurResume.image" :src="utilisateurResume.image" :alt="utilisateurResume.nom"
+                  class="h-8 w-8 rounded-full object-cover" />
+                <span v-else
+                  class="block h-8 w-8 rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#dbe7ff_28%,#2446d8_72%)] ring-1 ring-[#dbe2ef]"></span>
+              </button>
             </div>
           </div>
 
@@ -690,6 +713,16 @@ onBeforeUnmount(() => {
                 :canal-selectionne="canalSelectionne" :chargement-canaux="chargementCanaux"
                 :chargement-messages="chargementMessages" :envoi-message="envoiMessage"
                 @selectionner-canal="selectionnerCanal" @envoyer-message="envoyerMessage" />
+
+              <AppProfileManager
+                v-else-if="moduleActif === 'profil'"
+                :visible="moduleActif === 'profil'"
+                role-label="Joueur"
+                profile-endpoint="/joueur/profil"
+                :show-status="true"
+                :equipe="equipe"
+                @saved="mettreAJourProfilJoueur"
+              />
             </template>
           </div>
         </article>
