@@ -4,6 +4,10 @@ import { useRouter } from 'vue-router'
 import AppCard from '@/shared/components/AppCard.vue'
 import AppListState from '@/shared/components/AppListState.vue'
 import AppPagination from '@/shared/components/AppPagination.vue'
+import AppStatusMessage from '@/shared/components/ui/AppStatusMessage.vue'
+import AppModalShell from '@/shared/components/ui/AppModalShell.vue'
+import PresidentClubForm from '@/roles/president/clubs/components/PresidentClubForm.vue'
+import PresidentClubListCard from '@/roles/president/clubs/components/PresidentClubListCard.vue'
 import PresidentShellLayout from '@/roles/president/shared/components/PresidentShellLayout.vue'
 import { authDelete, authGet, authPost, authPut } from '@/shared/services/apiClient'
 import { notifyError, notifySuccess } from '@/shared/services/toastService'
@@ -71,6 +75,10 @@ const reinitialiserFormulaire = () => {
   logoFichier.value = null
   logoPreview.value = ''
   erreursValidation.value = {}
+}
+
+const mettreAJourChamp = (champ, valeur) => {
+  formulaire[champ] = valeur
 }
 
 const chargerClubs = async () => {
@@ -294,92 +302,22 @@ onMounted(() => {
       </div>
     </AppCard>
 
-    <div v-if="succes" class="ecs-note-success">{{ succes }}</div>
+    <AppStatusMessage v-if="succes">{{ succes }}</AppStatusMessage>
 
-    <div
-      v-if="afficherFormulaire"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[2px]"
-      @click.self="fermerFormulaire"
-    >
-      <section class="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-[#e7edf8] bg-white p-4 shadow-[0_24px_50px_rgba(15,23,42,0.22)] sm:p-5">
-        <div class="flex items-center justify-between gap-3">
-          <h3 class="text-base font-bold text-[#1f2a44]">{{ titreFormulaire }}</h3>
-          <button class="ecs-btn-secondary text-xs" type="button" @click="fermerFormulaire">Fermer</button>
-        </div>
-
-        <form class="mt-4 grid gap-3" @submit.prevent="enregistrerClub">
-          <label class="rounded-xl border border-dashed border-[#d8e2f1] bg-[#f8fbff] p-3 transition hover:border-[#2563eb] hover:bg-white">
-            <span class="block text-xs font-bold text-[#64748b]">Logo du club</span>
-            <span class="mt-2 flex flex-wrap items-center justify-between gap-3">
-              <span class="min-w-0 flex items-center gap-3">
-                <span class="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-[linear-gradient(130deg,#0f172a,#334155)] text-xs font-bold text-white">
-                  <img v-if="logoAffiche" :src="logoAffiche" alt="Logo club" class="h-full w-full object-cover" />
-                  <span v-else>CL</span>
-                </span>
-                <span class="min-w-0">
-                  <span class="block truncate text-xs font-bold text-[#1f2a44]">{{ nomLogoSelectionne }}</span>
-                  <span class="mt-0.5 block text-[11px] text-[#64748b]">JPG, JPEG, PNG ou WEBP. Max 2MB.</span>
-                </span>
-              </span>
-              <span class="ecs-btn-secondary text-[11px]">Choisir logo</span>
-            </span>
-            <input type="file" accept="image/*" class="sr-only" @change="choisirLogo" />
-          </label>
-          <span v-if="lireErreur('logo')" class="-mt-1 text-xs text-[#e11d48]">{{ lireErreur('logo') }}</span>
-
-          <div class="grid gap-3 md:grid-cols-2">
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Nom *</span>
-              <input v-model="formulaire.nom" class="ecs-input" type="text" />
-              <span v-if="lireErreur('nom')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('nom') }}</span>
-            </label>
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Email</span>
-              <input v-model="formulaire.email" class="ecs-input" type="email" />
-              <span v-if="lireErreur('email')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('email') }}</span>
-            </label>
-          </div>
-
-          <div class="grid gap-3 md:grid-cols-2">
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Telephone</span>
-              <input v-model="formulaire.telephone" class="ecs-input" type="text" />
-              <span v-if="lireErreur('telephone')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('telephone') }}</span>
-            </label>
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Adresse</span>
-              <input v-model="formulaire.adresse" class="ecs-input" type="text" />
-              <span v-if="lireErreur('adresse')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('adresse') }}</span>
-            </label>
-          </div>
-
-          <div class="grid gap-3 md:grid-cols-2">
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Ville</span>
-              <input v-model="formulaire.ville" class="ecs-input" type="text" />
-              <span v-if="lireErreur('ville')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('ville') }}</span>
-            </label>
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Pays</span>
-              <input v-model="formulaire.pays" class="ecs-input" type="text" />
-              <span v-if="lireErreur('pays')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('pays') }}</span>
-            </label>
-          </div>
-
-          <label>
-            <span class="text-xs font-bold text-[#64748b]">Description</span>
-            <textarea v-model="formulaire.description" rows="3" class="ecs-textarea"></textarea>
-            <span v-if="lireErreur('description')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('description') }}</span>
-          </label>
-
-          <div class="flex justify-end">
-            <button :disabled="envoi" class="ecs-btn-primary" type="submit">
-              {{ envoi ? 'Enregistrement...' : modeEdition ? 'Mettre a jour' : 'Creer le club' }}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+    <AppModalShell v-if="afficherFormulaire" :title="titreFormulaire" max-width-class="max-w-4xl" @close="fermerFormulaire">
+      <PresidentClubForm
+        :model-value="formulaire"
+        :errors="erreursValidation"
+        :logo-preview="logoPreview"
+        :current-logo-url="logoAffiche"
+        :logo-file-name="nomLogoSelectionne"
+        :loading="envoi"
+        :submit-label="modeEdition ? 'Mettre a jour' : 'Creer le club'"
+        @submit="enregistrerClub"
+        @update-field="mettreAJourChamp"
+        @choose-logo="choisirLogo"
+      />
+    </AppModalShell>
 
     <AppCard class="mt-4" title="Liste des clubs">
       <AppListState
@@ -395,29 +333,13 @@ onMounted(() => {
         </template>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <article v-for="club in clubs" :key="club.id" class="rounded-2xl border border-[#e8edf5] bg-white p-4 transition hover:-translate-y-[1px] hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-            <div class="flex items-start gap-3">
-              <span class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-[linear-gradient(130deg,#0f172a,#334155)] text-xs font-bold text-white">
-                <img v-if="club.logo_url" :src="club.logo_url" :alt="club.nom" class="h-full w-full object-cover" />
-                <span v-else>CL</span>
-              </span>
-              <div class="min-w-0">
-                <p class="truncate text-base font-bold text-[#1f2a44]">{{ club.nom }}</p>
-                <p class="mt-1 text-xs text-[#64748b]">{{ club.ville || '-' }}<span v-if="club.pays">, {{ club.pays }}</span></p>
-                <p class="mt-1 truncate text-xs text-[#475569]">{{ club.email || 'email non renseigne' }}</p>
-              </div>
-            </div>
-
-            <p class="mt-3 line-clamp-2 text-xs leading-5 text-[#64748b]">{{ club.description || 'Aucune description.' }}</p>
-
-            <div class="mt-4 flex items-center justify-between">
-              <span class="text-xs text-[#64748b]">{{ club.telephone || '-' }}</span>
-              <div class="flex gap-2">
-                <button class="ecs-btn-secondary !px-3 !py-1.5 !text-xs" type="button" @click="ouvrirEdition(club)">Modifier</button>
-                <button class="ecs-btn-danger" type="button" @click="supprimerClub(club)">Supprimer</button>
-              </div>
-            </div>
-          </article>
+          <PresidentClubListCard
+            v-for="club in clubs"
+            :key="club.id"
+            :club="club"
+            @edit="ouvrirEdition"
+            @delete="supprimerClub"
+          />
         </div>
       </AppListState>
 

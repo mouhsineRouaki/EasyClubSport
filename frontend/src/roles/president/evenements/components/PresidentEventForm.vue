@@ -68,81 +68,81 @@ const logoEquipe = (equipe) => equipe?.logo_url || equipe?.logo || equipe?.club?
 </script>
 
 <template>
-  <form class="mt-5 grid gap-4 rounded-[32px] border border-[#e6edf8] bg-[#f8fbff] p-5" @submit.prevent="emit('submit')">
-    <div class="grid gap-4 md:grid-cols-2">
+  <form class="grid gap-3" @submit.prevent="emit('submit')">
+    <div class="grid gap-3 md:grid-cols-2">
       <label>
-        <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Titre</span>
+        <span class="text-xs font-bold text-[#64748b]">Titre</span>
         <input
           :value="modelValue.titre"
           type="text"
-          class="mt-2 h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+          class="ecs-input"
           @input="emit('update-field', 'titre', $event.target.value)"
         />
-        <span v-if="lireErreur('titre')" class="mt-1 block text-xs font-semibold text-red-600">{{ lireErreur('titre') }}</span>
+        <span v-if="lireErreur('titre')" class="mt-1 block text-xs text-red-600">{{ lireErreur('titre') }}</span>
       </label>
 
       <label>
-        <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Type</span>
+        <span class="text-xs font-bold text-[#64748b]">Type</span>
         <select
           :value="modelValue.type"
-          class="mt-2 h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+          class="ecs-select"
           @change="emit('update-field', 'type', $event.target.value)"
         >
           <option value="match">Match</option>
           <option value="entrainement">Entrainement</option>
           <option value="reunion">Reunion</option>
         </select>
-        <span v-if="lireErreur('type')" class="mt-1 block text-xs font-semibold text-red-600">{{ lireErreur('type') }}</span>
+        <span v-if="lireErreur('type')" class="mt-1 block text-xs text-red-600">{{ lireErreur('type') }}</span>
       </label>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="grid gap-3 md:grid-cols-2">
       <label>
-        <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Date debut</span>
+        <span class="text-xs font-bold text-[#64748b]">Date debut</span>
         <input
           :value="modelValue.date_debut"
           type="datetime-local"
-          class="mt-2 h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+          class="ecs-input"
           @input="emit('update-field', 'date_debut', $event.target.value)"
         />
-        <span v-if="lireErreur('date_debut')" class="mt-1 block text-xs font-semibold text-red-600">{{ lireErreur('date_debut') }}</span>
+        <span v-if="lireErreur('date_debut')" class="mt-1 block text-xs text-red-600">{{ lireErreur('date_debut') }}</span>
       </label>
 
       <label>
-        <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Date fin</span>
+        <span class="text-xs font-bold text-[#64748b]">Date fin</span>
         <input
           :value="modelValue.date_fin"
           type="datetime-local"
-          class="mt-2 h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+          class="ecs-input"
           @input="emit('update-field', 'date_fin', $event.target.value)"
         />
-        <span v-if="lireErreur('date_fin')" class="mt-1 block text-xs font-semibold text-red-600">{{ lireErreur('date_fin') }}</span>
+        <span v-if="lireErreur('date_fin')" class="mt-1 block text-xs text-red-600">{{ lireErreur('date_fin') }}</span>
       </label>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="grid gap-3 md:grid-cols-2">
       <label>
-        <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Lieu</span>
+        <span class="text-xs font-bold text-[#64748b]">Lieu</span>
         <input
           :value="modelValue.lieu"
           type="text"
-          class="mt-2 h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+          class="ecs-input"
           @input="emit('update-field', 'lieu', $event.target.value)"
         />
       </label>
 
       <label v-if="modelValue.type === 'match'">
-        <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Equipe adversaire</span>
+        <span class="text-xs font-bold text-[#64748b]">Equipe adversaire</span>
         <input
           :value="rechercheAdversaire"
           type="search"
           placeholder="Rechercher par equipe, club, ville..."
-          class="mt-2 h-10 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-xs font-semibold outline-none placeholder:text-[#94a3b8] focus:border-[#4c6fff]"
+          class="ecs-input !h-10 !text-xs"
           @input="changerRechercheAdversaire"
         />
         <select
           :value="modelValue.adversaire_equipe_id"
-          class="mt-2 h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+          class="ecs-select"
           @change="emit('update-field', 'adversaire_equipe_id', $event.target.value)"
         >
           <option value="">Selectionner une equipe</option>
@@ -150,8 +150,8 @@ const logoEquipe = (equipe) => equipe?.logo_url || equipe?.logo || equipe?.club?
             {{ equipe.nom }}{{ equipe.club?.nom ? ` - ${equipe.club.nom}` : '' }}
           </option>
         </select>
-        <p v-if="rechercheAdversaire && !adversairesFiltres.length" class="mt-1 text-xs font-semibold text-[#ef4444]">Aucune equipe trouvee pour cette recherche.</p>
-        <span v-if="lireErreur('adversaire_equipe_id')" class="mt-1 block text-xs font-semibold text-red-600">{{ lireErreur('adversaire_equipe_id') }}</span>
+        <p v-if="rechercheAdversaire && !adversairesFiltres.length" class="mt-1 text-xs text-[#ef4444]">Aucune equipe trouvee pour cette recherche.</p>
+        <span v-if="lireErreur('adversaire_equipe_id')" class="mt-1 block text-xs text-red-600">{{ lireErreur('adversaire_equipe_id') }}</span>
       </label>
 
       <div v-else class="rounded-2xl border border-[#dbe2ef] bg-white px-4 py-3">
@@ -197,31 +197,31 @@ const logoEquipe = (equipe) => equipe?.logo_url || equipe?.logo || equipe?.club?
     </section>
 
     <label>
-      <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Statut</span>
+      <span class="text-xs font-bold text-[#64748b]">Statut</span>
       <select
         :value="modelValue.statut"
-        class="mt-2 h-11 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+        class="ecs-select"
         @change="emit('update-field', 'statut', $event.target.value)"
       >
         <option value="planifie">Planifie</option>
         <option value="termine">Termine</option>
         <option value="annule">Annule</option>
       </select>
-      <span v-if="lireErreur('statut')" class="mt-1 block text-xs font-semibold text-red-600">{{ lireErreur('statut') }}</span>
+      <span v-if="lireErreur('statut')" class="mt-1 block text-xs text-red-600">{{ lireErreur('statut') }}</span>
     </label>
 
     <label>
-      <span class="text-xs font-black uppercase tracking-[0.14em] text-[#6b7280]">Description</span>
+      <span class="text-xs font-bold text-[#64748b]">Description</span>
       <textarea
         :value="modelValue.description"
         rows="4"
-        class="mt-2 w-full rounded-2xl border border-[#dbe2ef] bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-[#4c6fff]"
+        class="ecs-textarea"
         @input="emit('update-field', 'description', $event.target.value)"
       ></textarea>
     </label>
 
     <div class="flex justify-end">
-      <button :disabled="loading" type="submit" class="rounded-full bg-[#111827] px-5 py-3 text-xs font-black text-white transition hover:bg-[#1f36bf] disabled:opacity-60">
+      <button :disabled="loading" type="submit" class="ecs-btn-primary">
         {{ loading ? loadingLabel : submitLabel }}
       </button>
     </div>

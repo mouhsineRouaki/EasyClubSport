@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 const props = defineProps({
   message: {
     type: Object,
@@ -46,7 +48,7 @@ const formatHour = (value) => {
         class="rounded-[24px] px-4 py-3 shadow-[0_18px_35px_rgba(15,23,42,0.06)]"
         :class="
           own
-            ? 'rounded-br-md bg-[linear-gradient(135deg,#2446d8_0%,#4c6fff_100%)] text-white'
+            ? 'rounded-br-md bg-[linear-gradient(135deg,#172554_0%,#1d4ed8_62%,#14b8a6_100%)] text-white'
             : 'rounded-bl-md border border-[#e8edf6] bg-white text-[#0f172a]'
         "
       >
@@ -59,21 +61,12 @@ const formatHour = (value) => {
           ></textarea>
 
           <div class="flex justify-end gap-2">
-            <button
-              type="button"
-              class="rounded-full border border-white/25 px-3 py-1.5 text-[11px] font-semibold"
-              :class="own ? 'text-white/90' : 'border-[#d7e1fb] text-[#334155]'"
-              @click="emit('cancel-edit')"
-            >
+            <AppButton type="button" variant="secondary" size="sm" @click="emit('cancel-edit')">
               Annuler
-            </button>
-            <button
-              type="button"
-              class="rounded-full bg-[#0f172a] px-3 py-1.5 text-[11px] font-semibold text-white"
-              @click="emit('save-edit', message)"
-            >
+            </AppButton>
+            <AppButton type="button" size="sm" @click="emit('save-edit', message)">
               Enregistrer
-            </button>
+            </AppButton>
           </div>
         </div>
 
@@ -81,20 +74,12 @@ const formatHour = (value) => {
       </div>
 
       <div v-if="own && !editing" class="mt-2 flex justify-end gap-2 px-1">
-        <button
-          type="button"
-          class="rounded-full border border-[#d7e1fb] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#334155] transition hover:border-[#4c6fff] hover:text-[#2446d8]"
-          @click="emit('edit', message)"
-        >
+        <AppButton type="button" variant="secondary" size="sm" @click="emit('edit', message)">
           Modifier
-        </button>
-        <button
-          type="button"
-          class="rounded-full border border-[#fecdd3] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#e11d48] transition hover:bg-[#fff1f2]"
-          @click="emit('delete', message)"
-        >
+        </AppButton>
+        <AppButton type="button" variant="danger" size="sm" @click="emit('delete', message)">
           Supprimer
-        </button>
+        </AppButton>
       </div>
     </div>
   </article>

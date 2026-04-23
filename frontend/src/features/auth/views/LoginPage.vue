@@ -3,7 +3,11 @@ import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import imageHero from '@/assets/hero.png'
 import logoEasyClubSport from '@/assets/logo-easyclubsport.svg'
+import AppButton from '@/shared/components/ui/AppButton.vue'
+import AppField from '@/shared/components/ui/AppField.vue'
+import AppStatusMessage from '@/shared/components/ui/AppStatusMessage.vue'
 import { API_BASE_URL, post } from '@/shared/services/apiClient'
+import { sauvegarderToken, sauvegarderUtilisateurStocke } from '@/shared/session/sessionStorage'
 import { notifyError } from '@/shared/services/toastService'
 
 const router = useRouter()
@@ -40,17 +44,12 @@ const soumettre = async () => {
     token.value = reponse?.data?.token || ''
     utilisateur.value = reponse?.data?.utilisateur || null
 
-    if (token.value) {
-      localStorage.setItem('token_api', token.value)
-    }
-
-    if (utilisateur.value) {
-      localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur.value))
-    }
+    sauvegarderToken(token.value)
+    sauvegarderUtilisateurStocke(utilisateur.value)
 
     if (utilisateur.value?.role === 'president') {
       router.push('/president')
-    }else if (utilisateur.value?.role === 'coach') {
+    } else if (utilisateur.value?.role === 'coach') {
       router.push('/coach')
     } else if (utilisateur.value?.role === 'joueur') {
       router.push('/joueur')
@@ -70,13 +69,11 @@ const soumettre = async () => {
 </script>
 
 <template>
-  <main
-    class="flex min-h-screen items-center justify-center bg-[#F2F4FF] bg-[radial-gradient(circle_at_15%_20%,rgba(61,55,241,0.12)_0%,transparent_40%),radial-gradient(circle_at_85%_80%,rgba(245,22,126,0.08)_0%,transparent_40%)] px-4 py-12"
-  >
-    <section class="grid w-full max-w-5xl overflow-hidden rounded-[20px] shadow-2xl lg:grid-cols-[1fr_1.25fr]">
-      <div class="relative flex flex-col justify-between gap-8 overflow-hidden bg-[linear-gradient(145deg,#0A075F_0%,#242565_45%,#3D37F1_100%)] p-8 text-white">
-        <div class="pointer-events-none absolute -right-[60px] -top-[60px] h-[220px] w-[220px] rounded-full bg-[rgba(245,22,126,0.18)]"></div>
-        <div class="pointer-events-none absolute -bottom-[40px] -left-[40px] h-[160px] w-[160px] rounded-full bg-[rgba(61,55,241,0.25)]"></div>
+  <main class="ecs-auth-shell">
+    <section class="ecs-auth-grid">
+      <div class="ecs-auth-hero">
+        <div class="pointer-events-none absolute -right-[60px] -top-[60px] h-[220px] w-[220px] rounded-full bg-white/10"></div>
+        <div class="pointer-events-none absolute -bottom-[40px] -left-[40px] h-[160px] w-[160px] rounded-full bg-white/10"></div>
 
         <div class="relative z-10 flex flex-col gap-5">
           <div class="flex items-center gap-3">
@@ -86,7 +83,7 @@ const soumettre = async () => {
           <div class="mt-1">
             <h1 class="text-[2rem] leading-tight font-bold text-white">
               Connectez-vous<br />
-              <span class="text-[#F5167E]">a votre espace club.</span>
+              <span class="text-[#ccfbf1]">a votre espace club.</span>
             </h1>
             <p class="mt-3 text-sm leading-relaxed text-white/70">
               Accedez rapidement a vos equipes, vos evenements et vos messages depuis une interface centralisee.
@@ -95,78 +92,70 @@ const soumettre = async () => {
         </div>
 
         <div class="relative z-10">
-          <img :src="imageHero" alt="Illustration sportive" class="max-h-[240px] w-full rounded-[20px] border border-white/15 object-cover" />
+          <img :src="imageHero" alt="Illustration sportive" class="max-h-[240px] w-full rounded-[28px] border border-white/15 object-cover" />
         </div>
 
         <div class="relative z-10 flex flex-wrap gap-2">
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Dashboard</span>
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Equipes</span>
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Evenements</span>
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Messagerie</span>
+          <span class="ecs-chip bg-white/10 text-white border-white/15">Dashboard</span>
+          <span class="ecs-chip bg-white/10 text-white border-white/15">Equipes</span>
+          <span class="ecs-chip bg-white/10 text-white border-white/15">Evenements</span>
+          <span class="ecs-chip bg-white/10 text-white border-white/15">Messagerie</span>
         </div>
       </div>
 
-      <div class="flex flex-col justify-center gap-6 bg-white px-8 py-10 sm:px-10">
+      <div class="ecs-auth-form">
         <div>
-          <p class="m-0 text-[11px] font-bold uppercase tracking-[0.15em] text-[#3D37F1]">Connexion</p>
-          <h2 class="m-0 mt-1.5 text-[1.75rem] font-bold text-[#242565]">Acceder a votre compte</h2>
-          <p class="mt-1 text-sm text-[#717275]">Entrez vos identifiants pour continuer.</p>
+          <p class="ecs-kicker">Connexion</p>
+          <h2 class="mt-1.5 text-[1.75rem] font-bold text-[#172554]">Acceder a votre compte</h2>
+          <p class="mt-1 text-sm text-[#64748b]">Entrez vos identifiants pour continuer.</p>
         </div>
 
         <form class="flex flex-col gap-4" @submit.prevent="soumettre">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Email</label>
+          <AppField label="Email" :error="lireErreur('email')">
             <input
               v-model="formulaire.email"
               type="email"
               placeholder="exemple@email.com"
-              class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+              class="ecs-input"
             />
-            <span v-if="lireErreur('email')" class="text-xs text-[#F5167E]">{{ lireErreur('email') }}</span>
-          </div>
+          </AppField>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Mot de passe</label>
+          <AppField label="Mot de passe" :error="lireErreur('password')">
             <input
               v-model="formulaire.password"
               type="password"
               placeholder="********"
-              class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+              class="ecs-input"
             />
-            <span v-if="lireErreur('password')" class="text-xs text-[#F5167E]">{{ lireErreur('password') }}</span>
-          </div>
+          </AppField>
 
-          <div v-if="succes" class="flex flex-col gap-2 rounded-[10px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
+          <AppStatusMessage v-if="succes" type="success">
             <p class="text-sm font-semibold">{{ succes }}</p>
             <p v-if="utilisateur" class="text-xs">Bienvenue {{ utilisateur.prenom || utilisateur.name || 'utilisateur' }}.</p>
             <p v-if="token" class="break-all font-mono text-xs opacity-80">Token : {{ token }}</p>
-          </div>
+          </AppStatusMessage>
 
-          <button
+          <AppButton
             :disabled="!peutSoumettre"
             type="submit"
-            :class="[
-              'mt-1 flex w-full items-center justify-center gap-2 rounded-[100px] py-3.5 text-sm font-bold text-white transition-all',
-              peutSoumettre
-                ? 'cursor-pointer border-0 bg-[linear-gradient(135deg,#F5167E_0%,#3D37F1_100%)] shadow-[0_8px_24px_rgba(245,22,126,0.3)] hover:-translate-y-px hover:bg-[linear-gradient(135deg,#d4106c_0%,#2d28d4_100%)] hover:shadow-[0_10px_28px_rgba(245,22,126,0.4)]'
-                : 'cursor-not-allowed bg-[#E2E4F0] text-[#A0A3B1] shadow-none',
-            ]"
+            size="lg"
+            block
           >
             <svg v-if="chargement" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
             </svg>
             {{ chargement ? 'Connexion en cours...' : 'Se connecter' }}
-          </button>
+          </AppButton>
 
-          <p class="text-center text-sm text-[#717275]">
+          <p class="text-center text-sm text-[#64748b]">
             Pas encore de compte ?
-            <RouterLink to="/register" class="font-semibold text-[#3D37F1] underline-offset-2 transition hover:text-[#F5167E] hover:underline">Creer un compte</RouterLink>
+            <RouterLink to="/register" class="font-semibold text-[#1d4ed8] underline-offset-2 transition hover:text-[#14b8a6] hover:underline">Creer un compte</RouterLink>
           </p>
 
-          <p class="text-xs text-[#717275]">
+          <p class="text-xs text-[#64748b]">
             Endpoint utilise :
-            <code class="rounded bg-slate-100 px-1.5 py-0.5">{{ API_BASE_URL }}/auth/connexion</code>
+            <code class="rounded-full bg-slate-100 px-2 py-0.5">{{ API_BASE_URL }}/auth/connexion</code>
           </p>
         </form>
       </div>

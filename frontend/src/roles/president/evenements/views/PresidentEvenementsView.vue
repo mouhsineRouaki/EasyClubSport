@@ -4,6 +4,10 @@ import { useRouter } from 'vue-router'
 import AppCard from '@/shared/components/AppCard.vue'
 import AppListState from '@/shared/components/AppListState.vue'
 import AppPagination from '@/shared/components/AppPagination.vue'
+import AppStatusMessage from '@/shared/components/ui/AppStatusMessage.vue'
+import AppModalShell from '@/shared/components/ui/AppModalShell.vue'
+import PresidentEventForm from '@/roles/president/evenements/components/PresidentEventForm.vue'
+import PresidentEventListCard from '@/roles/president/evenements/components/PresidentEventListCard.vue'
 import PresidentShellLayout from '@/roles/president/shared/components/PresidentShellLayout.vue'
 import { authDelete, authGet, authPost, authPut } from '@/shared/services/apiClient'
 import { notifyError, notifySuccess } from '@/shared/services/toastService'
@@ -60,6 +64,10 @@ const utilisateurLayout = computed(() => (utilisateurConnecte.value ? utilisateu
 const titreListe = computed(() => (selectedEquipeId.value ? 'Liste des evenements' : 'Selectionnez une equipe'))
 const lireErreur = (champ) => erreursValidation.value?.[champ]?.[0] || ''
 const logoEquipe = (equipe = {}) => equipe?.logo_url || equipe?.logo || equipe?.club?.logo_url || ''
+
+const mettreAJourChamp = (champ, valeur) => {
+  formulaire[champ] = valeur
+}
 
 const gerer401 = (error) => {
   if (error?.response?.code === 401) {
@@ -492,130 +500,20 @@ onMounted(async () => {
       </div>
     </AppCard>
 
-    <div v-if="succes" class="ecs-note-success">{{ succes }}</div>
+    <AppStatusMessage v-if="succes">{{ succes }}</AppStatusMessage>
 
-    <div
-      v-if="afficherFormulaire"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[2px]"
-      @click.self="fermerFormulaire"
-    >
-      <section class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#e7edf8] bg-white p-4 shadow-[0_24px_50px_rgba(15,23,42,0.22)] sm:p-5">
-        <div class="flex items-center justify-between gap-3">
-          <h3 class="text-base font-bold text-[#1f2a44]">{{ titreFormulaire }}</h3>
-          <button class="ecs-btn-secondary text-xs" type="button" @click="fermerFormulaire">Fermer</button>
-        </div>
-
-        <form class="mt-4 grid gap-3" @submit.prevent="enregistrerEvenement">
-          <div class="grid gap-3 md:grid-cols-2">
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Titre *</span>
-              <input v-model="formulaire.titre" type="text" class="ecs-input" />
-              <span v-if="lireErreur('titre')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('titre') }}</span>
-            </label>
-
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Type *</span>
-              <select v-model="formulaire.type" class="ecs-select">
-                <option value="match">match</option>
-                <option value="entrainement">entrainement</option>
-                <option value="reunion">reunion</option>
-              </select>
-              <span v-if="lireErreur('type')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('type') }}</span>
-            </label>
-          </div>
-
-          <div class="grid gap-3 md:grid-cols-2">
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Date debut *</span>
-              <input v-model="formulaire.date_debut" type="datetime-local" class="ecs-input" />
-              <span v-if="lireErreur('date_debut')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('date_debut') }}</span>
-            </label>
-
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Date fin</span>
-              <input v-model="formulaire.date_fin" type="datetime-local" class="ecs-input" />
-              <span v-if="lireErreur('date_fin')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('date_fin') }}</span>
-            </label>
-          </div>
-
-          <div class="grid gap-3 md:grid-cols-2">
-            <label>
-              <span class="text-xs font-bold text-[#64748b]">Lieu</span>
-              <input v-model="formulaire.lieu" type="text" class="ecs-input" />
-              <span v-if="lireErreur('lieu')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('lieu') }}</span>
-            </label>
-
-            <label v-if="formulaire.type === 'match'">
-              <span class="text-xs font-bold text-[#64748b]">Equipe adversaire *</span>
-              <select v-model="formulaire.adversaire_equipe_id" class="ecs-select" :disabled="chargementEquipesAdversaires">
-                <option value="">Choisir une equipe adversaire</option>
-                <option v-for="equipe in equipesAdversairesDisponibles" :key="equipe.id" :value="String(equipe.id)">
-                  {{ equipe.nom }}{{ equipe.club?.nom ? ` - ${equipe.club.nom}` : '' }}
-                </option>
-              </select>
-              <span v-if="lireErreur('adversaire_equipe_id')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('adversaire_equipe_id') }}</span>
-            </label>
-
-            <div v-else class="rounded-xl border border-[#dbe2ef] bg-[#f8fbff] px-3 py-2">
-              <span class="text-xs font-bold text-[#64748b]">Affichage</span>
-              <p class="mt-1 text-sm font-bold text-[#1f2a44]">{{ formulaire.type === 'entrainement' ? 'Entrainement' : 'Reunion' }}</p>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-[#e7edf8] bg-[#f8fbff] p-3">
-            <div v-if="formulaire.type === 'match'" class="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-              <div class="flex items-center gap-3 rounded-xl bg-white p-3">
-                <img v-if="logoEquipe(equipeActuelle)" :src="logoEquipe(equipeActuelle)" :alt="equipeActuelle?.nom || 'Equipe'" class="h-11 w-11 rounded-xl object-cover" />
-                <span v-else class="block h-11 w-11 rounded-xl bg-[#dbe7ff]"></span>
-                <div>
-                  <p class="text-sm font-bold text-[#1f2a44]">{{ equipeActuelle?.nom || 'Equipe locale' }}</p>
-                  <p class="text-xs text-[#64748b]">{{ clubActuel?.nom || 'Club actuel' }}</p>
-                </div>
-              </div>
-              <span class="mx-auto rounded-full bg-[#111827] px-3 py-1 text-xs font-bold text-white">VS</span>
-              <div class="flex items-center gap-3 rounded-xl bg-white p-3">
-                <img v-if="logoEquipe(equipeAdversaireSelectionnee)" :src="logoEquipe(equipeAdversaireSelectionnee)" :alt="equipeAdversaireSelectionnee?.nom || 'Adversaire'" class="h-11 w-11 rounded-xl object-cover" />
-                <span v-else class="block h-11 w-11 rounded-xl bg-[#e2e8f0]"></span>
-                <div>
-                  <p class="text-sm font-bold text-[#1f2a44]">{{ equipeAdversaireSelectionnee?.nom || 'Adversaire a choisir' }}</p>
-                  <p class="text-xs text-[#64748b]">{{ equipeAdversaireSelectionnee?.club?.nom || 'Equipe de la plateforme' }}</p>
-                </div>
-              </div>
-            </div>
-            <div v-else class="flex items-center gap-3">
-              <img v-if="logoEquipe(equipeActuelle)" :src="logoEquipe(equipeActuelle)" :alt="equipeActuelle?.nom || 'Equipe'" class="h-11 w-11 rounded-xl object-cover" />
-              <span v-else class="block h-11 w-11 rounded-xl bg-[#dbe7ff]"></span>
-              <div>
-                <p class="text-sm font-bold text-[#1f2a44]">{{ formulaire.type === 'entrainement' ? 'Entrainement' : 'Reunion' }}</p>
-                <p class="text-xs text-[#64748b]">{{ equipeActuelle?.nom || 'Equipe locale' }}</p>
-              </div>
-            </div>
-          </div>
-
-          <label>
-            <span class="text-xs font-bold text-[#64748b]">Statut *</span>
-            <select v-model="formulaire.statut" class="ecs-select">
-              <option value="planifie">planifie</option>
-              <option value="termine">termine</option>
-              <option value="annule">annule</option>
-            </select>
-            <span v-if="lireErreur('statut')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('statut') }}</span>
-          </label>
-
-          <label>
-            <span class="text-xs font-bold text-[#64748b]">Description</span>
-            <textarea v-model="formulaire.description" rows="3" class="ecs-textarea"></textarea>
-            <span v-if="lireErreur('description')" class="mt-1 block text-xs text-[#e11d48]">{{ lireErreur('description') }}</span>
-          </label>
-
-          <div class="flex justify-end">
-            <button :disabled="envoi" class="ecs-btn-primary" type="submit">
-              {{ envoi ? 'Enregistrement...' : modeEdition ? 'Mettre a jour' : 'Creer evenement' }}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+    <AppModalShell v-if="afficherFormulaire" :title="titreFormulaire" max-width-class="max-w-3xl" @close="fermerFormulaire">
+      <PresidentEventForm
+        :model-value="formulaire"
+        :errors="erreursValidation"
+        :loading="envoi"
+        :adversaire-options="equipesAdversairesDisponibles"
+        :equipe-locale="equipeActuelle"
+        :submit-label="modeEdition ? 'Mettre a jour' : 'Creer evenement'"
+        @submit="enregistrerEvenement"
+        @update-field="mettreAJourChamp"
+      />
+    </AppModalShell>
 
     <AppCard class="mt-4" :title="titreListe">
       <AppListState
@@ -631,36 +529,14 @@ onMounted(async () => {
         </template>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <article v-for="evenement in evenements" :key="evenement.id" class="rounded-2xl border border-[#e8edf5] bg-white p-4 transition hover:-translate-y-[1px] hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-            <div class="flex items-start justify-between gap-2">
-              <p class="line-clamp-2 text-base font-bold text-[#1f2a44]">{{ evenement.titre }}</p>
-              <span class="rounded-full bg-[#f8fbff] px-2.5 py-1 text-[11px] font-bold uppercase text-[#475569]">{{ evenement.type }}</span>
-            </div>
-
-            <p class="mt-2 text-xs text-[#64748b]">Debut: {{ formatDate(evenement.date_debut) }}</p>
-            <p class="mt-1 text-xs text-[#64748b]">Fin: {{ formatDate(evenement.date_fin) }}</p>
-
-            <div class="mt-3 rounded-lg bg-[#f8fbff] px-3 py-2 text-xs text-[#64748b]">
-              <p>Lieu: <span class="font-semibold text-[#1f2a44]">{{ evenement.lieu || '-' }}</span></p>
-              <div v-if="evenement.type === 'match'" class="mt-2 flex items-center gap-2">
-                <img v-if="logoEquipe(evenement.equipe)" :src="logoEquipe(evenement.equipe)" :alt="evenement.equipe?.nom || 'Equipe'" class="h-8 w-8 rounded-lg object-cover" />
-                <span v-else class="block h-8 w-8 rounded-lg bg-[#dbe7ff]"></span>
-                <span class="rounded-full bg-[#111827] px-2 py-0.5 text-[10px] font-bold text-white">VS</span>
-                <img v-if="logoEquipe(evenement.adversaire_equipe)" :src="logoEquipe(evenement.adversaire_equipe)" :alt="evenement.adversaire_equipe?.nom || 'Adversaire'" class="h-8 w-8 rounded-lg object-cover" />
-                <span v-else class="block h-8 w-8 rounded-lg bg-[#e2e8f0]"></span>
-                <span class="font-semibold text-[#1f2a44]">{{ evenement.adversaire_equipe?.nom || evenement.adversaire || '-' }}</span>
-              </div>
-              <p v-else class="mt-1">Equipe: <span class="font-semibold text-[#1f2a44]">{{ evenement.equipe?.nom || equipeActuelle?.nom || '-' }}</span></p>
-              <p class="mt-1">Statut: <span class="font-semibold capitalize text-[#1f2a44]">{{ evenement.statut || '-' }}</span></p>
-            </div>
-
-            <p class="mt-3 line-clamp-2 text-xs leading-5 text-[#64748b]">{{ evenement.description || 'Aucune description.' }}</p>
-
-            <div class="mt-4 flex justify-end gap-2">
-              <button class="ecs-btn-secondary !px-3 !py-1.5 !text-xs" type="button" @click="ouvrirEdition(evenement)">Modifier</button>
-              <button class="ecs-btn-danger" type="button" @click="supprimerEvenement(evenement)">Supprimer</button>
-            </div>
-          </article>
+          <PresidentEventListCard
+            v-for="evenement in evenements"
+            :key="evenement.id"
+            :evenement="evenement"
+            :format-date="formatDate"
+            @edit="ouvrirEdition"
+            @delete="supprimerEvenement"
+          />
         </div>
       </AppListState>
 

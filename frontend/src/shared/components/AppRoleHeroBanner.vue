@@ -29,15 +29,16 @@ defineEmits(['logout'])
 
 <template>
   <section
-    class="relative overflow-hidden rounded-[28px] border border-[#2a43cd] bg-[#2446d8] px-4 pb-[180px] pt-4 text-white sm:px-7 sm:pb-[196px] sm:pt-5"
+    class="relative overflow-hidden rounded-[32px] border border-white/20 px-4 pb-[180px] pt-4 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-7 sm:pb-[196px] sm:pt-5"
+    style="background: radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent 26%), linear-gradient(145deg, #111827 0%, #172554 42%, #1d4ed8 72%, #14b8a6 100%);"
   >
     <img :src="backgroundSrc" alt="Background" class="absolute inset-0 h-full w-full object-cover" />
 
     <header
-      class="relative z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md"
+      class="relative z-10 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md"
     >
       <RouterLink :to="homeRoute" class="flex items-center gap-2.5">
-        <img :src="logoSrc" :alt="brandName" class="h-10 w-10 rounded-xl bg-white/95 p-2" />
+        <img :src="logoSrc" :alt="brandName" class="h-10 w-10 rounded-2xl bg-white/95 p-2 shadow-[0_10px_24px_rgba(15,23,42,0.16)]" />
         <span class="text-lg font-bold">{{ brandName }}</span>
       </RouterLink>
 
@@ -46,7 +47,7 @@ defineEmits(['logout'])
           v-for="item in globalLinks.filter((link) => link.to)"
           :key="item.to"
           :to="item.to"
-          class="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[11px] font-semibold text-white/95 transition hover:bg-white/20"
+          class="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-semibold text-white/95 transition hover:bg-white/20"
         >
           {{ item.label }}
         </RouterLink>
@@ -54,13 +55,13 @@ defineEmits(['logout'])
           v-for="item in globalLinks.filter((link) => link.href)"
           :key="item.href"
           :href="item.href"
-          class="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[11px] font-semibold text-white/95 transition hover:bg-white/20"
+          class="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-semibold text-white/95 transition hover:bg-white/20"
         >
           {{ item.label }}
         </a>
         <button
           type="button"
-          class="rounded-full bg-white px-4 py-1.5 text-[11px] font-bold text-[#1f36bf] transition hover:bg-[#eef2ff]"
+          class="rounded-full bg-white px-4 py-1.5 text-[11px] font-bold text-[#1d4ed8] transition hover:bg-[#eef2ff]"
           @click="$emit('logout')"
         >
           Deconnexion

@@ -52,21 +52,21 @@ const emit = defineEmits([
 <template>
   <section class="relative z-30 -mt-[154px] min-h-screen pb-0">
     <article
-      class="sticky top-2 z-40 mx-auto w-full max-w-[1220px] rounded-[24px] border border-[#e6ebf8] bg-white text-[#111827] shadow-[0_1px_0_rgba(17,24,39,0.04),0_36px_70px_-54px_rgba(15,23,42,0.55)]"
+      class="sticky top-2 z-40 mx-auto w-full max-w-[1220px] overflow-hidden rounded-[30px] border border-[#e6ebf8] bg-white text-[#111827] shadow-[0_1px_0_rgba(17,24,39,0.04),0_36px_70px_-54px_rgba(15,23,42,0.55)]"
     >
       <div
-        class="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 rounded-t-[24px] border-b border-[#ecf0f9] bg-white/95 px-3 py-3 backdrop-blur-md sm:px-4"
+        class="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-[#ecf0f9] bg-white/95 px-3 py-3 backdrop-blur-md sm:px-4"
       >
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-[11px]">
           <button
             v-for="item in featureLinks"
             :key="item.key"
             type="button"
-            class="group inline-flex items-center gap-2 rounded-full border px-2.5 py-1.5 font-bold transition"
+            class="group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-bold transition"
             :class="
               activeModule === item.key
-                ? 'border-[#d8e2fb] bg-[#f2f6ff] text-[#1f36bf]'
-                : 'border-transparent text-[#6b7280] hover:border-[#dce4f7] hover:bg-[#f8fbff] hover:text-[#1f2a44]'
+                ? 'border-transparent bg-[linear-gradient(135deg,#172554_0%,#1d4ed8_100%)] text-white shadow-[0_10px_22px_rgba(29,78,216,0.16)]'
+                : 'border-[#edf2fb] text-[#6b7280] hover:border-[#dce4f7] hover:bg-[#f8fbff] hover:text-[#1f2a44]'
             "
             @click="emit('select-module', item.key)"
           >
@@ -80,14 +80,14 @@ const emit = defineEmits([
               :value="searchValue"
               type="text"
               :placeholder="searchPlaceholder"
-              class="h-8 w-[165px] rounded-full border border-[#dbe2ef] bg-white px-3 py-1 text-xs text-[#1f2a44] outline-none placeholder:text-[#94a3b8]"
+              class="ecs-search-input h-9 w-[180px] text-xs"
               @input="emit('update:searchValue', $event.target.value)"
             />
           </label>
 
           <button
             type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#dbe2ef] bg-white text-[#1f2a44] transition hover:border-[#c7d2ea] hover:bg-[#f8fbff] disabled:cursor-not-allowed disabled:opacity-60"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#dbe2ef] bg-white text-[#1f2a44] transition hover:border-[#c7d2ea] hover:bg-[#f8fbff] disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="refreshDisabled"
             @click="emit('refresh')"
           >

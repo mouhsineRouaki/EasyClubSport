@@ -1,6 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue'
 import AppModuleHeader from '@/shared/components/AppModuleHeader.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
+import AppEmptyState from '@/shared/components/ui/AppEmptyState.vue'
 import PresidentConversationItem from '@/roles/president/messagerie/components/PresidentConversationItem.vue'
 import PresidentMessageBubble from '@/roles/president/messagerie/components/PresidentMessageBubble.vue'
 
@@ -79,7 +81,7 @@ const envoyer = () => {
     />
 
     <div class="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
-      <aside class="overflow-hidden rounded-[32px] border border-[#e7edf7] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+      <aside class="ecs-message-shell">
         <div class="border-b border-[#eef2f8] p-5">
           <div class="flex items-center justify-between gap-3">
             <div>
@@ -87,7 +89,7 @@ const envoyer = () => {
               <p class="mt-1 text-sm text-[#64748b]">Canaux actives de votre equipe.</p>
             </div>
 
-            <div class="rounded-full border border-[#d7e1fb] bg-[#f8fbff] px-4 py-2 text-xs font-semibold text-[#4b5563]">
+            <div class="ecs-chip-soft">
               {{ canaux.length }} canal{{ canaux.length > 1 ? 'x' : '' }}
             </div>
           </div>
@@ -98,10 +100,11 @@ const envoyer = () => {
             <div v-for="index in 5" :key="index" class="h-[118px] animate-pulse rounded-[26px] border border-[#eef2f7] bg-[#f8fbff]"></div>
           </div>
 
-          <div v-else-if="canaux.length === 0" class="rounded-[28px] border border-dashed border-[#d8e2fb] bg-[#f8fbff] px-6 py-10 text-center">
-            <p class="text-xl font-black text-[#0f172a]">Aucune conversation</p>
-            <p class="mt-2 text-sm text-[#64748b]">Vos coachs n ont pas encore cree de canal pour votre equipe.</p>
-          </div>
+          <AppEmptyState
+            v-else-if="canaux.length === 0"
+            title="Aucune conversation"
+            description="Vos coachs n ont pas encore cree de canal pour votre equipe."
+          />
 
           <div v-else class="space-y-3">
             <PresidentConversationItem
@@ -115,8 +118,8 @@ const envoyer = () => {
         </div>
       </aside>
 
-      <section class="flex min-h-[780px] flex-col overflow-hidden rounded-[32px] border border-[#e7edf7] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
-        <header class="border-b border-[#eef2f8] px-6 py-5">
+      <section class="ecs-message-shell flex min-h-[780px] flex-col">
+        <header class="ecs-message-header">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div v-if="canalSelectionne">
               <p class="text-2xl font-black text-[#0f172a]">{{ canalSelectionne.nom }}</p>
@@ -130,13 +133,13 @@ const envoyer = () => {
               <p class="mt-1 text-sm font-medium text-[#64748b]">Choisissez une conversation a gauche.</p>
             </div>
 
-            <div v-if="canalSelectionne" class="rounded-full border border-[#d7e1fb] bg-[#f8fbff] px-4 py-2 text-xs font-semibold text-[#4b5563]">
+            <div v-if="canalSelectionne" class="ecs-chip-soft">
               {{ messages.length }} messages visibles
             </div>
           </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#f8fbff_0%,#f4f7ff_100%)] px-5 py-6 sm:px-6">
+        <div class="ecs-message-body">
           <div v-if="!canalSelectionne" class="grid min-h-full place-items-center">
             <div class="max-w-md text-center">
               <p class="text-3xl font-black text-[#0f172a]">Selectionnez une conversation</p>
@@ -175,7 +178,7 @@ const envoyer = () => {
           </div>
         </div>
 
-        <div class="border-t border-[#eef2f8] bg-white p-4 sm:p-5">
+        <div class="ecs-message-composer">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
             <label class="block flex-1">
               <span class="sr-only">Message</span>
@@ -189,9 +192,9 @@ const envoyer = () => {
               ></textarea>
             </label>
 
-            <button
+            <AppButton
               type="button"
-              class="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[#0f172a] px-6 text-sm font-semibold text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+              size="lg"
               :disabled="!canalSelectionne || !messageEnvoi.trim() || envoiMessage"
               @click="envoyer"
             >
@@ -199,7 +202,7 @@ const envoyer = () => {
                 <path d="m22 2-7 20-4-9-9-4 20-7Z" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
               {{ envoiMessage ? 'Envoi...' : 'Envoyer' }}
-            </button>
+            </AppButton>
           </div>
         </div>
       </section>

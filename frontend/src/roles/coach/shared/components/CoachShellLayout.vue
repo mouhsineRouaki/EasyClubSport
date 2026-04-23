@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import AppBlueShell from '@/shared/layouts/AppBlueShell.vue'
 import AppTopNavbar from '@/shared/layouts/AppTopNavbar.vue'
 import AppWorkspace from '@/shared/layouts/AppWorkspace.vue'
@@ -53,14 +54,15 @@ const retourDashboard = () => {
 
     <AppWorkspace :title="title" :subtitle="subtitle" :tabs="tabs" :active-tab="activeTab">
       <template #actions>
-        <button
+        <AppButton
           v-if="activeTab !== 'dashboard'"
           type="button"
-          class="rounded-full border border-[#d7e1fb] bg-white px-4 py-2 text-xs font-semibold text-[#2446d8] transition hover:bg-[#f6f8ff]"
+          variant="ghost"
+          size="sm"
           @click="retourDashboard"
         >
           Retour dashboard
-        </button>
+        </AppButton>
       </template>
 
       <slot />

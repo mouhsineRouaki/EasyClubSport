@@ -16,12 +16,11 @@ defineProps({
 </script>
 
 <template>
-  <section class="rounded-2xl border border-[#e8edf5] bg-white shadow-[0_18px_35px_rgba(15,23,42,0.06)]"
-    :class="padded ? 'p-4 sm:p-5' : ''">
+  <section class="ecs-card" :class="padded ? '' : 'p-0'">
     <header v-if="title || subtitle || $slots.actions" class="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h2 v-if="title" class="text-lg font-bold text-[#1f2a44]">{{ title }}</h2>
-        <p v-if="subtitle" class="mt-1 text-sm text-[#6b7280]">{{ subtitle }}</p>
+        <h2 v-if="title" class="ecs-heading">{{ title }}</h2>
+        <p v-if="subtitle" class="ecs-subheading">{{ subtitle }}</p>
       </div>
       <div v-if="$slots.actions">
         <slot name="actions" />

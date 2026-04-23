@@ -34,13 +34,13 @@ const formatDate = (value) => {
     class="group w-full rounded-[26px] border px-4 py-3 text-left transition duration-200"
     :class="
       active
-        ? 'border-[#4c6fff] bg-[linear-gradient(180deg,#f4f7ff_0%,#edf2ff_100%)] shadow-[0_20px_40px_rgba(76,111,255,0.10)]'
+        ? 'border-transparent bg-[linear-gradient(135deg,#eff4ff_0%,#eef7ff_42%,#ecfffb_100%)] shadow-[0_20px_40px_rgba(37,99,235,0.12)]'
         : 'border-[#e7edf7] bg-white hover:border-[#cad7ff] hover:bg-[#f9fbff]'
     "
     @click="emit('select', canal)"
   >
     <div class="flex items-start gap-3">
-      <span class="mt-0.5 h-11 w-11 rounded-2xl bg-[linear-gradient(135deg,#2446d8_0%,#4c6fff_100%)]"></span>
+      <span class="mt-0.5 h-11 w-11 rounded-2xl bg-[linear-gradient(135deg,#172554_0%,#1d4ed8_62%,#14b8a6_100%)]"></span>
 
       <div class="min-w-0 flex-1">
         <div class="flex items-start justify-between gap-3">
@@ -61,13 +61,13 @@ const formatDate = (value) => {
         </p>
 
         <div class="mt-3 flex items-center justify-between gap-2">
-          <span class="rounded-full border border-[#d7e1fb] px-2.5 py-1 text-[11px] font-semibold text-[#3150d3]">
+          <span class="ecs-chip text-[#1d4ed8]">
             {{ canal.participants_total ?? 0 }} participants
           </span>
 
           <span
             v-if="unread > 0"
-            class="rounded-full bg-[#0f172a] px-2 py-1 text-[10px] font-bold text-white"
+            class="rounded-full bg-[#111827] px-2 py-1 text-[10px] font-bold text-white"
           >
             {{ unread }}
           </span>

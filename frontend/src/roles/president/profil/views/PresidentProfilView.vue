@@ -1,6 +1,7 @@
 <script setup>
 import AppCard from '@/shared/components/AppCard.vue'
 import AppProfileManager from '@/shared/components/AppProfileManager.vue'
+import PresidentProfileModuleCard from '@/roles/president/profil/components/PresidentProfileModuleCard.vue'
 import PresidentShellLayout from '@/roles/president/shared/components/PresidentShellLayout.vue'
 import { useAuthSession } from '@/shared/session/useAuthSession'
 
@@ -90,13 +91,7 @@ const synchroniserProfil = (payload) => {
 
       <AppCard title="Modules president" subtitle="Acces rapide aux axes de gestion.">
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-          <article v-for="module in modules" :key="module.titre" class="overflow-hidden rounded-xl border border-[#e8edf5] bg-white">
-            <div class="h-24" :style="{ background: module.image }"></div>
-            <div class="p-4">
-              <p class="text-sm font-bold text-[#1f2a44]">{{ module.titre }}</p>
-              <p class="mt-1 text-xs text-[#64748b]">{{ module.description }}</p>
-            </div>
-          </article>
+          <PresidentProfileModuleCard v-for="module in modules" :key="module.titre" :module="module" />
 
           <button class="grid min-h-[156px] place-items-center rounded-xl border border-dashed border-[#d1d9e6] text-center text-xs font-bold text-[#64748b] transition hover:border-[#2563eb] hover:text-[#2563eb]" type="button">
             <span>

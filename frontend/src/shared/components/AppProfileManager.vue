@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import AppModuleHeader from './AppModuleHeader.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import { useAuthSession } from '@/shared/session/useAuthSession'
 import { authGet, authPut } from '@/shared/services/apiClient'
 import { notifyError, notifySuccess } from '@/shared/services/toastService'
@@ -175,8 +176,8 @@ watch(
     </div>
 
     <div v-else class="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
-      <section class="overflow-hidden rounded-[32px] border border-[#e7edf7] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
-        <div class="relative bg-[linear-gradient(135deg,#0f172a_0%,#1f36bf_58%,#4c6fff_100%)] px-6 pb-8 pt-10 text-white">
+      <section class="ecs-message-shell">
+        <div class="relative px-6 pb-8 pt-10 text-white" style="background: linear-gradient(135deg, #111827 0%, #172554 45%, #1d4ed8 75%, #14b8a6 100%);">
           <div class="absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.25),transparent_60%)]"></div>
           <div class="relative text-center">
             <div class="mx-auto grid h-28 w-28 place-items-center overflow-hidden rounded-[28px] border-4 border-white/20 bg-white/15 text-3xl font-black text-white shadow-[0_18px_42px_rgba(15,23,42,0.28)]">
@@ -193,18 +194,18 @@ watch(
 
         <div class="space-y-4 p-5">
           <label class="block rounded-[24px] border border-dashed border-[#dbe3f1] bg-[#f8fbff] p-4 transition hover:border-[#4c6fff] hover:bg-white">
-            <span class="block text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Photo de profil</span>
+            <span class="ecs-field-label text-[#7c8aa5]">Photo de profil</span>
             <span class="mt-2 block text-sm font-semibold text-[#1f2a44]">
               {{ photoFichier?.name || (formulaire.photo_url ? 'Photo actuelle chargee' : 'Aucune photo selectionnee') }}
             </span>
-            <span class="mt-4 inline-flex rounded-full border border-[#d7e1fb] bg-white px-4 py-2 text-xs font-black text-[#1f36bf]">
+            <span class="ecs-chip mt-4 w-fit text-[#1d4ed8]">
               Changer la photo
             </span>
             <input type="file" class="sr-only" accept="image/*" @change="choisirPhoto" />
           </label>
 
-          <div v-if="equipe" class="rounded-[24px] border border-[#e7edf7] bg-[#fbfdff] p-4">
-            <p class="text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Equipe actuelle</p>
+          <div v-if="equipe" class="ecs-panel-muted p-4">
+            <p class="ecs-field-label text-[#7c8aa5]">Equipe actuelle</p>
             <p class="mt-2 text-lg font-black text-[#111827]">{{ equipe.nom || 'Equipe' }}</p>
             <p class="mt-1 text-sm font-semibold text-[#64748b]">{{ equipe.club?.nom || 'Club' }}<span v-if="equipe.categorie"> - {{ equipe.categorie }}</span></p>
             <p v-if="equipe.coach?.nom" class="mt-3 text-xs font-semibold text-[#64748b]">Coach : <span class="text-[#1f2a44]">{{ equipe.coach.nom }}</span></p>
@@ -212,35 +213,35 @@ watch(
         </div>
       </section>
 
-      <form class="rounded-[32px] border border-[#e7edf7] bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]" @submit.prevent="enregistrerProfil">
+      <form class="ecs-message-shell p-6" @submit.prevent="enregistrerProfil">
         <div class="grid gap-4 md:grid-cols-2">
           <label>
-            <span class="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Prenom</span>
-            <input v-model="formulaire.prenom" type="text" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none transition focus:border-[#4c6fff] focus:ring-4 focus:ring-[#4c6fff]/10" />
+            <span class="ecs-field-label text-[#7c8aa5]">Prenom</span>
+            <input v-model="formulaire.prenom" type="text" class="ecs-input mt-2" />
             <span v-if="lireErreur('prenom')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('prenom') }}</span>
           </label>
 
           <label>
-            <span class="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Nom</span>
-            <input v-model="formulaire.nom" type="text" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none transition focus:border-[#4c6fff] focus:ring-4 focus:ring-[#4c6fff]/10" />
+            <span class="ecs-field-label text-[#7c8aa5]">Nom</span>
+            <input v-model="formulaire.nom" type="text" class="ecs-input mt-2" />
             <span v-if="lireErreur('nom')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('nom') }}</span>
           </label>
 
           <label>
-            <span class="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Email</span>
-            <input v-model="formulaire.email" type="email" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none transition focus:border-[#4c6fff] focus:ring-4 focus:ring-[#4c6fff]/10" />
+            <span class="ecs-field-label text-[#7c8aa5]">Email</span>
+            <input v-model="formulaire.email" type="email" class="ecs-input mt-2" />
             <span v-if="lireErreur('email')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('email') }}</span>
           </label>
 
           <label>
-            <span class="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Telephone</span>
-            <input v-model="formulaire.telephone" type="text" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none transition focus:border-[#4c6fff] focus:ring-4 focus:ring-[#4c6fff]/10" />
+            <span class="ecs-field-label text-[#7c8aa5]">Telephone</span>
+            <input v-model="formulaire.telephone" type="text" class="ecs-input mt-2" />
             <span v-if="lireErreur('telephone')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('telephone') }}</span>
           </label>
 
           <label v-if="showStatus" class="md:col-span-2 lg:max-w-[260px]">
-            <span class="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Statut</span>
-            <select v-model="formulaire.statut" class="h-12 w-full rounded-2xl border border-[#dbe3f1] bg-white px-4 text-sm font-semibold text-[#0f172a] outline-none transition focus:border-[#4c6fff] focus:ring-4 focus:ring-[#4c6fff]/10">
+            <span class="ecs-field-label text-[#7c8aa5]">Statut</span>
+            <select v-model="formulaire.statut" class="ecs-select mt-2">
               <option value="actif">Actif</option>
               <option value="blesse">Blesse</option>
               <option value="suspendu">Suspendu</option>
@@ -251,8 +252,8 @@ watch(
         </div>
 
         <label class="mt-4 block">
-          <span class="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-[#7c8aa5]">Adresse</span>
-          <textarea v-model="formulaire.adresse" rows="4" class="w-full rounded-2xl border border-[#dbe3f1] px-4 py-3 text-sm font-semibold text-[#0f172a] outline-none transition focus:border-[#4c6fff] focus:ring-4 focus:ring-[#4c6fff]/10"></textarea>
+          <span class="ecs-field-label text-[#7c8aa5]">Adresse</span>
+          <textarea v-model="formulaire.adresse" rows="4" class="ecs-textarea mt-2"></textarea>
           <span v-if="lireErreur('adresse')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('adresse') }}</span>
         </label>
 
@@ -261,9 +262,9 @@ watch(
             <p class="text-sm font-black text-[#111827]">Informations personnelles</p>
             <p class="mt-1 text-xs font-semibold text-[#64748b]">Les changements sont synchronises avec votre compte principal.</p>
           </div>
-          <button type="submit" class="rounded-full bg-[#111827] px-6 py-3 text-sm font-black text-white transition hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60" :disabled="enregistrement">
+          <AppButton type="submit" size="lg" :disabled="enregistrement">
             {{ enregistrement ? 'Enregistrement...' : 'Enregistrer le profil' }}
-          </button>
+          </AppButton>
         </div>
       </form>
     </div>

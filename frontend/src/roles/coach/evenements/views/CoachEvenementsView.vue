@@ -1,7 +1,10 @@
 <script setup>
 import { onMounted, reactive, ref, watch } from 'vue'
+import CoachEventCard from '@/roles/coach/evenements/components/CoachEventCard.vue'
+import CoachEventForm from '@/roles/coach/evenements/components/CoachEventForm.vue'
 import CoachShellLayout from '@/roles/coach/shared/components/CoachShellLayout.vue'
 import AppSelectField from '@/shared/components/AppSelectField.vue'
+import AppModalShell from '@/shared/components/ui/AppModalShell.vue'
 import { useAuthSession } from '@/shared/session/useAuthSession'
 import { authDelete, authGet, authPost, authPut } from '@/shared/services/apiClient'
 import { notifyError, notifySuccess } from '@/shared/services/toastService'
@@ -40,6 +43,10 @@ const formatDate = (value) => {
 }
 
 const lireErreur = (champ) => erreurs.value?.[champ]?.[0] || ''
+
+const mettreAJourChamp = (champ, valeur) => {
+  formulaire[champ] = valeur
+}
 
 const reinitialiserFormulaire = () => {
   formulaire.titre = ''
@@ -220,101 +227,28 @@ onMounted(async () => {
     </div>
 
     <div v-else class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <article v-for="evenement in evenements" :key="evenement.id" class="rounded-[26px] border border-[#e5ecfb] bg-white p-5">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">{{ evenement.type }}</p>
-            <h2 class="mt-2 text-xl font-black text-[#0f172a]">{{ evenement.titre }}</h2>
-          </div>
-          <span class="rounded-full bg-[#f8fbff] px-3 py-1 text-[11px] font-black capitalize text-[#2446d8]">{{ evenement.statut }}</span>
-        </div>
-
-        <p class="mt-3 text-sm font-semibold text-[#475569]">{{ formatDate(evenement.date_debut) }}</p>
-        <p class="mt-2 text-sm font-semibold text-[#64748b]">{{ evenement.lieu || evenement.adversaire_equipe?.nom || evenement.adversaire || '-' }}</p>
-        <p class="mt-4 line-clamp-3 text-sm text-[#475569]">{{ evenement.description || 'Aucune description.' }}</p>
-
-        <div class="mt-5 flex gap-2">
-          <button type="button" class="rounded-full border border-[#d7e1fb] px-4 py-2 text-xs font-semibold text-[#2446d8]" @click="ouvrirEdition(evenement)">Modifier</button>
-          <button type="button" class="rounded-full border border-[#fecdd3] px-4 py-2 text-xs font-semibold text-[#e11d48]" @click="supprimerEvenement(evenement)">Supprimer</button>
-        </div>
-      </article>
+      <CoachEventCard
+        v-for="evenement in evenements"
+        :key="evenement.id"
+        :evenement="evenement"
+        :format-date="formatDate"
+        @edit="ouvrirEdition"
+        @delete="supprimerEvenement"
+      />
 
       <div v-if="!evenements.length" class="rounded-[28px] border border-dashed border-[#d7e1fb] bg-[#f8fbff] p-8 text-center text-sm font-semibold text-[#64748b] md:col-span-2 xl:col-span-3">
         Aucun evenement pour cette equipe.
       </div>
     </div>
 
-    <div v-if="modalOuvert" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4" @click.self="fermerModal">
-      <section class="w-full max-w-2xl rounded-[28px] border border-[#e5ecfb] bg-white p-6 shadow-[0_30px_60px_rgba(15,23,42,0.18)]">
-        <div class="flex items-center justify-between gap-3">
-          <h2 class="text-2xl font-black text-[#0f172a]">{{ mode === 'edition' ? 'Modifier evenement' : 'Nouvel evenement' }}</h2>
-          <button type="button" class="rounded-full border border-[#d7e1fb] px-4 py-2 text-xs font-semibold text-[#2446d8]" @click="fermerModal">Fermer</button>
-        </div>
-
-        <form class="mt-6 grid gap-4 md:grid-cols-2" @submit.prevent="enregistrer">
-          <label class="md:col-span-2">
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Titre</span>
-            <input v-model="formulaire.titre" type="text" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" />
-            <span v-if="lireErreur('titre')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('titre') }}</span>
-          </label>
-
-          <label>
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Type</span>
-            <select v-model="formulaire.type" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]">
-              <option value="match">Match</option>
-              <option value="entrainement">Entrainement</option>
-              <option value="reunion">Reunion</option>
-            </select>
-          </label>
-
-          <label>
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Statut</span>
-            <select v-model="formulaire.statut" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]">
-              <option value="planifie">Planifie</option>
-              <option value="termine">Termine</option>
-              <option value="annule">Annule</option>
-            </select>
-          </label>
-
-          <label>
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Date debut</span>
-            <input v-model="formulaire.date_debut" type="datetime-local" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" />
-            <span v-if="lireErreur('date_debut')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('date_debut') }}</span>
-          </label>
-
-          <label>
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Date fin</span>
-            <input v-model="formulaire.date_fin" type="datetime-local" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" />
-          </label>
-
-          <label>
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Lieu</span>
-            <input v-model="formulaire.lieu" type="text" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" />
-          </label>
-
-          <label v-if="formulaire.type === 'match'">
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Equipe adverse ID</span>
-            <input v-model="formulaire.adversaire_equipe_id" type="number" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" />
-            <span v-if="lireErreur('adversaire_equipe_id')" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ lireErreur('adversaire_equipe_id') }}</span>
-          </label>
-
-          <label v-if="formulaire.type === 'match'" class="md:col-span-2">
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Adversaire texte</span>
-            <input v-model="formulaire.adversaire" type="text" class="h-12 w-full rounded-2xl border border-[#dbe3f1] px-4 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]" />
-          </label>
-
-          <label class="md:col-span-2">
-            <span class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Description</span>
-            <textarea v-model="formulaire.description" rows="4" class="w-full rounded-2xl border border-[#dbe3f1] px-4 py-3 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#4c6fff]"></textarea>
-          </label>
-
-          <div class="md:col-span-2 flex justify-end">
-            <button type="submit" class="rounded-full bg-[#0f172a] px-6 py-3 text-sm font-semibold text-white" :disabled="envoi">
-              {{ envoi ? 'Enregistrement...' : 'Enregistrer' }}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+    <AppModalShell v-if="modalOuvert" :title="mode === 'edition' ? 'Modifier evenement' : 'Nouvel evenement'" max-width-class="max-w-2xl" @close="fermerModal">
+      <CoachEventForm
+        :model-value="formulaire"
+        :errors="erreurs"
+        :loading="envoi"
+        @submit="enregistrer"
+        @update-field="mettreAJourChamp"
+      />
+    </AppModalShell>
   </CoachShellLayout>
 </template>

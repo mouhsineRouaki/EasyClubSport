@@ -34,7 +34,7 @@ const props = defineProps({
   },
   labelClass: {
     type: String,
-    default: 'text-xs font-bold text-[#64748b]',
+    default: 'ecs-field-label',
   },
   selectClass: {
     type: String,

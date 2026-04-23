@@ -3,7 +3,11 @@ import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import imageHero from '@/assets/hero.png'
 import logoEasyClubSport from '@/assets/logo-easyclubsport.svg'
+import AppButton from '@/shared/components/ui/AppButton.vue'
+import AppField from '@/shared/components/ui/AppField.vue'
+import AppStatusMessage from '@/shared/components/ui/AppStatusMessage.vue'
 import { post } from '@/shared/services/apiClient'
+import { sauvegarderToken, sauvegarderUtilisateurStocke } from '@/shared/session/sessionStorage'
 import { notifyError } from '@/shared/services/toastService'
 
 const router = useRouter()
@@ -58,13 +62,8 @@ const soumettre = async () => {
     token.value = reponse?.data?.token || ''
     utilisateur.value = reponse?.data?.utilisateur || null
 
-    if (token.value) {
-      localStorage.setItem('token_api', token.value)
-    }
-
-    if (utilisateur.value) {
-      localStorage.setItem('utilisateur_api', JSON.stringify(utilisateur.value))
-    }
+    sauvegarderToken(token.value)
+    sauvegarderUtilisateurStocke(utilisateur.value)
 
     if (utilisateur.value?.role === 'president') {
       router.push('/president')
@@ -88,13 +87,11 @@ const soumettre = async () => {
 </script>
 
 <template>
-  <main
-    class="flex min-h-screen items-center justify-center bg-[#F2F4FF] bg-[radial-gradient(circle_at_15%_20%,rgba(61,55,241,0.12)_0%,transparent_40%),radial-gradient(circle_at_85%_80%,rgba(245,22,126,0.08)_0%,transparent_40%)] px-4 py-12"
-  >
-    <div class="grid w-full max-w-5xl overflow-hidden rounded-[20px] shadow-2xl lg:grid-cols-[1fr_1.25fr]">
-      <div class="relative flex flex-col justify-between gap-8 overflow-hidden bg-[linear-gradient(145deg,#0A075F_0%,#242565_45%,#3D37F1_100%)] p-8 text-white">
-        <div class="pointer-events-none absolute -right-[60px] -top-[60px] h-[220px] w-[220px] rounded-full bg-[rgba(245,22,126,0.18)]"></div>
-        <div class="pointer-events-none absolute -bottom-[40px] -left-[40px] h-[160px] w-[160px] rounded-full bg-[rgba(61,55,241,0.25)]"></div>
+  <main class="ecs-auth-shell">
+    <div class="ecs-auth-grid">
+      <div class="ecs-auth-hero">
+        <div class="pointer-events-none absolute -right-[60px] -top-[60px] h-[220px] w-[220px] rounded-full bg-white/10"></div>
+        <div class="pointer-events-none absolute -bottom-[40px] -left-[40px] h-[160px] w-[160px] rounded-full bg-white/10"></div>
 
         <div class="relative z-10 flex flex-col gap-5">
           <div class="flex items-center gap-3">
@@ -105,7 +102,7 @@ const soumettre = async () => {
           <div class="mt-1">
             <h1 class="text-[2rem] leading-tight font-bold text-white">
               Gerez votre club<br />
-              <span class="text-[#F5167E]">simplement.</span>
+              <span class="text-[#ccfbf1]">simplement.</span>
             </h1>
             <p class="mt-3 text-sm leading-relaxed text-white/70">
               Rejoignez des centaines de clubs qui font confiance a EasyClubSport pour organiser leurs equipes et leurs membres.
@@ -117,124 +114,109 @@ const soumettre = async () => {
           <img
             :src="imageHero"
             alt="Illustration sportive"
-            class="max-h-[240px] w-full rounded-[20px] border border-white/15 object-cover"
+            class="max-h-[240px] w-full rounded-[28px] border border-white/15 object-cover"
           />
         </div>
 
         <div class="relative z-10 flex flex-wrap gap-2">
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Football</span>
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Basketball</span>
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Tennis</span>
-          <span class="inline-block rounded-[100px] border border-white/20 bg-white/10 px-[14px] py-1 text-xs font-medium text-white/85">Natation</span>
+          <span class="ecs-chip border-white/15 bg-white/10 text-white">Football</span>
+          <span class="ecs-chip border-white/15 bg-white/10 text-white">Basketball</span>
+          <span class="ecs-chip border-white/15 bg-white/10 text-white">Tennis</span>
+          <span class="ecs-chip border-white/15 bg-white/10 text-white">Natation</span>
         </div>
       </div>
 
-      <div class="flex flex-col justify-center gap-6 bg-white px-8 py-10 sm:px-10">
+      <div class="ecs-auth-form">
         <div>
-          <p class="m-0 text-[11px] font-bold uppercase tracking-[0.15em] text-[#3D37F1]">Inscription</p>
-          <h2 class="m-0 mt-1.5 text-[1.75rem] font-bold text-[#242565]">Creer votre compte</h2>
-          <p class="mt-1 text-sm text-[#717275]">Remplissez les informations ci-dessous pour rejoindre votre club.</p>
+          <p class="ecs-kicker">Inscription</p>
+          <h2 class="m-0 mt-1.5 text-[1.75rem] font-bold text-[#172554]">Creer votre compte</h2>
+          <p class="mt-1 text-sm text-[#64748b]">Remplissez les informations ci-dessous pour rejoindre votre club.</p>
         </div>
 
         <form class="flex flex-col gap-4" @submit.prevent="soumettre">
           <div class="grid gap-4 sm:grid-cols-2">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Nom</label>
+            <AppField label="Nom" :error="lireErreur('nom')">
               <input
                 v-model="formulaire.nom"
                 type="text"
                 placeholder="Votre nom"
-                class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+                class="ecs-input"
               />
-              <span v-if="lireErreur('nom')" class="text-xs text-[#F5167E]">{{ lireErreur('nom') }}</span>
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Prenom</label>
+            </AppField>
+            <AppField label="Prenom" :error="lireErreur('prenom')">
               <input
                 v-model="formulaire.prenom"
                 type="text"
                 placeholder="Votre prenom"
-                class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+                class="ecs-input"
               />
-              <span v-if="lireErreur('prenom')" class="text-xs text-[#F5167E]">{{ lireErreur('prenom') }}</span>
-            </div>
+            </AppField>
           </div>
 
           <div class="grid gap-4 sm:grid-cols-2">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Email</label>
+            <AppField label="Email" :error="lireErreur('email')">
               <input
                 v-model="formulaire.email"
                 type="email"
                 placeholder="exemple@email.com"
-                class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+                class="ecs-input"
               />
-              <span v-if="lireErreur('email')" class="text-xs text-[#F5167E]">{{ lireErreur('email') }}</span>
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Telephone</label>
+            </AppField>
+            <AppField label="Telephone" :error="lireErreur('telephone')">
               <input
                 v-model="formulaire.telephone"
                 type="tel"
                 placeholder="06XXXXXXXX"
-                class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+                class="ecs-input"
               />
-              <span v-if="lireErreur('telephone')" class="text-xs text-[#F5167E]">{{ lireErreur('telephone') }}</span>
-            </div>
+            </AppField>
           </div>
 
           <div class="grid gap-4 sm:grid-cols-2">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Adresse</label>
+            <AppField label="Adresse" :error="lireErreur('adresse')">
               <input
                 v-model="formulaire.adresse"
                 type="text"
                 placeholder="Ville, quartier..."
-                class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+                class="ecs-input"
               />
-              <span v-if="lireErreur('adresse')" class="text-xs text-[#F5167E]">{{ lireErreur('adresse') }}</span>
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Role</label>
+            </AppField>
+            <AppField label="Role" :error="lireErreur('role')">
               <select
                 v-model="formulaire.role"
-                class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+                class="ecs-select"
               >
                 <option v-for="role in roles" :key="role.value" :value="role.value">{{ role.label }}</option>
               </select>
-              <span v-if="lireErreur('role')" class="text-xs text-[#F5167E]">{{ lireErreur('role') }}</span>
-            </div>
+            </AppField>
           </div>
 
           <div class="grid gap-4 sm:grid-cols-2">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Mot de passe</label>
+            <AppField label="Mot de passe" :error="lireErreur('password')">
               <input
                 v-model="formulaire.password"
                 type="password"
                 placeholder="********"
-                class="w-full rounded-[10px] border-[1.5px] border-[#E2E4F0] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]"
+                class="ecs-input"
               />
-              <span v-if="lireErreur('password')" class="text-xs text-[#F5167E]">{{ lireErreur('password') }}</span>
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-[0.1em] text-[#717275]">Confirmation</label>
+            </AppField>
+            <AppField
+              label="Confirmation"
+              :error="motDePasseDifferent ? 'Les mots de passe ne correspondent pas.' : ''"
+            >
               <input
                 v-model="formulaire.password_confirmation"
                 type="password"
                 placeholder="********"
                 :class="[
-                  'w-full rounded-[10px] border-[1.5px] bg-[#F2F4FF] px-4 py-[11px] text-sm text-[#242565] outline-none transition placeholder:text-[#A0A3B1]',
-                  motDePasseDifferent
-                    ? 'border-[#F5167E] focus:border-[#F5167E] focus:bg-white focus:ring-4 focus:ring-[rgba(245,22,126,0.12)]'
-                    : 'border-[#E2E4F0] focus:border-[#3D37F1] focus:bg-white focus:ring-4 focus:ring-[rgba(61,55,241,0.12)]',
+                  'ecs-input',
+                  motDePasseDifferent ? 'border-[#e11d48] focus:border-[#e11d48] focus:ring-[#e11d48]/10' : '',
                 ]"
               />
-              <span v-if="motDePasseDifferent" class="text-xs text-[#F5167E]">Les mots de passe ne correspondent pas.</span>
-            </div>
+            </AppField>
           </div>
 
-          <div v-if="succes" class="flex flex-col gap-2 rounded-[10px] border border-[rgba(7,238,18,0.3)] bg-[#F0FFF4] px-4 py-3 text-[#0A7A12]">
+          <AppStatusMessage v-if="succes" type="success">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
@@ -242,28 +224,24 @@ const soumettre = async () => {
               <p class="text-sm font-semibold">{{ succes }}</p>
             </div>
             <p v-if="token" class="break-all font-mono text-xs opacity-80">Token : {{ token }}</p>
-          </div>
+          </AppStatusMessage>
 
-          <button
+          <AppButton
             :disabled="!peutSoumettre"
             type="submit"
-            :class="[
-              'mt-1 flex w-full items-center justify-center gap-2 rounded-[100px] py-3.5 text-sm font-bold text-white transition-all',
-              peutSoumettre
-                ? 'cursor-pointer border-0 bg-[linear-gradient(135deg,#F5167E_0%,#3D37F1_100%)] shadow-[0_8px_24px_rgba(245,22,126,0.3)] hover:-translate-y-px hover:bg-[linear-gradient(135deg,#d4106c_0%,#2d28d4_100%)] hover:shadow-[0_10px_28px_rgba(245,22,126,0.4)]'
-                : 'cursor-not-allowed bg-[#E2E4F0] text-[#A0A3B1] shadow-none',
-            ]"
+            size="lg"
+            block
           >
             <svg v-if="chargement" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
             </svg>
             {{ chargement ? 'Inscription en cours...' : 'Creer mon compte' }}
-          </button>
+          </AppButton>
 
-          <p class="text-center text-sm text-[#717275]">
+          <p class="text-center text-sm text-[#64748b]">
             Deja un compte ?
-            <RouterLink to="/login" class="font-semibold text-[#3D37F1] underline-offset-2 transition hover:text-[#F5167E] hover:underline">Se connecter</RouterLink>
+            <RouterLink to="/login" class="font-semibold text-[#1d4ed8] underline-offset-2 transition hover:text-[#14b8a6] hover:underline">Se connecter</RouterLink>
           </p>
         </form>
       </div>
