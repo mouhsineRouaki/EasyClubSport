@@ -1,6 +1,7 @@
 <script setup>
 import AppCard from '@/shared/components/AppCard.vue'
 import AppProfileManager from '@/shared/components/AppProfileManager.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import PresidentProfileModuleCard from '@/roles/president/profil/components/PresidentProfileModuleCard.vue'
 import PresidentShellLayout from '@/roles/president/shared/components/PresidentShellLayout.vue'
 import { useAuthSession } from '@/shared/session/useAuthSession'
@@ -84,7 +85,7 @@ const synchroniserProfil = (payload) => {
               <p class="truncate text-xs font-bold text-[#1f2a44]">{{ conversation.nom }}</p>
               <p class="truncate text-xs text-[#64748b]">{{ conversation.message }}</p>
             </div>
-            <button class="text-[11px] font-bold text-[#2563eb]" type="button">Ouvrir</button>
+            <AppButton type="button" variant="ghost" size="xs">Ouvrir</AppButton>
           </div>
         </div>
       </AppCard>
@@ -93,12 +94,12 @@ const synchroniserProfil = (payload) => {
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
           <PresidentProfileModuleCard v-for="module in modules" :key="module.titre" :module="module" />
 
-          <button class="grid min-h-[156px] place-items-center rounded-xl border border-dashed border-[#d1d9e6] text-center text-xs font-bold text-[#64748b] transition hover:border-[#2563eb] hover:text-[#2563eb]" type="button">
+          <AppButton type="button" variant="ghost" class="grid min-h-[156px] w-full place-items-center rounded-xl border-dashed text-center text-xs font-bold text-[#64748b] hover:!border-[#2563eb] hover:!text-[#2563eb]">
             <span>
               <span class="block text-xl">+</span>
               Ajouter un module
             </span>
-          </button>
+          </AppButton>
         </div>
       </AppCard>
     </section>

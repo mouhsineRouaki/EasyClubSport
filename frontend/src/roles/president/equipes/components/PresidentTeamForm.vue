@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 const props = defineProps({
   modelValue: {
     type: Object,
@@ -109,9 +111,9 @@ const lireErreur = (champ) => props.errors?.[champ]?.[0] || ''
     </label>
 
     <div class="flex justify-end">
-      <button :disabled="loading" type="submit" class="ecs-btn-primary">
+      <AppButton :disabled="loading" type="submit">
         {{ loading ? loadingLabel : submitLabel }}
-      </button>
+      </AppButton>
     </div>
   </form>
 </template>

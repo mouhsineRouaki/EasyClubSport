@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AppCard from '@/shared/components/AppCard.vue'
 import AppListState from '@/shared/components/AppListState.vue'
 import AppPagination from '@/shared/components/AppPagination.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import AppStatusMessage from '@/shared/components/ui/AppStatusMessage.vue'
 import AppModalShell from '@/shared/components/ui/AppModalShell.vue'
 import PresidentTeamForm from '@/roles/president/equipes/components/PresidentTeamForm.vue'
@@ -326,7 +327,7 @@ onMounted(async () => {
   >
     <AppCard title="Equipes du president" subtitle="Selectionnez un club puis gerez ses equipes.">
       <template #actions>
-        <button type="button" class="ecs-btn-primary" @click="ouvrirCreation">+ Nouvelle equipe</button>
+        <AppButton type="button" @click="ouvrirCreation">+ Nouvelle equipe</AppButton>
       </template>
 
       <div class="grid gap-3 lg:grid-cols-4">
@@ -384,7 +385,7 @@ onMounted(async () => {
         @retry="chargerEquipes"
       >
         <template #empty-action>
-          <button v-if="selectedClubId" type="button" class="mt-4 ecs-btn-primary" @click="ouvrirCreation">Creer la premiere equipe</button>
+          <AppButton v-if="selectedClubId" type="button" class="mt-4" @click="ouvrirCreation">Creer la premiere equipe</AppButton>
         </template>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

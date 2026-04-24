@@ -26,14 +26,17 @@ const props = defineProps({
 
 const variantClass = computed(() => {
   if (props.variant === 'secondary') return 'ecs-btn-secondary'
+  if (props.variant === 'neutral') return 'ecs-btn-neutral'
   if (props.variant === 'ghost') return 'ecs-btn-ghost'
   if (props.variant === 'danger') return 'ecs-btn-danger'
   return 'ecs-btn-primary'
 })
 
 const sizeClass = computed(() => {
+  if (props.size === 'xs') return 'px-3 py-1.5 text-xs'
   if (props.size === 'sm') return 'px-3 py-1.5 text-xs'
   if (props.size === 'lg') return 'h-14 px-6 text-sm'
+  if (props.size === 'icon') return 'h-9 w-9 p-0'
   return 'px-4 py-2 text-sm'
 })
 </script>

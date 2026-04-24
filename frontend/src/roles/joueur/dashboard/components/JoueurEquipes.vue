@@ -1,5 +1,6 @@
 <script setup>
-import blueBackground from '@/assets/Background.jpg'
+import AppCoverCard from '@/shared/components/ui/AppCoverCard.vue'
+import { resolveCoverImage } from '@/shared/utils/coverImage'
 
 const props = defineProps({
   equipes: { type: Array, default: () => [] },
@@ -8,9 +9,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:recherche'])
-
-const imageEquipe = (eq = {}) => eq?.logo_url || eq?.logo || blueBackground
-const backgroundEquipe = (eq = {}) => `linear-gradient(145deg, rgba(8,18,72,0.86), rgba(36,70,216,0.64)), url(${imageEquipe(eq)})`
+const imageEquipe = (eq = {}) => resolveCoverImage(eq?.image_url, eq?.logo_url, eq?.logo, eq?.photo_url, eq?.club?.logo_url)
 </script>
 
 <template>
@@ -35,36 +34,32 @@ const backgroundEquipe = (eq = {}) => `linear-gradient(145deg, rgba(8,18,72,0.86
     </div>
 
     <div v-else-if="equipes.length" class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <article
+      <AppCoverCard
         v-for="(equipe, idx) in equipes"
         :key="equipe.id"
-        class="relative min-h-[230px] overflow-hidden rounded-[30px] border border-white/70 bg-cover bg-center p-5 text-white transition hover:-translate-y-1"
+        :image="imageEquipe(equipe)"
+        :badge="equipe.categorie || 'Equipe'"
+        :status-label="equipe.statut || 'active'"
+        :status-class="equipe.statut === 'active' ? 'bg-[#ecfdf5] text-[#16a34a]' : 'bg-[#f1f5f9] text-[#64748b]'"
+        min-height-class="min-h-[230px]"
         :class="idx % 2 === 1 ? 'md:translate-y-5' : ''"
-        :style="{ backgroundImage: backgroundEquipe(equipe) }"
       >
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.32),transparent_26%),linear-gradient(180deg,transparent,rgba(0,0,0,0.18))]"></div>
-        <div class="relative z-10 flex min-h-[190px] flex-col justify-between">
-          <div class="flex items-start justify-between">
-            <p class="w-max rounded-full border border-white/30 bg-white/14 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-md">
-              {{ equipe.categorie || 'Equipe' }}
-            </p>
-            <span class="rounded-full px-2 py-1 text-[10px] font-black" :class="equipe.statut === 'active' ? 'bg-[#ecfdf5] text-[#16a34a]' : 'bg-[#f1f5f9] text-[#64748b]'">
-              {{ equipe.statut || 'active' }}
-            </span>
-          </div>
+        <template #body>
           <div>
             <h4 class="text-3xl font-black leading-tight text-white">{{ equipe.nom }}</h4>
             <p class="mt-2 text-xs font-semibold text-white/76">{{ equipe.club?.nom || 'Club non defini' }}</p>
             <p class="mt-1 text-[11px] font-semibold text-white/60">Coach : {{ equipe.coach?.nom || equipe.coach?.name || 'Non assign' }}</p>
           </div>
+        </template>
+        <template #footer>
           <div class="flex items-center justify-between">
             <p class="text-xs font-black text-white/82">{{ equipe.joueurs_total || 0 }} joueurs</p>
             <span class="rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-black text-white backdrop-blur-md">
               {{ equipe.role_equipe || 'Joueur' }}
             </span>
           </div>
-        </div>
-      </article>
+        </template>
+      </AppCoverCard>
     </div>
 
     <div v-else class="mt-6 rounded-[32px] border border-dashed border-[#cfdaf2] bg-[#f8fbff] px-5 py-12 text-center">

@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 defineProps({
   title: {
     type: String,
@@ -30,9 +32,9 @@ const emit = defineEmits(['close'])
     >
       <div class="flex items-center justify-between gap-3">
         <h3 class="text-base font-bold text-[#1f2a44]">{{ title }}</h3>
-        <button class="ecs-btn-secondary text-xs" type="button" @click="emit('close')">
+        <AppButton type="button" variant="secondary" size="sm" @click="emit('close')">
           {{ closeLabel }}
-        </button>
+        </AppButton>
       </div>
 
       <div class="mt-4">

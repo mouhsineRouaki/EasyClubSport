@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 defineProps({
   equipe: {
     type: Object,
@@ -33,8 +35,8 @@ const emit = defineEmits(['edit', 'delete'])
     <div class="mt-4 flex items-center justify-between">
       <span class="text-xs text-[#64748b]">{{ equipe.coach?.name || 'Coach non assigne' }}</span>
       <div class="flex gap-2">
-        <button class="ecs-btn-secondary !px-3 !py-1.5 !text-xs" type="button" @click="emit('edit', equipe)">Modifier</button>
-        <button class="ecs-btn-danger" type="button" @click="emit('delete', equipe)">Supprimer</button>
+        <AppButton type="button" variant="secondary" size="sm" @click="emit('edit', equipe)">Modifier</AppButton>
+        <AppButton type="button" variant="danger" size="sm" @click="emit('delete', equipe)">Supprimer</AppButton>
       </div>
     </div>
   </article>

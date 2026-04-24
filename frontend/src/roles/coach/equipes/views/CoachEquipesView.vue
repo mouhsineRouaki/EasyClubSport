@@ -1,6 +1,8 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import CoachShellLayout from '@/roles/coach/shared/components/CoachShellLayout.vue'
+import CoachEquipeCard from '@/roles/coach/equipes/components/CoachEquipeCard.vue'
+import AppDetailsTable from '@/shared/components/details/AppDetailsTable.vue'
 import { useAuthSession } from '@/shared/session/useAuthSession'
 import { authGet } from '@/shared/services/apiClient'
 import { notifyError } from '@/shared/services/toastService'
@@ -9,6 +11,21 @@ const { utilisateur, chargerUtilisateur, deconnecter, gererErreurAuthentificatio
 const chargement = ref(true)
 const equipes = ref([])
 const equipeSelectionnee = ref(null)
+
+const detailsEquipe = computed(() => {
+  if (!equipeSelectionnee.value) {
+    return []
+  }
+
+  return [
+    { label: 'Categorie', value: equipeSelectionnee.value.categorie || '-' },
+    { label: 'Joueurs', value: equipeSelectionnee.value.joueurs_total || 0 },
+    { label: 'Statut', value: equipeSelectionnee.value.statut || '-' },
+    { label: 'Club', value: equipeSelectionnee.value.club?.nom || '-' },
+    { label: 'Ville', value: equipeSelectionnee.value.club?.ville || '-' },
+    { label: 'Description', value: equipeSelectionnee.value.description || 'Aucune description.' },
+  ]
+})
 
 const chargerEquipes = async () => {
   chargement.value = true
@@ -46,27 +63,16 @@ onMounted(async () => {
 
     <div v-else class="grid gap-6 xl:grid-cols-[1fr_390px]">
       <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <button
+        <CoachEquipeCard
           v-for="equipe in equipes"
           :key="equipe.id"
-          type="button"
-          class="overflow-hidden rounded-[28px] border text-left transition"
-          :class="equipeSelectionnee?.id === equipe.id ? 'border-[#4c6fff] bg-[#f7f9ff]' : 'border-[#e5ecfb] bg-white hover:border-[#cdd8ff]'"
-          @click="equipeSelectionnee = equipe"
-        >
-          <div class="h-40 w-full bg-[linear-gradient(135deg,#2446d8_0%,#4c6fff_100%)]">
-            <img v-if="equipe.logo_url" :src="equipe.logo_url" :alt="equipe.nom" class="h-full w-full object-cover" />
-          </div>
-          <div class="p-5">
-            <p class="text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">{{ equipe.categorie || 'categorie' }}</p>
-            <h2 class="mt-2 text-2xl font-black text-[#0f172a]">{{ equipe.nom }}</h2>
-            <p class="mt-2 text-sm font-semibold text-[#64748b]">{{ equipe.club?.nom || '-' }} · {{ equipe.club?.ville || '-' }}</p>
-            <div class="mt-4 flex items-center justify-between text-sm font-semibold text-[#334155]">
-              <span>{{ equipe.joueurs_total || 0 }} joueurs</span>
-              <span class="capitalize">{{ equipe.statut || '-' }}</span>
-            </div>
-          </div>
-        </button>
+          :equipe="equipe"
+          :active="equipeSelectionnee?.id === equipe.id"
+          selectable
+          action-label="Selectionner"
+          @select="equipeSelectionnee = $event"
+          @show-players="equipeSelectionnee = equipes.find((item) => String(item.id) === String($event)) || equipeSelectionnee"
+        />
 
         <div v-if="!equipes.length" class="rounded-[28px] border border-dashed border-[#d7e1fb] bg-[#f8fbff] p-8 text-center text-sm font-semibold text-[#64748b] md:col-span-2 xl:col-span-3">
           Aucune equipe affectee a ce coach.
@@ -79,23 +85,8 @@ onMounted(async () => {
           <h2 class="mt-2 text-3xl font-black text-[#0f172a]">{{ equipeSelectionnee.nom }}</h2>
           <p class="mt-2 text-sm font-semibold text-[#64748b]">{{ equipeSelectionnee.club?.nom || '-' }}</p>
 
-          <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <div class="rounded-[22px] border border-[#edf2ff] bg-[#f8fbff] p-4">
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Categorie</p>
-              <p class="mt-2 text-lg font-black text-[#0f172a]">{{ equipeSelectionnee.categorie || '-' }}</p>
-            </div>
-            <div class="rounded-[22px] border border-[#edf2ff] bg-[#f8fbff] p-4">
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Joueurs</p>
-              <p class="mt-2 text-lg font-black text-[#0f172a]">{{ equipeSelectionnee.joueurs_total || 0 }}</p>
-            </div>
-            <div class="rounded-[22px] border border-[#edf2ff] bg-[#f8fbff] p-4">
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Statut</p>
-              <p class="mt-2 text-lg font-black capitalize text-[#0f172a]">{{ equipeSelectionnee.statut || '-' }}</p>
-            </div>
-            <div class="rounded-[22px] border border-[#edf2ff] bg-[#f8fbff] p-4">
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-[#64748b]">Description</p>
-              <p class="mt-2 text-sm font-semibold text-[#475569]">{{ equipeSelectionnee.description || 'Aucune description.' }}</p>
-            </div>
+          <div class="mt-6">
+            <AppDetailsTable :items="detailsEquipe" :columns="1" />
           </div>
         </div>
 

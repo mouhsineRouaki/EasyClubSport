@@ -132,6 +132,10 @@
     @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 border border-transparent bg-[#eef4ff] text-[#1d4ed8] hover:border-[#d7e2f0] hover:bg-white;
   }
 
+  .ecs-btn-neutral {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 bg-[#0f172a] text-white hover:bg-[#1e293b];
+  }
+
   .ecs-btn-danger {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 bg-[#e11d48] text-white shadow-[0_10px_24px_rgba(225,29,72,0.18)] hover:bg-[#be123c];
   }

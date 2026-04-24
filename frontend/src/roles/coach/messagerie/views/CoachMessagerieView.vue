@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import CoachShellLayout from '@/roles/coach/shared/components/CoachShellLayout.vue'
 import PresidentConversationItem from '@/roles/president/messagerie/components/PresidentConversationItem.vue'
 import PresidentMessageBubble from '@/roles/president/messagerie/components/PresidentMessageBubble.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import { useAuthSession } from '@/shared/session/useAuthSession'
 import { authDelete, authGet, authPost, authPut } from '@/shared/services/apiClient'
 import { disconnectRealtime, subscribeToCanalMessages } from '@/shared/services/realtimeService'
@@ -296,7 +297,7 @@ onBeforeUnmount(() => {
         <form class="border-t border-[#edf2ff] bg-white p-4" @submit.prevent="envoyer">
           <div class="flex gap-3">
             <textarea v-model="formulaire" rows="3" placeholder="Ecrire un message..." class="min-h-[86px] flex-1 rounded-[22px] border border-[#dbe3f1] px-4 py-3 text-sm font-medium text-[#0f172a] outline-none focus:border-[#4c6fff]"></textarea>
-            <button type="submit" class="rounded-full bg-[#0f172a] px-6 py-3 text-sm font-semibold text-white">Envoyer</button>
+            <AppButton type="submit" variant="neutral">Envoyer</AppButton>
           </div>
           <span v-if="erreurs?.contenu?.[0]" class="mt-2 block text-xs font-semibold text-[#e11d48]">{{ erreurs.contenu[0] }}</span>
         </form>

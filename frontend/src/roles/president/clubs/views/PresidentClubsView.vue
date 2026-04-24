@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AppCard from '@/shared/components/AppCard.vue'
 import AppListState from '@/shared/components/AppListState.vue'
 import AppPagination from '@/shared/components/AppPagination.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import AppStatusMessage from '@/shared/components/ui/AppStatusMessage.vue'
 import AppModalShell from '@/shared/components/ui/AppModalShell.vue'
 import PresidentClubForm from '@/roles/president/clubs/components/PresidentClubForm.vue'
@@ -281,7 +282,7 @@ onMounted(() => {
   >
     <AppCard title="Clubs du president" subtitle="Creation, modification et suppression des clubs.">
       <template #actions>
-        <button type="button" class="ecs-btn-primary" @click="ouvrirCreation">+ Nouveau club</button>
+        <AppButton type="button" @click="ouvrirCreation">+ Nouveau club</AppButton>
       </template>
 
       <div class="grid gap-3 md:grid-cols-[1fr_180px]">
@@ -329,7 +330,7 @@ onMounted(() => {
         @retry="chargerClubs"
       >
         <template #empty-action>
-          <button type="button" class="mt-4 ecs-btn-primary" @click="ouvrirCreation">Creer le premier club</button>
+          <AppButton type="button" class="mt-4" @click="ouvrirCreation">Creer le premier club</AppButton>
         </template>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

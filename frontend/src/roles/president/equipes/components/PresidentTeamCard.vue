@@ -1,5 +1,7 @@
 <script setup>
 import { computed } from 'vue'
+import AppCoverCard from '@/shared/components/ui/AppCoverCard.vue'
+import { resolveCoverImage } from '@/shared/utils/coverImage'
 
 const props = defineProps({
   equipe: {
@@ -18,35 +20,27 @@ const props = defineProps({
 
 const emit = defineEmits(['select'])
 
-const imageEquipe = computed(() => {
-  return props.equipe.image_url || props.equipe.logo_url || props.equipe.photo_url || props.equipe.club?.logo_url || props.fallbackImage
-})
-
-const backgroundEquipe = computed(() => {
-  return `linear-gradient(180deg, rgba(7, 16, 58, 0.12), rgba(7, 16, 58, 0.78)), url(${imageEquipe.value})`
-})
+const imageEquipe = computed(() =>
+  resolveCoverImage(
+    props.equipe.image_url,
+    props.equipe.logo_url,
+    props.equipe.photo_url,
+    props.equipe.club?.logo_url,
+    props.fallbackImage,
+  )
+)
 </script>
 
 <template>
-  <button
-    type="button"
-    class="group relative min-h-[220px] overflow-hidden rounded-[24px] border bg-cover bg-center text-left text-white transition duration-300 hover:-translate-y-1"
-    :class="active ? 'border-white ring-4 ring-[#2446d8]/15' : 'border-white/70 hover:border-white'"
-    :style="{ backgroundImage: backgroundEquipe }"
+  <AppCoverCard
+    :image="imageEquipe"
+    :fallback-image="fallbackImage"
+    :active="active"
+    :badge="equipe.categorie || 'Equipe'"
+    :status-label="active ? 'Active' : 'Voir'"
     @click="emit('select', equipe)"
   >
-    <div class="absolute inset-0 bg-[#2446d8]/0 transition duration-300 group-hover:bg-[#2446d8]/20"></div>
-
-    <div class="relative z-10 flex min-h-[220px] flex-col justify-between p-4">
-      <div class="flex items-center justify-between gap-3">
-        <span class="rounded-full border border-white/30 bg-white/16 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white backdrop-blur-md">
-          {{ equipe.categorie || 'Equipe' }}
-        </span>
-        <span class="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-[#1f36bf]">
-          {{ active ? 'Active' : 'Voir' }}
-        </span>
-      </div>
-
+    <template #body>
       <div>
         <h5 class="line-clamp-2 text-2xl font-black leading-tight text-white">
           {{ equipe.nom }}
@@ -55,7 +49,8 @@ const backgroundEquipe = computed(() => {
           Coach : {{ equipe.coach?.nom || 'Non defini' }}
         </p>
       </div>
-
+    </template>
+    <template #footer>
       <div class="grid grid-cols-2 gap-2">
         <div class="rounded-2xl border border-white/18 bg-white/14 p-2 backdrop-blur-md">
           <p class="text-lg font-black text-white">{{ equipe.joueurs_total || equipe.joueurs?.length || 0 }}</p>
@@ -66,6 +61,6 @@ const backgroundEquipe = computed(() => {
           <p class="text-[9px] font-bold uppercase text-white/68">Statut</p>
         </div>
       </div>
-    </div>
-  </button>
+    </template>
+  </AppCoverCard>
 </template>

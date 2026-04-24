@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 defineProps({
   loading: {
     type: Boolean,
@@ -43,7 +45,7 @@ const emit = defineEmits(['retry'])
       <p class="text-sm font-semibold text-[#b91c1c]">Erreur de chargement</p>
       <p class="mt-1 text-xs text-[#9f1239]">{{ errorMessage }}</p>
       <slot name="error-action">
-        <button type="button" class="mt-4 ecs-btn-secondary !text-xs" @click="emit('retry')">Reessayer</button>
+        <AppButton type="button" variant="secondary" size="sm" class="mt-4" @click="emit('retry')">Reessayer</AppButton>
       </slot>
     </div>
   </template>

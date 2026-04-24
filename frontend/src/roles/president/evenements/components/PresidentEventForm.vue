@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 
 const props = defineProps({
   modelValue: {
@@ -221,9 +222,9 @@ const logoEquipe = (equipe) => equipe?.logo_url || equipe?.logo || equipe?.club?
     </label>
 
     <div class="flex justify-end">
-      <button :disabled="loading" type="submit" class="ecs-btn-primary">
+      <AppButton :disabled="loading" type="submit">
         {{ loading ? loadingLabel : submitLabel }}
-      </button>
+      </AppButton>
     </div>
   </form>
 </template>

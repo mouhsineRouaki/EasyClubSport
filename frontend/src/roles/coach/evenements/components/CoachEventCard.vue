@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 defineProps({
   evenement: {
     type: Object,
@@ -28,8 +30,8 @@ const emit = defineEmits(['edit', 'delete'])
     <p class="mt-4 line-clamp-3 text-sm text-[#475569]">{{ evenement.description || 'Aucune description.' }}</p>
 
     <div class="mt-5 flex gap-2">
-      <button type="button" class="ecs-btn-secondary !px-3 !py-1.5 !text-xs" @click="emit('edit', evenement)">Modifier</button>
-      <button type="button" class="ecs-btn-danger" @click="emit('delete', evenement)">Supprimer</button>
+      <AppButton type="button" variant="secondary" size="sm" @click="emit('edit', evenement)">Modifier</AppButton>
+      <AppButton type="button" variant="danger" size="sm" @click="emit('delete', evenement)">Supprimer</AppButton>
     </div>
   </article>
 </template>

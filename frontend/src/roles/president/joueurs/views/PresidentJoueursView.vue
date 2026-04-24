@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AppCard from '@/shared/components/AppCard.vue'
 import AppListState from '@/shared/components/AppListState.vue'
 import AppPagination from '@/shared/components/AppPagination.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import AppStatusMessage from '@/shared/components/ui/AppStatusMessage.vue'
 import AppModalShell from '@/shared/components/ui/AppModalShell.vue'
 import PresidentPlayerAssignForm from '@/roles/president/joueurs/components/PresidentPlayerAssignForm.vue'
@@ -287,7 +288,7 @@ onMounted(async () => {
   >
     <AppCard title="Joueurs par equipe" subtitle="Selectionnez un club puis une equipe pour gerer les joueurs.">
       <template #actions>
-        <button type="button" class="ecs-btn-primary" @click="ouvrirFormulaire">+ Ajouter joueur</button>
+        <AppButton type="button" @click="ouvrirFormulaire">+ Ajouter joueur</AppButton>
       </template>
 
       <div class="grid gap-3 lg:grid-cols-4">
@@ -350,7 +351,7 @@ onMounted(async () => {
         @retry="chargerJoueurs"
       >
         <template #empty-action>
-          <button v-if="selectedEquipeId" type="button" class="mt-4 ecs-btn-primary" @click="ouvrirFormulaire">Ajouter le premier joueur</button>
+          <AppButton v-if="selectedEquipeId" type="button" class="mt-4" @click="ouvrirFormulaire">Ajouter le premier joueur</AppButton>
         </template>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

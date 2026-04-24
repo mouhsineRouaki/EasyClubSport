@@ -1,37 +1,43 @@
 <script setup>
-import blueBackground from '@/assets/Background.jpg'
+import AppButton from '@/shared/components/ui/AppButton.vue'
+import AppCoverCard from '@/shared/components/ui/AppCoverCard.vue'
+import { resolveCoverImage } from '@/shared/utils/coverImage'
 
 const props = defineProps({
   equipe: {
     type: Object,
     required: true,
   },
+  active: {
+    type: Boolean,
+    default: false,
+  },
+  selectable: {
+    type: Boolean,
+    default: false,
+  },
+  actionLabel: {
+    type: String,
+    default: 'Voir joueurs',
+  },
 })
 
-const emit = defineEmits(['show-players'])
+const emit = defineEmits(['show-players', 'select'])
 
-const imageEquipe = (eq = {}) => eq?.logo_url || eq?.logo || blueBackground
-const backgroundEquipe = (eq = {}) => `linear-gradient(145deg, rgba(8,18,72,0.86), rgba(36,70,216,0.64)), url(${imageEquipe(eq)})`
+const imageEquipe = (eq = {}) => resolveCoverImage(eq?.image_url, eq?.logo_url, eq?.logo, eq?.photo_url, eq?.club?.logo_url)
 </script>
 
 <template>
-  <article
-    class="group relative min-h-[255px] overflow-hidden rounded-[26px] border border-white/70 bg-cover bg-center p-4 text-white transition duration-300 hover:-translate-y-1 hover:border-white"
-    :style="{ backgroundImage: backgroundEquipe(equipe) }"
+  <AppCoverCard
+    :image="imageEquipe(equipe)"
+    :active="active"
+    :badge="equipe.categorie || 'Equipe'"
+    status-label="Coach"
+    min-height-class="min-h-[255px]"
+    :class="selectable ? 'cursor-pointer' : ''"
+    @click="selectable ? emit('select', equipe) : null"
   >
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.32),transparent_26%),linear-gradient(180deg,rgba(6,14,48,0.12),rgba(6,14,48,0.72))]"></div>
-    <div class="absolute inset-0 bg-[#2446d8]/0 transition duration-300 group-hover:bg-[#2446d8]/20"></div>
-
-    <div class="relative z-10 flex min-h-[220px] flex-col justify-between">
-      <div class="flex items-start justify-between gap-3">
-        <span class="rounded-full border border-white/35 bg-white/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white backdrop-blur-md">
-          {{ equipe.categorie || 'Equipe' }}
-        </span>
-        <span class="rounded-full bg-white px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#1f36bf]">
-          Coach
-        </span>
-      </div>
-
+    <template #body>
       <div>
         <h4 class="line-clamp-2 text-2xl font-black leading-tight text-white">
           {{ equipe.nom }}
@@ -40,8 +46,9 @@ const backgroundEquipe = (eq = {}) => `linear-gradient(145deg, rgba(8,18,72,0.86
           {{ equipe.club?.nom || 'Club non defini' }}
         </p>
       </div>
-
-      <div class="translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+    </template>
+    <template #footer>
+      <div>
         <div class="grid grid-cols-3 gap-1.5 rounded-2xl border border-white/20 bg-white/16 p-2 text-center backdrop-blur-md">
           <div>
             <p class="text-lg font-black text-white">{{ equipe.joueurs_total || 0 }}</p>
@@ -58,15 +65,17 @@ const backgroundEquipe = (eq = {}) => `linear-gradient(145deg, rgba(8,18,72,0.86
         </div>
         <div class="mt-2 flex items-center justify-between gap-2 rounded-2xl border border-white/15 bg-white/12 px-3 py-2 text-[10px] font-semibold text-white/80 backdrop-blur-md">
           <span>{{ equipe.code_invitation || 'Code non defini' }}</span>
-          <button
+          <AppButton
             type="button"
-            class="rounded-full bg-white px-3 py-1.5 text-[10px] font-black text-[#1f36bf] hover:bg-[#eef4ff]"
-            @click="emit('show-players', equipe.id)"
+            variant="secondary"
+            size="xs"
+            class="!border-white !bg-white !text-[#1f36bf] hover:!bg-[#eef4ff]"
+            @click.stop="emit('show-players', equipe.id)"
           >
-            Voir joueurs
-          </button>
+            {{ actionLabel }}
+          </AppButton>
         </div>
       </div>
-    </div>
-  </article>
+    </template>
+  </AppCoverCard>
 </template>

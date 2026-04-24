@@ -1,0 +1,10 @@
+.git
+.github
+.vscode
+node_modules
+dist
+.env
+.env.*
+vite.err.log
+vite.out.log
+README.md

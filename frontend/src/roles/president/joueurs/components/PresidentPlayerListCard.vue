@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 defineProps({
   joueur: {
     type: Object,
@@ -29,7 +31,7 @@ const emit = defineEmits(['remove'])
     </div>
 
     <div class="mt-4 flex items-center justify-end">
-      <button class="ecs-btn-danger" type="button" @click="emit('remove', joueur)">Retirer</button>
+      <AppButton type="button" variant="danger" size="sm" @click="emit('remove', joueur)">Retirer</AppButton>
     </div>
   </article>
 </template>

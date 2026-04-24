@@ -1,4 +1,6 @@
 ﻿<script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 const props = defineProps({
   modelValue: {
     type: Object,
@@ -120,9 +122,9 @@ const lireErreur = (champ) => props.errors?.[champ]?.[0] || ''
     <span v-if="lireErreur('est_active')" class="-mt-2 block text-xs font-semibold text-red-600">{{ lireErreur('est_active') }}</span>
 
     <div class="flex justify-end">
-      <button :disabled="loading" type="submit" class="rounded-full bg-[#111827] px-5 py-3 text-xs font-black text-white transition hover:bg-[#1f36bf] disabled:opacity-60">
+      <AppButton :disabled="loading" type="submit">
         {{ loading ? loadingLabel : submitLabel }}
-      </button>
+      </AppButton>
     </div>
   </form>
 </template>

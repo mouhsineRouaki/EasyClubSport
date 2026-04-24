@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import AppModuleHeader from '@/shared/components/AppModuleHeader.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 
 const props = defineProps({
   disponibilites: { type: Array, default: () => [] },
@@ -131,11 +132,9 @@ const disponibilitesFiltrees = computed(() => {
           <p class="text-[11px] font-bold text-[#94a3b8]">
             Affecte le {{ item.date_affectation ? new Date(item.date_affectation).toLocaleDateString('fr-FR') : '-' }}
           </p>
-          <button type="button"
-            class="rounded-full bg-[#111827] px-4 py-2 text-xs font-black text-white transition hover:bg-[#2446d8]"
-            @click="emit('aller-convocations')">
+          <AppButton type="button" size="sm" @click="emit('aller-convocations')">
             Aller aux convocations
-          </button>
+          </AppButton>
         </div>
 
         <div

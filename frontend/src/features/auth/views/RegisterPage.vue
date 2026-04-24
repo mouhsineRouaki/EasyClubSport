@@ -44,6 +44,22 @@ const peutSoumettre = computed(() => !motDePasseDifferent.value && !chargement.v
 
 const lireErreur = (champ) => erreursValidation.value?.[champ]?.[0] || ''
 
+const extraireErreursValidation = (reponseErreur) => {
+  if (!reponseErreur) {
+    return {}
+  }
+
+  if (reponseErreur.errors && typeof reponseErreur.errors === 'object') {
+    return reponseErreur.errors
+  }
+
+  if (reponseErreur.data && typeof reponseErreur.data === 'object') {
+    return reponseErreur.data
+  }
+
+  return {}
+}
+
 const reinitialiserMessages = () => {
   succes.value = ''
   erreursValidation.value = {}
@@ -79,7 +95,7 @@ const soumettre = async () => {
     if (!reponseErreur?.message && error?.message) {
       notifyError(error.message)
     }
-    erreursValidation.value = reponseErreur.data || {}
+    erreursValidation.value = extraireErreursValidation(reponseErreur)
   } finally {
     chargement.value = false
   }

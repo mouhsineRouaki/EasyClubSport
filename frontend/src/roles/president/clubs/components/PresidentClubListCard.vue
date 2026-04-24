@@ -1,4 +1,6 @@
 <script setup>
+import AppButton from '@/shared/components/ui/AppButton.vue'
+
 defineProps({
   club: {
     type: Object,
@@ -30,8 +32,8 @@ const emit = defineEmits(['edit', 'delete'])
     <div class="mt-4 flex items-center justify-between">
       <span class="text-xs text-[#64748b]">{{ club.telephone || '-' }}</span>
       <div class="flex gap-2">
-        <button class="ecs-btn-secondary !px-3 !py-1.5 !text-xs" type="button" @click="emit('edit', club)">Modifier</button>
-        <button class="ecs-btn-danger" type="button" @click="emit('delete', club)">Supprimer</button>
+        <AppButton type="button" variant="secondary" size="sm" @click="emit('edit', club)">Modifier</AppButton>
+        <AppButton type="button" variant="danger" size="sm" @click="emit('delete', club)">Supprimer</AppButton>
       </div>
     </div>
   </article>

@@ -1,10 +1,23 @@
 <?php
 
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\ApplicationBuilder;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = new Application(dirname(__DIR__));
+
+$environmentFile = $_SERVER['APP_ENV_FILE'] ?? $_ENV['APP_ENV_FILE'] ?? getenv('APP_ENV_FILE');
+
+if (is_string($environmentFile) && $environmentFile !== '' && is_file($app->environmentPath().DIRECTORY_SEPARATOR.$environmentFile)) {
+    $app->loadEnvironmentFrom($environmentFile);
+}
+
+return (new ApplicationBuilder($app))
+    ->withKernels()
+    ->withEvents()
+    ->withCommands()
+    ->withProviders()
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',

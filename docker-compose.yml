@@ -1,0 +1,103 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: easyclubsport-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: easyclubsport
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d easyclubsport"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: easyclubsport-backend
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      APP_ENV_FILE: .env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_vendor:/app/vendor
+    command: ["sh", "/app/docker/start.sh", "web"]
+
+  queue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: easyclubsport-queue
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      APP_ENV_FILE: .env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - backend_vendor:/app/vendor
+    command: ["sh", "/app/docker/start.sh", "queue"]
+
+  reverb:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: easyclubsport-reverb
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      APP_ENV_FILE: .env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./backend:/app
+      - backend_vendor:/app/vendor
+    command: ["sh", "/app/docker/start.sh", "reverb"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: easyclubsport-frontend
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ./frontend/.env.docker
+    depends_on:
+      - backend
+      - reverb
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: ["sh", "/app/docker/start.sh"]
+
+volumes:
+  postgres_data:
+  backend_vendor:
+  frontend_node_modules:

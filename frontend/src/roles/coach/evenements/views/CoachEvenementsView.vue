@@ -4,6 +4,7 @@ import CoachEventCard from '@/roles/coach/evenements/components/CoachEventCard.v
 import CoachEventForm from '@/roles/coach/evenements/components/CoachEventForm.vue'
 import CoachShellLayout from '@/roles/coach/shared/components/CoachShellLayout.vue'
 import AppSelectField from '@/shared/components/AppSelectField.vue'
+import AppButton from '@/shared/components/ui/AppButton.vue'
 import AppModalShell from '@/shared/components/ui/AppModalShell.vue'
 import { useAuthSession } from '@/shared/session/useAuthSession'
 import { authDelete, authGet, authPost, authPut } from '@/shared/services/apiClient'
@@ -217,9 +218,9 @@ onMounted(async () => {
         />
       </div>
 
-      <button type="button" class="rounded-full bg-[#0f172a] px-5 py-3 text-sm font-semibold text-white" @click="ouvrirCreation">
+      <AppButton type="button" variant="neutral" @click="ouvrirCreation">
         Nouvel evenement
-      </button>
+      </AppButton>
     </div>
 
     <div v-if="chargementEvenements" class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

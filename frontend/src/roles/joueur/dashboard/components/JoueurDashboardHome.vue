@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
-import blueBackground from '@/assets/Background.jpg'
+import AppButton from '@/shared/components/ui/AppButton.vue'
+import AppCoverCard from '@/shared/components/ui/AppCoverCard.vue'
+import { resolveCoverImage } from '@/shared/utils/coverImage'
 
 const props = defineProps({
   equipe: { type: Object, default: null },
@@ -22,9 +24,15 @@ const formatDateHeure = (date) => {
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(date))
 }
 
-const imageEvenement = (evenement = {}) => evenement.image_url || evenement.photo_url || evenement.image || blueBackground
-const fondEvenement = (evenement = {}) =>
-  `linear-gradient(180deg, rgba(7,16,58,0.20), rgba(7,16,58,0.88)), url(${imageEvenement(evenement)})`
+const imageEvenement = (evenement = {}) =>
+  resolveCoverImage(
+    evenement.image_url,
+    evenement.photo_url,
+    evenement.image,
+    evenement.equipe?.logo_url,
+    evenement.adversaire_equipe?.logo_url,
+    props.equipe?.club?.logo_url,
+  )
 
 const coachs = computed(() => {
   if (!props.equipe) return []
@@ -99,30 +107,23 @@ const badgeStatutConvocation = (statut) =>
         <div class="text-center">
           <h2 class="text-3xl font-black text-[#111827] sm:text-4xl">Evenements proches</h2>
           <p class="mt-2 text-sm font-semibold text-[#6b7280]">Les prochains rendez-vous a suivre en priorite.</p>
-          <button
-            type="button"
-            class="mt-4 inline-flex rounded-full border border-[#dbe2ef] px-4 py-2 text-sm font-extrabold text-[#1f36bf] transition hover:bg-[#f8fbff]"
-            @click="emit('aller-module', 'evenements')"
-          >
+          <AppButton type="button" variant="secondary" class="mt-4" @click="emit('aller-module', 'evenements')">
             Voir tous
-          </button>
+          </AppButton>
         </div>
 
         <div v-if="prochainsEvenements.length" class="mt-6 grid gap-4 lg:grid-cols-3">
-          <article
+          <AppCoverCard
             v-for="evenement in prochainsEvenements"
             :key="evenement.id"
-            class="relative min-h-[240px] overflow-hidden rounded-[26px] border border-[#e6edf8] bg-cover bg-center p-5 text-white"
-            :style="{ backgroundImage: fondEvenement(evenement) }"
+            :image="imageEvenement(evenement)"
+            :badge="formatDate(evenement.date_debut)"
+            :status-label="badgeStatutEvenement(evenement.statut).label"
+            :status-class="badgeStatutEvenement(evenement.statut).classe"
+            min-height-class="min-h-[240px]"
           >
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.14),transparent_26%),linear-gradient(180deg,rgba(7,16,58,0.10),rgba(7,16,58,0.86))]"></div>
-            <div class="relative z-10 flex h-full flex-col justify-between text-center">
-              <div class="flex justify-center">
-                <span class="rounded-full border border-white/25 bg-white/12 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] backdrop-blur-md">
-                  {{ formatDate(evenement.date_debut) }}
-                </span>
-              </div>
-
+            <template #body>
+              <div class="flex h-full flex-col justify-between text-center">
               <div>
                 <h3 class="text-3xl font-black leading-tight text-white">{{ evenement.titre }}</h3>
                 <p class="mx-auto mt-3 max-w-[240px] text-sm font-semibold text-white/80">
@@ -132,17 +133,9 @@ const badgeStatutConvocation = (statut) =>
                   vs {{ evenement.adversaire }}
                 </p>
               </div>
-
-              <div class="flex justify-center">
-                <span
-                  class="rounded-full px-3 py-1.5 text-[10px] font-black"
-                  :class="badgeStatutEvenement(evenement.statut).classe"
-                >
-                  {{ badgeStatutEvenement(evenement.statut).label }}
-                </span>
               </div>
-            </div>
-          </article>
+            </template>
+          </AppCoverCard>
         </div>
 
         <p v-else class="mt-6 rounded-2xl border border-dashed border-[#cfdaf2] bg-[#f8fbff] px-4 py-8 text-center text-sm font-semibold text-[#6b7280]">
@@ -154,13 +147,9 @@ const badgeStatutConvocation = (statut) =>
         <div class="text-center">
           <h2 class="text-3xl font-black text-[#111827] sm:text-4xl">Convocations recentes</h2>
           <p class="mt-2 text-sm font-semibold text-[#6b7280]">Les reponses a suivre dans votre espace joueur.</p>
-          <button
-            type="button"
-            class="mt-4 inline-flex rounded-full border border-[#dbe2ef] px-4 py-2 text-sm font-extrabold text-[#1f36bf] transition hover:bg-[#f8fbff]"
-            @click="emit('aller-module', 'convocations')"
-          >
+          <AppButton type="button" variant="secondary" class="mt-4" @click="emit('aller-module', 'convocations')">
             Voir toutes
-          </button>
+          </AppButton>
         </div>
 
         <div v-if="convocationsRecentes.length" class="mt-6 grid gap-4 lg:grid-cols-3">
@@ -192,13 +181,9 @@ const badgeStatutConvocation = (statut) =>
     <div v-else class="mt-10 rounded-[32px] border border-dashed border-[#cfdaf2] bg-[#f8fbff] px-5 py-16 text-center">
       <p class="text-2xl font-black text-[#111827]">Vous n'etes dans aucune equipe</p>
       <p class="mt-2 text-sm font-semibold text-[#6b7280]">Rejoignez votre equipe avec un code d invitation partage par votre coach ou votre president.</p>
-      <button
-        type="button"
-        class="mt-5 inline-flex rounded-full bg-[#111827] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#1f2937]"
-        @click="emit('ouvrir-rejoindre-equipe')"
-      >
+      <AppButton type="button" class="mt-5" @click="emit('ouvrir-rejoindre-equipe')">
         Rejoindre une equipe
-      </button>
+      </AppButton>
     </div>
   </div>
 </template>
