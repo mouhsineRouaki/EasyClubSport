@@ -1,2 +1,6 @@
 *
 !.gitignore
+!seeders/
+seeders/*
+!seeders/defaults/
+!seeders/defaults/*.svg

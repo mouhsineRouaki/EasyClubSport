@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Default club logo">
+  <rect width="256" height="256" rx="32" fill="#14532d"/>
+  <path d="M128 36l70 24v54c0 44-28 84-70 102-42-18-70-58-70-102V60l70-24z" fill="#f8fafc"/>
+  <path d="M128 72l34 12v27c0 26-14 49-34 61-20-12-34-35-34-61V84l34-12z" fill="#14532d"/>
+</svg>
