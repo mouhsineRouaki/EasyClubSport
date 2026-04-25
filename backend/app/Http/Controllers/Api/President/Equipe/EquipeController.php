@@ -9,6 +9,7 @@ use App\Http\Requests\President\Equipe\CreerEquipeRequest;
 use App\Http\Requests\President\Equipe\ModifierEquipeRequest;
 use App\Http\Resources\President\Equipe\EquipeCollection;
 use App\Http\Resources\President\Equipe\EquipeResource;
+use App\Http\Resources\President\Equipe\JoueurDisponibleCollection;
 use App\Http\Resources\President\Equipe\JoueurEquipeCollection;
 use App\Models\Club;
 use App\Models\Equipe;
@@ -141,6 +142,16 @@ class EquipeController extends Controller
         return new JoueurEquipeCollection($this->equipeService->listerJoueurs($equipe, $filtres));
     }
 
+    public function listerJoueursDisponibles(Club $club, Equipe $equipe): JoueurDisponibleCollection
+    {
+        $filtres = $this->cleanFilters($this->paginationParams(6, 24));
+
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('gererJoueurs', $equipe);
+
+        return new JoueurDisponibleCollection($this->equipeService->listerJoueursDisponibles($equipe, $filtres));
+    }
+
     public function ajouterJoueur(AjouterJoueurEquipeRequest $request, Club $club, Equipe $equipe): JsonResponse
     {
         $this->verifierAppartenanceAuClub($club, $equipe);
@@ -200,4 +211,3 @@ class EquipeController extends Controller
         abort_if($equipe->club_id !== $club->id, 404, 'Equipe introuvable pour ce club.');
     }
 }
-

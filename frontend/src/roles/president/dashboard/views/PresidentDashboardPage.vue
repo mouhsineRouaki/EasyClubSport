@@ -1958,14 +1958,21 @@ onBeforeUnmount(() => {
                           <span class="rounded-full border border-white/35 bg-white/18 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white backdrop-blur-md">
                             {{ formatDate(evenement.date_debut) }}
                           </span>
-                          <div v-if="evenement.type === 'match'" class="mt-4 grid w-full max-w-[230px] grid-cols-[1fr_auto_1fr] items-center gap-2">
-                            <img v-if="logoEquipe(evenement.equipe)" :src="logoEquipe(evenement.equipe)" :alt="evenement.equipe?.nom || 'Equipe'" class="mx-auto h-12 w-12 rounded-2xl object-cover ring-4 ring-white/20" />
-                            <span v-else class="mx-auto block h-12 w-12 rounded-2xl bg-white/25 ring-4 ring-white/20"></span>
-                            <span class="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-[#111827]">VS</span>
-                            <img v-if="logoEquipe(evenement.adversaire_equipe)" :src="logoEquipe(evenement.adversaire_equipe)" :alt="evenement.adversaire_equipe?.nom || 'Adversaire'" class="mx-auto h-12 w-12 rounded-2xl object-cover ring-4 ring-white/20" />
-                            <span v-else class="mx-auto block h-12 w-12 rounded-2xl bg-white/25 ring-4 ring-white/20"></span>
+                          <div v-if="evenement.type === 'match'" class="mt-4 flex w-full max-w-[240px] items-center justify-center gap-2 rounded-[24px] border border-white/25 bg-white/12 px-3 py-3 backdrop-blur-md">
+                            <p class="min-w-0 flex-1 truncate text-right text-xs font-black text-white">
+                              {{ evenement.equipe?.nom || 'Equipe' }}
+                            </p>
+                            <span class="rounded-full bg-white px-3 py-1 text-[9px] font-black text-[#111827]">VS</span>
+                            <p class="min-w-0 flex-1 truncate text-left text-xs font-black text-white">
+                              {{ evenement.adversaire_equipe?.nom || evenement.adversaire || 'Adversaire' }}
+                            </p>
                           </div>
-                          <img v-else-if="logoEquipe(evenement.equipe)" :src="logoEquipe(evenement.equipe)" :alt="evenement.equipe?.nom || 'Equipe'" class="mt-4 h-14 w-14 rounded-2xl object-cover ring-4 ring-white/20" />
+                          <p
+                            v-else
+                            class="mt-4 inline-flex max-w-[220px] items-center justify-center rounded-full border border-white/25 bg-white/12 px-4 py-2 text-xs font-black text-white backdrop-blur-md"
+                          >
+                            {{ evenement.equipe?.nom || 'Equipe non definie' }}
+                          </p>
                           <h4 class="mt-4 text-3xl font-black leading-tight tracking-normal text-white sm:text-4xl">
                             {{ evenement.titre }}
                           </h4>

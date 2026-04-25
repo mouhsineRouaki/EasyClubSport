@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Equipe;
-use App\Models\MembreEquipe;
 use App\Models\Canal;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
@@ -13,22 +12,9 @@ Broadcast::channel('equipe.{equipeId}.messages', function (User $utilisateur, in
         return false;
     }
 
-    if ($utilisateur->role === 'president') {
-        return (int) $equipe->club?->president_id === (int) $utilisateur->id;
-    }
-
-    if ($utilisateur->role === 'coach') {
-        return (int) $equipe->coach_id === (int) $utilisateur->id;
-    }
-
-    if ($utilisateur->role === 'joueur') {
-        return MembreEquipe::query()
-            ->where('equipe_id', $equipeId)
-            ->where('utilisateur_id', $utilisateur->id)
-            ->exists();
-    }
-
-    return false;
+    return $utilisateur->presidesClub($equipe->club)
+        || $utilisateur->coachesEquipe($equipe)
+        || $utilisateur->belongsToEquipe($equipe);
 });
 
 Broadcast::channel('canal.{canalId}.messages', function (User $utilisateur, int $canalId) {
@@ -38,21 +24,9 @@ Broadcast::channel('canal.{canalId}.messages', function (User $utilisateur, int 
         return false;
     }
 
-    if ($utilisateur->role === 'president') {
-        return (int) $canal->equipe?->club?->president_id === (int) $utilisateur->id;
-    }
-
-    if ($utilisateur->role === 'coach') {
-        return (int) $canal->equipe?->coach_id === (int) $utilisateur->id;
-    }
-
-    if ($utilisateur->role === 'joueur') {
-        return $canal->utilisateurs()
-            ->where('users.id', $utilisateur->id)
-            ->exists();
-    }
-
-    return false;
+    return $utilisateur->presidesClub($canal->equipe?->club)
+        || $utilisateur->coachesEquipe($canal->equipe)
+        || $utilisateur->belongsToCanal($canal);
 });
 
 Broadcast::channel('user.{userId}.notifications', function (User $utilisateur, int $userId) {

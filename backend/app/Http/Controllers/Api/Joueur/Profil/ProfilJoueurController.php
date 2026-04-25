@@ -19,6 +19,7 @@ class ProfilJoueurController extends Controller
     public function afficher(): ProfilJoueurResource
     {
         $utilisateur = request()->user();
+        $this->authorize('voirProfilJoueur', $utilisateur);
 
         return new ProfilJoueurResource([
             'message' => 'Profil joueur recupere avec succes.',
@@ -29,6 +30,8 @@ class ProfilJoueurController extends Controller
 
     public function modifier(ModifierProfilJoueurRequest $request): ProfilJoueurResource
     {
+        $this->authorize('modifierProfilJoueur', $request->user());
+
         $resultat = $this->profilJoueurService->mettreAJourProfil(
             $request->user(),
             $request->safe()->except('photo'),

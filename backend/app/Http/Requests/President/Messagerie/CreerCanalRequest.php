@@ -15,6 +15,7 @@ class CreerCanalRequest extends FormRequest
     {
         return [
             'nom' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'description' => ['nullable', 'string'],
             'type_canal' => ['nullable', 'in:equipe,prive'],
             'utilisateur_ids' => ['nullable', 'array'],

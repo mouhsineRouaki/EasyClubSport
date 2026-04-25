@@ -8,6 +8,7 @@ storage/framework/cache
 storage/framework/sessions
 storage/framework/testing
 bootstrap/cache/*.php
+public/storage
 .env
 .env.*
 README.md

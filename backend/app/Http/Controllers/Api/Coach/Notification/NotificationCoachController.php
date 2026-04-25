@@ -20,6 +20,8 @@ class NotificationCoachController extends Controller
 
     public function index(): NotificationCoachCollection
     {
+        $this->authorize('voirListe', Notification::class);
+
         return new NotificationCoachCollection(
             $this->notificationCoachService->listerNotifications(request()->user())
         );
@@ -27,16 +29,13 @@ class NotificationCoachController extends Controller
 
     public function marquerCommeLue(Notification $notification): ApiResponseResource|JsonResponse
     {
-        try {
-            $notification = $this->notificationCoachService->marquerNotificationCommeLue(request()->user(), $notification);
+        $this->authorize('modifier', $notification);
+        $notification = $this->notificationCoachService->marquerNotificationCommeLue(request()->user(), $notification);
 
-            return new ApiResponseResource([
-                'message' => 'Notification marquee comme lue avec succes.',
-                'data' => ['notification' => $notification],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        return new ApiResponseResource([
+            'message' => 'Notification marquee comme lue avec succes.',
+            'data' => ['notification' => $notification],
+        ]);
     }
 
     public function marquerToutesCommeLues(): ApiResponseResource

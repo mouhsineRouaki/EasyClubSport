@@ -3,8 +3,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { useRouter } from 'vue-router'
 import PresidentConversationItem from './PresidentConversationItem.vue'
 import PresidentConversationCreateModal from './PresidentConversationCreateModal.vue'
+import PresidentConversationParticipantsModal from './PresidentConversationParticipantsModal.vue'
 import PresidentMessageBubble from './PresidentMessageBubble.vue'
 import { authDelete, authGet, authPost, authPut } from '@/shared/services/apiClient'
+import {
+  createPresidentConversation,
+  fetchConversationParticipants,
+  removeConversationParticipant,
+} from '@/roles/president/messagerie/services/presidentMessagingService'
 import { disconnectRealtime, subscribeToCanalMessages } from '@/shared/services/realtimeService'
 import { notifyError, notifySuccess } from '@/shared/services/toastService'
 
@@ -24,6 +30,7 @@ const chargementCanaux = ref(false)
 const chargementMessages = ref(false)
 const chargementEquipesCreation = ref(false)
 const chargementParticipantsCreation = ref(false)
+const chargementParticipantsCanal = ref(false)
 const creationCanal = ref(false)
 const envoiMessage = ref(false)
 const clubs = ref([])
@@ -38,7 +45,9 @@ const selectedEquipeId = ref('')
 const selectedCanalId = ref('')
 const utilisateurConnecte = ref(null)
 const afficherCreationCanal = ref(false)
+const afficherParticipants = ref(false)
 const participantsCreation = ref([])
+const participantsCanal = ref([])
 const erreursValidationCanal = ref({})
 const erreursValidationMessage = ref({})
 const erreurCanaux = ref('')
@@ -50,6 +59,7 @@ const searchParticipantsDebounce = ref(null)
 const stopRealtimeSubscription = ref(() => {})
 const unreadByCanal = ref({})
 const messagesViewport = ref(null)
+const retraitParticipantId = ref('')
 
 const filtresCanaux = reactive({
   page: 1,
@@ -59,6 +69,8 @@ const filtresCanaux = reactive({
 const formulaireCanal = reactive({
   club_id: '',
   equipe_id: '',
+  nom: '',
+  image: null,
   recherche_participant: '',
   utilisateur_ids: [],
 })
@@ -111,6 +123,8 @@ const scrollToBottom = async (behavior = 'smooth') => {
 const reinitialiserFormulaireCanal = () => {
   formulaireCanal.club_id = ''
   formulaireCanal.equipe_id = ''
+  formulaireCanal.nom = ''
+  formulaireCanal.image = null
   formulaireCanal.recherche_participant = ''
   formulaireCanal.utilisateur_ids = []
   equipesCreation.value = []
@@ -400,6 +414,7 @@ const ouvrirCreationCanal = () => {
   reinitialiserFormulaireCanal()
   formulaireCanal.club_id = selectedClubId.value
   formulaireCanal.equipe_id = selectedEquipeId.value
+  formulaireCanal.nom = equipeActuelle.value ? `Conversation - ${equipeActuelle.value.nom}` : ''
   afficherCreationCanal.value = true
 
   if (formulaireCanal.club_id) {
@@ -425,12 +440,21 @@ const creerCanal = async () => {
     return
   }
 
+  if (!formulaireCanal.nom.trim()) {
+    erreursValidationCanal.value = {
+      nom: ['Le nom de la conversation est obligatoire.'],
+    }
+    return
+  }
+
   creationCanal.value = true
   erreursValidationCanal.value = {}
 
   try {
-    const reponse = await authPost(`/president/clubs/${formulaireCanal.club_id}/equipes/${formulaireCanal.equipe_id}/canaux`, {
+    const reponse = await createPresidentConversation(formulaireCanal.club_id, formulaireCanal.equipe_id, {
       type_canal: 'prive',
+      nom: formulaireCanal.nom,
+      image: formulaireCanal.image,
       utilisateur_ids: formulaireCanal.utilisateur_ids,
     })
 
@@ -450,6 +474,58 @@ const creerCanal = async () => {
     erreursValidationCanal.value = error?.response?.data || {}
   } finally {
     creationCanal.value = false
+  }
+}
+
+const ouvrirParticipants = async () => {
+  if (!selectedCanalId.value) {
+    return
+  }
+
+  afficherParticipants.value = true
+  chargementParticipantsCanal.value = true
+
+  try {
+    participantsCanal.value = await fetchConversationParticipants(selectedCanalId.value)
+  } catch (error) {
+    if (!gerer401(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les participants.')
+    }
+  } finally {
+    chargementParticipantsCanal.value = false
+  }
+}
+
+const fermerParticipants = () => {
+  afficherParticipants.value = false
+  participantsCanal.value = []
+  retraitParticipantId.value = ''
+}
+
+const retirerParticipant = async (participant) => {
+  if (!selectedCanalId.value) {
+    return
+  }
+
+  const ok = window.confirm(`Retirer ${participant.prenom || participant.nom || participant.name || 'ce participant'} ?`)
+
+  if (!ok) {
+    return
+  }
+
+  retraitParticipantId.value = participant.id
+
+  try {
+    const reponse = await removeConversationParticipant(selectedCanalId.value, participant.id)
+    notifySuccess(reponse?.message || 'Participant retire avec succes.')
+    participantsCanal.value = participantsCanal.value.filter((item) => String(item.id) !== String(participant.id))
+    await chargerCanaux(paginationCanaux.value?.current_page || 1)
+  } catch (error) {
+    if (!gerer401(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de retirer ce participant.')
+    }
+  } finally {
+    retraitParticipantId.value = ''
   }
 }
 
@@ -576,6 +652,8 @@ watch(selectedCanalId, async () => {
   messages.value = []
   paginationMessages.value = null
   annulerEdition()
+  participantsCanal.value = []
+  afficherParticipants.value = false
   await chargerMessages(1)
   synchroniserRealtime()
 })
@@ -763,11 +841,26 @@ defineExpose({
       <section class="flex min-h-[780px] flex-col overflow-hidden rounded-[32px] border border-[#e7edf7] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
         <header class="border-b border-[#eef2f8] px-6 py-5">
           <div class="flex flex-wrap items-center justify-between gap-4">
-            <div v-if="canalActuel">
-              <p class="text-2xl font-black text-[#0f172a]">{{ canalActuel.nom }}</p>
-              <p class="mt-1 text-sm font-medium text-[#64748b]">
+            <div v-if="canalActuel" class="flex items-center gap-4">
+              <img
+                v-if="canalActuel.image_url"
+                :src="canalActuel.image_url"
+                :alt="canalActuel.nom"
+                class="h-16 w-16 rounded-[22px] object-cover shadow-[0_18px_40px_rgba(36,70,216,0.18)]"
+              />
+              <div
+                v-else
+                class="grid h-16 w-16 place-items-center rounded-[22px] bg-[linear-gradient(135deg,#0f172a,#2446d8)] text-lg font-black text-white shadow-[0_18px_40px_rgba(36,70,216,0.18)]"
+              >
+                {{ canalActuel.nom?.slice(0, 2)?.toUpperCase() || 'CV' }}
+              </div>
+
+              <div>
+                <p class="text-2xl font-black text-[#0f172a]">{{ canalActuel.nom }}</p>
+                <p class="mt-1 text-sm font-medium text-[#64748b]">
                 {{ canalActuel.club?.nom || clubActuel?.nom || 'Club' }} · {{ canalActuel.equipe?.nom || equipeActuelle?.nom || 'Equipe' }}
-              </p>
+                </p>
+              </div>
             </div>
 
             <div v-else>
@@ -776,6 +869,15 @@ defineExpose({
             </div>
 
             <div class="flex items-center gap-2">
+              <button
+                v-if="canalActuel"
+                type="button"
+                class="rounded-full border border-[#d7e1fb] px-4 py-2 text-xs font-semibold text-[#2446d8] transition hover:bg-[#f5f8ff]"
+                @click="ouvrirParticipants"
+              >
+                Participants
+              </button>
+
               <button
                 v-if="paginationMessages && paginationMessages.current_page < paginationMessages.last_page"
                 type="button"
@@ -888,6 +990,7 @@ defineExpose({
       :participants="participantsCreation"
       :club-id="formulaireCanal.club_id"
       :equipe-id="formulaireCanal.equipe_id"
+      :conversation-name="formulaireCanal.nom"
       :search="formulaireCanal.recherche_participant"
       :selected-ids="formulaireCanal.utilisateur_ids"
       :loading-equipes="chargementEquipesCreation"
@@ -898,9 +1001,21 @@ defineExpose({
       @submit="creerCanal"
       @update:club-id="formulaireCanal.club_id = $event"
       @update:equipe-id="formulaireCanal.equipe_id = $event"
+      @update:conversation-name="formulaireCanal.nom = $event"
       @update:search="formulaireCanal.recherche_participant = $event"
+      @update:image="formulaireCanal.image = $event"
       @toggle-participant="basculerParticipantCreation"
       @toggle-all="basculerTousParticipantsCreation"
+    />
+
+    <PresidentConversationParticipantsModal
+      :visible="afficherParticipants"
+      :canal="canalActuel"
+      :participants="participantsCanal"
+      :loading="chargementParticipantsCanal"
+      :removing-id="retraitParticipantId"
+      @close="fermerParticipants"
+      @remove="retirerParticipant"
     />
   </section>
 </template>

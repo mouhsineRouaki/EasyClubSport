@@ -14,6 +14,7 @@ use App\Models\Canal;
 use App\Models\Club;
 use App\Models\Equipe;
 use App\Models\Message;
+use App\Models\User;
 use App\Services\President\Messagerie\MessagerieService;
 use Illuminate\Http\JsonResponse;
 
@@ -52,7 +53,8 @@ class MessagerieController extends Controller
         $canal = $this->messagerieService->creerCanal(
             $request->user(),
             $equipe,
-            $request->validated()
+            $request->safe()->except('image'),
+            $request->file('image')
         );
 
         return new CanalResource([
@@ -85,6 +87,32 @@ class MessagerieController extends Controller
         return new CanalResource([
             'message' => 'Details du canal recuperes avec succes.',
             'canal' => $canal->load(['equipe.club', 'utilisateurs']),
+        ]);
+    }
+
+    public function participantsCanal(Canal $canal): JsonResponse
+    {
+        $this->authorize('voir', $canal);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Participants du canal recuperes avec succes.',
+            'data' => [
+                'participants' => $this->messagerieService->listerParticipantsCanal($canal),
+            ],
+        ]);
+    }
+
+    public function retirerParticipant(Canal $canal, User $participant): JsonResponse
+    {
+        $this->authorize('gerer', $canal);
+
+        $this->messagerieService->retirerParticipant(request()->user(), $canal, $participant);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Participant retire de la conversation avec succes.',
+            'data' => null,
         ]);
     }
 

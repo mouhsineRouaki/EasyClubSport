@@ -17,6 +17,8 @@ class NotificationPresidentController extends Controller
 
     public function index(): NotificationPresidentCollection
     {
+        $this->authorize('voirListe', Notification::class);
+
         return new NotificationPresidentCollection(
             $this->notificationService->listerPourUtilisateur(request()->user())
         );
@@ -24,7 +26,7 @@ class NotificationPresidentController extends Controller
 
     public function marquerCommeLue(Notification $notification): JsonResponse
     {
-        abort_if((int) $notification->utilisateur_id !== (int) request()->user()->id, 403, 'Cette notification ne vous appartient pas.');
+        $this->authorize('modifier', $notification);
 
         $notification = $this->notificationService->marquerCommeLue($notification);
 

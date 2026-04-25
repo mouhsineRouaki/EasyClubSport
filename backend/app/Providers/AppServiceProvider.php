@@ -5,18 +5,22 @@ namespace App\Providers;
 use App\Models\Annonce;
 use App\Models\Canal;
 use App\Models\Club;
+use App\Models\Convocation;
 use App\Models\Document;
 use App\Models\Evenement;
 use App\Models\Equipe;
 use App\Models\Message;
+use App\Models\Notification;
 use App\Models\User;
 use App\Policies\AnnoncePolicy;
 use App\Policies\CanalPolicy;
 use App\Policies\ClubPolicy;
+use App\Policies\ConvocationPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\EvenementPolicy;
 use App\Policies\EquipePolicy;
 use App\Policies\MessagePolicy;
+use App\Policies\NotificationPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -44,5 +48,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Equipe::class, EquipePolicy::class);
         Gate::policy(Evenement::class, EvenementPolicy::class);
         Gate::policy(Message::class, MessagePolicy::class);
+        Gate::policy(Notification::class, NotificationPolicy::class);
+        Gate::policy(Convocation::class, ConvocationPolicy::class);
     }
 }

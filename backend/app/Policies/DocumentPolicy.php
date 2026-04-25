@@ -10,19 +10,20 @@ class DocumentPolicy
 {
     public function voirListe(User $utilisateur): bool
     {
-        return $utilisateur->role === 'president';
+        return $utilisateur->isPresident()
+            || $utilisateur->isCoach()
+            || $utilisateur->isJoueur();
     }
 
     public function creer(User $utilisateur, Club $club): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $club->president_id === (int) $utilisateur->id;
+        return $utilisateur->presidesClub($club);
     }
 
     public function voir(User $utilisateur, Document $document): bool
     {
-        if ($utilisateur->role !== 'president') {
-            return false;
+        if ($utilisateur->ownsDocument($document)) {
+            return true;
         }
 
         return User::whereKey($document->utilisateur_id)
@@ -44,7 +45,7 @@ class DocumentPolicy
 
     public function modifier(User $utilisateur, Document $document): bool
     {
-        return $this->voir($utilisateur, $document);
+        return $utilisateur->ownsDocument($document) || $this->voir($utilisateur, $document);
     }
 
     public function supprimer(User $utilisateur, Document $document): bool

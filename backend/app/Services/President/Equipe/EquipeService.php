@@ -101,6 +101,11 @@ class EquipeService
         return $this->equipeRepository->listerJoueurs($equipe, $filtres);
     }
 
+    public function listerJoueursDisponibles(Equipe $equipe, array $filtres = [])
+    {
+        return $this->equipeRepository->listerJoueursDisponibles($equipe, $filtres);
+    }
+
     public function ajouterJoueur(Equipe $equipe, User $joueur): void
     {
         if ($joueur->role !== 'joueur') {

@@ -21,6 +21,8 @@ class ConvocationJoueurController extends Controller
 
     public function index(): ConvocationJoueurCollection
     {
+        $this->authorize('voirListe', Convocation::class);
+
         return new ConvocationJoueurCollection(
             $this->convocationJoueurService->listerConvocations(request()->user())
         );
@@ -28,22 +30,19 @@ class ConvocationJoueurController extends Controller
 
     public function repondre(RepondreConvocationRequest $request, Convocation $convocation): ApiResponseResource|JsonResponse
     {
-        try {
-            $convocation = $this->convocationJoueurService->repondreConvocation($request->user(), $convocation, $request->validated());
+        $this->authorize('repondre', $convocation);
+        $convocation = $this->convocationJoueurService->repondreConvocation($request->user(), $convocation, $request->validated());
 
-            return new ApiResponseResource([
-                'message' => 'Reponse a la convocation enregistree avec succes.',
-                'data' => [
-                    'convocation' => [
-                        'id' => $convocation->id,
-                        'statut' => $convocation->statut,
-                        'date_convocation' => $convocation->date_convocation,
-                        'date_confirmation' => $convocation->date_confirmation,
-                    ],
+        return new ApiResponseResource([
+            'message' => 'Reponse a la convocation enregistree avec succes.',
+            'data' => [
+                'convocation' => [
+                    'id' => $convocation->id,
+                    'statut' => $convocation->statut,
+                    'date_convocation' => $convocation->date_convocation,
+                    'date_confirmation' => $convocation->date_confirmation,
                 ],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+            ],
+        ]);
     }
 }

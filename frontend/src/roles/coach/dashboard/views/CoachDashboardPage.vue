@@ -964,9 +964,7 @@ onBeforeUnmount(() => {
                 @update:recherche="rechercheEquipes = $event"
                 @voir-joueurs="(id) => { afficherModule('joueurs'); equipeJoueurId = String(id) }" />
 
-              <CoachJoueurs v-else-if="moduleActif === 'joueurs'" :joueurs="joueursEquipe" :equipes="equipesOptions"
-                :equipe-id="equipeJoueurId" :chargement="chargementJoueurs" :recherche="rechercheJoueurs"
-                @update:equipe-id="equipeJoueurId = $event" @update:recherche="rechercheJoueurs = $event" />
+              <CoachJoueurs v-else-if="moduleActif === 'joueurs'" :equipe-id="equipeJoueurId" />
 
               <CoachEvenements v-else-if="moduleActif === 'evenements'" :evenements="evenementsEquipe"
                 :equipes="equipesOptions" :equipe-id="equipeEvenementId" :chargement="chargementEvenements"

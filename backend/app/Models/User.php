@@ -24,6 +24,17 @@ class User extends Authenticatable
         'telephone',
         'adresse',
         'photo',
+        'numero_joueur',
+        'poste_principal',
+        'poste_secondaire',
+        'pied_fort',
+        'note_globale',
+        'attaque',
+        'defense',
+        'vitesse',
+        'passe',
+        'dribble',
+        'physique',
         'role',
         'statut',
     ];
@@ -38,6 +49,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'numero_joueur' => 'integer',
+            'note_globale' => 'integer',
+            'attaque' => 'integer',
+            'defense' => 'integer',
+            'vitesse' => 'integer',
+            'passe' => 'integer',
+            'dribble' => 'integer',
+            'physique' => 'integer',
         ];
     }
 
@@ -122,5 +141,72 @@ class User extends Authenticatable
     public function annoncesPubliees(): HasMany
     {
         return $this->hasMany(Annonce::class, 'auteur_id');
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    public function isPresident(): bool
+    {
+        return $this->hasRole('president');
+    }
+
+    public function isCoach(): bool
+    {
+        return $this->hasRole('coach');
+    }
+
+    public function isJoueur(): bool
+    {
+        return $this->hasRole('joueur');
+    }
+
+    public function presidesClub(?Club $club): bool
+    {
+        return $this->isPresident() && (int) $club?->president_id === (int) $this->id;
+    }
+
+    public function coachesEquipe(?Equipe $equipe): bool
+    {
+        return $this->isCoach() && (int) $equipe?->coach_id === (int) $this->id;
+    }
+
+    public function belongsToEquipe(?Equipe $equipe): bool
+    {
+        if (! $this->isJoueur() || ! $equipe) {
+            return false;
+        }
+
+        return $this->equipes()
+            ->where('equipes.id', $equipe->id)
+            ->exists();
+    }
+
+    public function belongsToCanal(?Canal $canal): bool
+    {
+        if (! $canal) {
+            return false;
+        }
+
+        return $this->canaux()
+            ->where('canaux.id', $canal->id)
+            ->exists();
+    }
+
+    public function ownsNotification(?Notification $notification): bool
+    {
+        return (int) $notification?->utilisateur_id === (int) $this->id;
+    }
+
+    public function ownsConvocation(?Convocation $convocation): bool
+    {
+        return (int) $convocation?->utilisateur_id === (int) $this->id;
+    }
+
+    public function ownsDocument(?Document $document): bool
+    {
+        return (int) $document?->utilisateur_id === (int) $this->id;
     }
 }

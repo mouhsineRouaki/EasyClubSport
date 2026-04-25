@@ -12,7 +12,6 @@ use App\Services\Notification\NotificationService;
 use App\Support\CompositionMatchPresenter;
 use App\Support\FeuilleMatchPresenter;
 use App\Support\StatistiqueMatchPresenter;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 
 class EvenementCoachService
@@ -27,8 +26,6 @@ class EvenementCoachService
 
     public function listerEvenementsEquipe(User $utilisateur, Equipe $equipe)
     {
-        $this->verifierEquipeCoach($utilisateur, $equipe);
-
         return $this->evenementCoachRepository->listerEvenementsEquipe($equipe);
     }
 
@@ -211,17 +208,8 @@ class EvenementCoachService
 
     protected function verifierAccesEvenement(User $utilisateur, Equipe $equipe, Evenement $evenement): void
     {
-        $this->verifierEquipeCoach($utilisateur, $equipe);
-
         if ((int) $evenement->equipe_id !== (int) $equipe->id) {
-            throw new AuthorizationException('Cet evenement ne correspond pas a cette equipe.');
-        }
-    }
-
-    protected function verifierEquipeCoach(User $utilisateur, Equipe $equipe): void
-    {
-        if ((int) $equipe->coach_id !== (int) $utilisateur->id) {
-            throw new AuthorizationException('Vous ne pouvez gerer que vos equipes.');
+            abort(404, 'Cet evenement ne correspond pas a cette equipe.');
         }
     }
 

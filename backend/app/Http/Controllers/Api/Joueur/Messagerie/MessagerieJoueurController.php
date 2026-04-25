@@ -24,6 +24,8 @@ class MessagerieJoueurController extends Controller
 
     public function indexCanaux(): CanalJoueurCollection
     {
+        $this->authorize('voirListe', Canal::class);
+
         return new CanalJoueurCollection(
             $this->messagerieJoueurService->listerCanaux(request()->user())
         );
@@ -31,52 +33,41 @@ class MessagerieJoueurController extends Controller
 
     public function indexMessages(Canal $canal): MessageJoueurCollection|JsonResponse
     {
-        try {
-            return new MessageJoueurCollection(
-                $this->messagerieJoueurService->listerMessages($canal, request()->user())
-            );
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        $this->authorize('voir', $canal);
+
+        return new MessageJoueurCollection(
+            $this->messagerieJoueurService->listerMessages($canal, request()->user())
+        );
     }
 
     public function storeMessage(EnvoyerMessageJoueurRequest $request, Canal $canal): ApiResponseResource|JsonResponse
     {
-        try {
-            $message = $this->messagerieJoueurService->envoyerMessage($request->user(), $canal, $request->validated());
+        $this->authorize('voir', $canal);
+        $message = $this->messagerieJoueurService->envoyerMessage($request->user(), $canal, $request->validated());
 
-            return (new ApiResponseResource([
-                'message' => 'Message envoye avec succes.',
-                'data' => ['message' => $this->formaterMessage($message)],
-            ]))->response()->setStatusCode(201);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        return (new ApiResponseResource([
+            'message' => 'Message envoye avec succes.',
+            'data' => ['message' => $this->formaterMessage($message)],
+        ]))->response()->setStatusCode(201);
     }
 
     public function updateMessage(ModifierMessageJoueurRequest $request, Message $message): ApiResponseResource|JsonResponse
     {
-        try {
-            $message = $this->messagerieJoueurService->modifierMessage($request->user(), $message, $request->validated());
+        $this->authorize('modifier', $message);
+        $message = $this->messagerieJoueurService->modifierMessage($request->user(), $message, $request->validated());
 
-            return new ApiResponseResource([
-                'message' => 'Message modifie avec succes.',
-                'data' => ['message' => $this->formaterMessage($message)],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        return new ApiResponseResource([
+            'message' => 'Message modifie avec succes.',
+            'data' => ['message' => $this->formaterMessage($message)],
+        ]);
     }
 
     public function destroyMessage(Message $message): ApiResponseResource|JsonResponse
     {
-        try {
-            $this->messagerieJoueurService->supprimerMessage(request()->user(), $message);
+        $this->authorize('supprimer', $message);
+        $this->messagerieJoueurService->supprimerMessage(request()->user(), $message);
 
-            return new ApiResponseResource(['message' => 'Message supprime avec succes.', 'data' => null]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        return new ApiResponseResource(['message' => 'Message supprime avec succes.', 'data' => null]);
     }
 
     protected function formaterMessage(Message $message): array

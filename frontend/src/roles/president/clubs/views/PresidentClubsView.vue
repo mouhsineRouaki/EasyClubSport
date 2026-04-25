@@ -52,6 +52,31 @@ const logoAffiche = computed(() => logoPreview.value || formulaire.logo_url || '
 const nomLogoSelectionne = computed(() => logoFichier.value?.name || (formulaire.logo_url ? 'Logo actuel charge' : 'Aucun logo selectionne'))
 const utilisateurLayout = computed(() => (utilisateurConnecte.value ? utilisateurConnecte.value : null))
 const lireErreur = (champ) => erreursValidation.value?.[champ]?.[0] || ''
+const totalVilles = computed(() => new Set(clubs.value.map((club) => club.ville).filter(Boolean)).size)
+const clubsAvecEmail = computed(() => clubs.value.filter((club) => club.email).length)
+const clubsAvecLogo = computed(() => clubs.value.filter((club) => club.logo_url || club.logo).length)
+const resumeClubs = computed(() => [
+  {
+    label: 'Clubs visibles',
+    value: pagination.value?.total || clubs.value.length || 0,
+    helper: 'Tous les clubs geres dans votre espace.',
+  },
+  {
+    label: 'Villes actives',
+    value: totalVilles.value,
+    helper: 'Zones deja couvertes par vos clubs.',
+  },
+  {
+    label: 'Emails renseignes',
+    value: clubsAvecEmail.value,
+    helper: 'Clubs joignables rapidement par email.',
+  },
+  {
+    label: 'Logos charges',
+    value: clubsAvecLogo.value,
+    helper: 'Cartes avec identite visuelle complete.',
+  },
+])
 
 const gerer401 = (error) => {
   if (error?.response?.code === 401) {
@@ -280,26 +305,63 @@ onMounted(() => {
     :utilisateur="utilisateurLayout"
     @logout="deconnecter"
   >
-    <AppCard title="Clubs du president" subtitle="Creation, modification et suppression des clubs.">
+    <section class="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div class="overflow-hidden rounded-[30px] border border-white/60 bg-[linear-gradient(135deg,#0f172a_0%,#183b8c_42%,#2563eb_100%)] p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-white/70">Espace president</p>
+        <h2 class="mt-3 max-w-xl text-4xl font-black leading-tight sm:text-5xl">
+          Une vue plus claire pour gerer tous vos clubs.
+        </h2>
+        <p class="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/78">
+          Creez, modifiez et suivez vos clubs depuis une seule page avec une recherche simple et des cartes plus visuelles.
+        </p>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <AppButton type="button" size="lg" @click="ouvrirCreation">+ Nouveau club</AppButton>
+          <div class="rounded-full border border-white/18 bg-white/10 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-white/82 backdrop-blur-md">
+            {{ pagination?.total || clubs.length || 0 }} clubs geres
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-2">
+        <article
+          v-for="item in resumeClubs"
+          :key="item.label"
+          class="rounded-[24px] border border-[#dfe7f5] bg-white p-4 shadow-[0_16px_34px_rgba(15,23,42,0.06)]"
+        >
+          <p class="text-[11px] font-black uppercase tracking-[0.18em] text-[#4c6fff]">{{ item.label }}</p>
+          <p class="mt-3 text-3xl font-black text-[#0f172a]">{{ item.value }}</p>
+          <p class="mt-2 text-xs font-semibold leading-5 text-[#64748b]">{{ item.helper }}</p>
+        </article>
+      </div>
+    </section>
+
+    <AppCard class="mt-4" title="Explorer les clubs" subtitle="Utilisez les filtres ci-dessous pour retrouver rapidement un club.">
       <template #actions>
-        <AppButton type="button" @click="ouvrirCreation">+ Nouveau club</AppButton>
+        <AppButton type="button" variant="secondary" @click="ouvrirCreation">Creer un club</AppButton>
       </template>
 
-      <div class="grid gap-3 md:grid-cols-[1fr_180px]">
-        <label>
+      <div class="grid gap-3 xl:grid-cols-[1.2fr_220px_180px]">
+        <label class="rounded-[22px] border border-[#e6edf8] bg-[#f8fbff] p-3">
           <span class="text-xs font-bold text-[#64748b]">Recherche serveur</span>
-          <input v-model="filtres.q" type="text" placeholder="Nom, ville, email..." class="ecs-input" />
+          <input v-model="filtres.q" type="text" placeholder="Nom, ville, email..." class="ecs-input mt-2" />
         </label>
 
-        <label>
+        <label class="rounded-[22px] border border-[#e6edf8] bg-[#f8fbff] p-3">
           <span class="text-xs font-bold text-[#64748b]">Taille page</span>
-          <select v-model.number="filtres.per_page" class="ecs-select" @change="onChangePerPage(filtres.per_page)">
+          <select v-model.number="filtres.per_page" class="ecs-select mt-2" @change="onChangePerPage(filtres.per_page)">
             <option :value="6">6</option>
             <option :value="12">12</option>
             <option :value="24">24</option>
             <option :value="48">48</option>
           </select>
         </label>
+
+        <div class="rounded-[22px] border border-[#e6edf8] bg-[#f8fbff] p-3">
+          <p class="text-xs font-bold text-[#64748b]">Resultat actuel</p>
+          <p class="mt-2 text-2xl font-black text-[#0f172a]">{{ clubs.length }}</p>
+          <p class="mt-1 text-xs font-semibold text-[#64748b]">club(s) sur cette page</p>
+        </div>
       </div>
     </AppCard>
 
@@ -320,7 +382,7 @@ onMounted(() => {
       />
     </AppModalShell>
 
-    <AppCard class="mt-4" title="Liste des clubs">
+    <AppCard class="mt-4" title="Liste des clubs" subtitle="Chaque card reprend les informations principales du club avec des actions rapides.">
       <AppListState
         :loading="chargement"
         :has-data="clubs.length > 0"
@@ -333,7 +395,7 @@ onMounted(() => {
           <AppButton type="button" class="mt-4" @click="ouvrirCreation">Creer le premier club</AppButton>
         </template>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div class="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           <PresidentClubListCard
             v-for="club in clubs"
             :key="club.id"

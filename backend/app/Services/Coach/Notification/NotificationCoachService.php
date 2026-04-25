@@ -6,8 +6,6 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Repositories\Coach\Notification\NotificationCoachRepository;
 use App\Services\Notification\NotificationService;
-use Illuminate\Auth\Access\AuthorizationException;
-
 class NotificationCoachService
 {
     public function __construct(
@@ -23,10 +21,6 @@ class NotificationCoachService
 
     public function marquerNotificationCommeLue(User $utilisateur, Notification $notification): Notification
     {
-        if ((int) $notification->utilisateur_id !== (int) $utilisateur->id) {
-            throw new AuthorizationException('Cette notification ne vous appartient pas.');
-        }
-
         return $this->notificationService->marquerCommeLue($notification);
     }
 

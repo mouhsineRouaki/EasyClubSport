@@ -20,6 +20,8 @@ class NotificationJoueurController extends Controller
 
     public function index(): NotificationJoueurCollection
     {
+        $this->authorize('voirListe', Notification::class);
+
         return new NotificationJoueurCollection(
             $this->notificationJoueurService->listerNotifications(request()->user())
         );
@@ -27,22 +29,19 @@ class NotificationJoueurController extends Controller
 
     public function marquerCommeLue(Notification $notification): ApiResponseResource|JsonResponse
     {
-        try {
-            $notification = $this->notificationJoueurService->marquerNotificationCommeLue(request()->user(), $notification);
+        $this->authorize('modifier', $notification);
+        $notification = $this->notificationJoueurService->marquerNotificationCommeLue(request()->user(), $notification);
 
-            return new ApiResponseResource([
-                'message' => 'Notification marquee comme lue avec succes.',
-                'data' => [
-                    'notification' => [
-                        'id' => $notification->id,
-                        'est_lue' => $notification->est_lue,
-                        'date_lecture' => $notification->date_lecture,
-                    ],
+        return new ApiResponseResource([
+            'message' => 'Notification marquee comme lue avec succes.',
+            'data' => [
+                'notification' => [
+                    'id' => $notification->id,
+                    'est_lue' => $notification->est_lue,
+                    'date_lecture' => $notification->date_lecture,
                 ],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+            ],
+        ]);
     }
 
     public function marquerToutesCommeLues(): ApiResponseResource

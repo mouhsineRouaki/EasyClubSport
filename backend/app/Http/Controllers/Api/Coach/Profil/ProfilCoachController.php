@@ -16,6 +16,8 @@ class ProfilCoachController extends Controller
 
     public function afficher(): ProfilCoachResource
     {
+        $this->authorize('voirProfilCoach', request()->user());
+
         return new ProfilCoachResource([
             'message' => 'Profil coach recupere avec succes.',
             'utilisateur' => $this->profilCoachService->recupererProfil(request()->user()),
@@ -24,6 +26,8 @@ class ProfilCoachController extends Controller
 
     public function modifier(ModifierProfilCoachRequest $request): ProfilCoachResource
     {
+        $this->authorize('modifierProfilCoach', $request->user());
+
         $utilisateur = $this->profilCoachService->mettreAJourProfil(
             $request->user(),
             $request->safe()->except('photo'),

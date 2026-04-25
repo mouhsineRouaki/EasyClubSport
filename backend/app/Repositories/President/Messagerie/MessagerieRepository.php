@@ -7,8 +7,8 @@ use App\Models\Canal;
 use App\Models\Equipe;
 use App\Models\Message;
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class MessagerieRepository
 {
@@ -103,6 +103,8 @@ class MessagerieRepository
                     'photo_url' => $utilisateur->photo ? asset('storage/'.$utilisateur->photo) : null,
                     'role' => $utilisateur->role,
                     'role_equipe' => $utilisateur->role_equipe ?? $utilisateur->pivot?->role_equipe,
+                    'poste_principal' => $utilisateur->poste_principal,
+                    'numero_joueur' => $utilisateur->numero_joueur,
                     'date_affectation' => $utilisateur->date_affectation ?? $utilisateur->pivot?->date_affectation,
                 ];
             });
@@ -126,12 +128,58 @@ class MessagerieRepository
                     'photo_url' => $coach->photo ? asset('storage/'.$coach->photo) : null,
                     'role' => $coach->role,
                     'role_equipe' => 'coach',
+                    'poste_principal' => $coach->poste_principal,
+                    'numero_joueur' => $coach->numero_joueur,
                     'date_affectation' => null,
                 ]);
             }
         }
 
         return $joueurs->values();
+    }
+
+    public function listerParticipantsCanal(Canal $canal): Collection
+    {
+        return $canal->utilisateurs()
+            ->select('users.*', 'membre_equipes.role_equipe')
+            ->leftJoin('membre_equipes', function ($join) use ($canal) {
+                $join->on('membre_equipes.utilisateur_id', '=', 'users.id')
+                    ->where('membre_equipes.equipe_id', '=', $canal->equipe_id);
+            })
+            ->orderBy('users.nom')
+            ->orderBy('users.prenom')
+            ->get()
+            ->map(function ($utilisateur) {
+                $roleEquipe = $utilisateur->role_equipe ?: ($utilisateur->role === 'president' ? 'president' : $utilisateur->role);
+
+                return [
+                    'id' => $utilisateur->id,
+                    'name' => $utilisateur->name,
+                    'nom' => $utilisateur->nom,
+                    'prenom' => $utilisateur->prenom,
+                    'email' => $utilisateur->email,
+                    'telephone' => $utilisateur->telephone,
+                    'photo' => $utilisateur->photo,
+                    'photo_url' => $utilisateur->photo ? asset('storage/'.$utilisateur->photo) : null,
+                    'role' => $utilisateur->role,
+                    'role_equipe' => $roleEquipe,
+                    'poste_principal' => $utilisateur->poste_principal,
+                    'numero_joueur' => $utilisateur->numero_joueur,
+                ];
+            })
+            ->values();
+    }
+
+    public function participantExiste(Canal $canal, int $utilisateurId): bool
+    {
+        return $canal->utilisateurs()
+            ->where('users.id', $utilisateurId)
+            ->exists();
+    }
+
+    public function retirerParticipant(Canal $canal, int $utilisateurId): void
+    {
+        $canal->utilisateurs()->detach($utilisateurId);
     }
 
     public function listerMessagesParCanal(Canal $canal, array $filtres = []): LengthAwarePaginator

@@ -21,6 +21,8 @@ class EvenementJoueurController extends Controller
 
     public function index(): EvenementJoueurCollection
     {
+        $this->authorize('voirListe', Evenement::class);
+
         return new EvenementJoueurCollection(
             $this->evenementJoueurService->listerEvenements(request()->user())
         );
@@ -28,66 +30,54 @@ class EvenementJoueurController extends Controller
 
     public function composition(Evenement $evenement): ApiResponseResource|JsonResponse
     {
-        try {
-            $composition = $this->evenementJoueurService->recupererCompositionMatch(request()->user(), $evenement);
+        $this->authorize('voir', $evenement);
+        $composition = $this->evenementJoueurService->recupererCompositionMatch(request()->user(), $evenement);
 
-            return new ApiResponseResource([
-                'message' => 'Composition du match recuperee avec succes.',
-                'data' => ['composition' => $composition],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        return new ApiResponseResource([
+            'message' => 'Composition du match recuperee avec succes.',
+            'data' => ['composition' => $composition],
+        ]);
     }
 
     public function feuilleMatch(Evenement $evenement): ApiResponseResource|JsonResponse
     {
-        try {
-            $feuilleMatch = $this->evenementJoueurService->recupererFeuilleMatch(request()->user(), $evenement);
+        $this->authorize('voir', $evenement);
+        $feuilleMatch = $this->evenementJoueurService->recupererFeuilleMatch(request()->user(), $evenement);
 
-            return new ApiResponseResource([
-                'message' => 'Feuille de match recuperee avec succes.',
-                'data' => ['feuille_match' => $feuilleMatch],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        return new ApiResponseResource([
+            'message' => 'Feuille de match recuperee avec succes.',
+            'data' => ['feuille_match' => $feuilleMatch],
+        ]);
     }
 
     public function statistiques(Evenement $evenement): ApiResponseResource|JsonResponse
     {
-        try {
-            $statistiques = $this->evenementJoueurService->recupererStatistiquesMatchEvenement(request()->user(), $evenement);
+        $this->authorize('voir', $evenement);
+        $statistiques = $this->evenementJoueurService->recupererStatistiquesMatchEvenement(request()->user(), $evenement);
 
-            return new ApiResponseResource([
-                'message' => 'Statistiques du match recuperees avec succes.',
-                'data' => ['statistiques' => $statistiques],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+        return new ApiResponseResource([
+            'message' => 'Statistiques du match recuperees avec succes.',
+            'data' => ['statistiques' => $statistiques],
+        ]);
     }
 
     public function repondreDisponibilite(RepondreDisponibiliteRequest $request, Evenement $evenement): ApiResponseResource|JsonResponse
     {
-        try {
-            $disponibilite = $this->evenementJoueurService->repondreDisponibilite($request->user(), $evenement, $request->validated());
+        $this->authorize('repondreDisponibilite', $evenement);
+        $disponibilite = $this->evenementJoueurService->repondreDisponibilite($request->user(), $evenement, $request->validated());
 
-            return new ApiResponseResource([
-                'message' => 'Disponibilite enregistree avec succes.',
-                'data' => [
-                    'disponibilite' => [
-                        'id' => $disponibilite->id,
-                        'evenement_id' => $disponibilite->evenement_id,
-                        'utilisateur_id' => $disponibilite->utilisateur_id,
-                        'reponse' => $disponibilite->reponse,
-                        'commentaire' => $disponibilite->commentaire,
-                        'date_reponse' => $disponibilite->date_reponse,
-                    ],
+        return new ApiResponseResource([
+            'message' => 'Disponibilite enregistree avec succes.',
+            'data' => [
+                'disponibilite' => [
+                    'id' => $disponibilite->id,
+                    'evenement_id' => $disponibilite->evenement_id,
+                    'utilisateur_id' => $disponibilite->utilisateur_id,
+                    'reponse' => $disponibilite->reponse,
+                    'commentaire' => $disponibilite->commentaire,
+                    'date_reponse' => $disponibilite->date_reponse,
                 ],
-            ]);
-        } catch (AuthorizationException $e) {
-            return (new ApiErrorResource(['message' => $e->getMessage()]))->response()->setStatusCode(403);
-        }
+            ],
+        ]);
     }
 }

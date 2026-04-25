@@ -10,19 +10,17 @@ class AnnoncePolicy
 {
     public function voirListe(User $utilisateur): bool
     {
-        return $utilisateur->role === 'president';
+        return $utilisateur->isPresident();
     }
 
     public function creer(User $utilisateur, Club $club): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $club->president_id === (int) $utilisateur->id;
+        return $utilisateur->presidesClub($club);
     }
 
     public function voir(User $utilisateur, Annonce $annonce): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $annonce->club?->president_id === (int) $utilisateur->id;
+        return $utilisateur->presidesClub($annonce->club);
     }
 
     public function modifier(User $utilisateur, Annonce $annonce): bool

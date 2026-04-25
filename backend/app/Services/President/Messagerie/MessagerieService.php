@@ -8,7 +8,9 @@ use App\Models\Message;
 use App\Models\User;
 use App\Repositories\President\Messagerie\MessagerieRepository;
 use App\Services\Notification\NotificationService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class MessagerieService
@@ -29,7 +31,7 @@ class MessagerieService
         return $this->messagerieRepository->listerCanauxParEquipe($equipe, $filtres);
     }
 
-    public function creerCanal(User $utilisateur, Equipe $equipe, array $donnees): Canal
+    public function creerCanal(User $utilisateur, Equipe $equipe, array $donnees, ?UploadedFile $image = null): Canal
     {
         $typeCanal = $donnees['type_canal'] ?? 'equipe';
 
@@ -82,6 +84,7 @@ class MessagerieService
         $canal = $this->messagerieRepository->creerCanal([
             'equipe_id' => $equipe->id,
             'nom' => $nomCanal,
+            'image' => $image ? $image->store('canaux', 'public') : null,
             'type_canal' => $typeCanal,
             'description' => $donnees['description'] ?? null,
         ]);
@@ -103,6 +106,11 @@ class MessagerieService
     public function listerParticipantsEquipe(Equipe $equipe, string $recherche = ''): Collection
     {
         return $this->messagerieRepository->listerParticipantsEquipe($equipe, $recherche);
+    }
+
+    public function listerParticipantsCanal(Canal $canal): Collection
+    {
+        return $this->messagerieRepository->listerParticipantsCanal($canal);
     }
 
     public function listerMessages(Canal $canal, array $filtres = [])
@@ -135,5 +143,28 @@ class MessagerieService
     public function supprimerMessage(Message $message): void
     {
         $this->messagerieRepository->supprimerMessage($message);
+    }
+
+    public function retirerParticipant(User $utilisateur, Canal $canal, User $participant): void
+    {
+        if ($canal->type_canal !== 'prive') {
+            throw ValidationException::withMessages([
+                'participant' => 'Seules les conversations privees peuvent retirer un participant manuellement.',
+            ]);
+        }
+
+        if ((int) $participant->id === (int) $utilisateur->id) {
+            throw ValidationException::withMessages([
+                'participant' => 'Le president ne peut pas etre retire de sa propre conversation.',
+            ]);
+        }
+
+        if (! $this->messagerieRepository->participantExiste($canal, $participant->id)) {
+            throw ValidationException::withMessages([
+                'participant' => 'Ce participant n appartient pas a cette conversation.',
+            ]);
+        }
+
+        $this->messagerieRepository->retirerParticipant($canal, $participant->id);
     }
 }

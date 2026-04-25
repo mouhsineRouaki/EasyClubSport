@@ -18,15 +18,19 @@ const router = useRouter()
 const chargementClubs = ref(true)
 const chargementEquipes = ref(false)
 const chargementJoueurs = ref(false)
+const chargementJoueursDisponibles = ref(false)
 const envoi = ref(false)
 const clubs = ref([])
 const equipes = ref([])
 const joueurs = ref([])
+const joueursDisponibles = ref([])
 const pagination = ref(null)
+const paginationJoueursDisponibles = ref(null)
 const selectedClubId = ref('')
 const selectedEquipeId = ref('')
 const utilisateurConnecte = ref(null)
 const searchDebounce = ref(null)
+const searchAjoutDebounce = ref(null)
 const erreurChargement = ref('')
 const succes = ref('')
 const afficherFormulaire = ref(false)
@@ -40,6 +44,12 @@ const filtres = reactive({
 
 const formulaireAjout = reactive({
   utilisateur_id: '',
+})
+
+const filtresAjout = reactive({
+  q: '',
+  page: 1,
+  per_page: 6,
 })
 
 const clubActuel = computed(() => clubs.value.find((club) => String(club.id) === String(selectedClubId.value)) || null)
@@ -175,19 +185,79 @@ const ouvrirFormulaire = () => {
   }
 
   formulaireAjout.utilisateur_id = ''
+  filtresAjout.q = ''
+  filtresAjout.page = 1
+  filtresAjout.per_page = 6
+  joueursDisponibles.value = []
+  paginationJoueursDisponibles.value = null
   erreursValidation.value = {}
   afficherFormulaire.value = true
+  chargerJoueursDisponibles()
 }
 
 const fermerFormulaire = () => {
   afficherFormulaire.value = false
   formulaireAjout.utilisateur_id = ''
+  filtresAjout.q = ''
+  filtresAjout.page = 1
   erreursValidation.value = {}
 }
+
+const chargerJoueursDisponibles = async () => {
+  if (!selectedClubId.value || !selectedEquipeId.value || !afficherFormulaire.value) {
+    joueursDisponibles.value = []
+    paginationJoueursDisponibles.value = null
+    return
+  }
+
+  chargementJoueursDisponibles.value = true
+
+  try {
+    const reponse = await authGet(`/president/clubs/${selectedClubId.value}/equipes/${selectedEquipeId.value}/joueurs-disponibles`, {
+      q: filtresAjout.q,
+      page: filtresAjout.page,
+      per_page: filtresAjout.per_page,
+    })
+
+    joueursDisponibles.value = reponse?.data?.joueurs || []
+    paginationJoueursDisponibles.value = reponse?.data?.pagination || null
+  } catch (error) {
+    if (!gerer401(error)) {
+      notifyError(error?.response?.message || error.message || 'Impossible de charger les joueurs disponibles.')
+    }
+  } finally {
+    chargementJoueursDisponibles.value = false
+  }
+}
+
+watch(
+  () => filtresAjout.q,
+  () => {
+    if (!afficherFormulaire.value) {
+      return
+    }
+
+    if (searchAjoutDebounce.value) {
+      clearTimeout(searchAjoutDebounce.value)
+    }
+
+    searchAjoutDebounce.value = setTimeout(() => {
+      filtresAjout.page = 1
+      chargerJoueursDisponibles()
+    }, 350)
+  }
+)
 
 const ajouterJoueur = async () => {
   if (!selectedClubId.value || !selectedEquipeId.value) {
     notifyError('Selection de club/equipe invalide.')
+    return
+  }
+
+  if (!formulaireAjout.utilisateur_id) {
+    erreursValidation.value = {
+      utilisateur_id: ['Selectionnez un joueur dans la liste.'],
+    }
     return
   }
 
@@ -253,6 +323,21 @@ const onChangePerPage = (size) => {
   filtres.per_page = size
   filtres.page = 1
   chargerJoueurs()
+}
+
+const onChangePageAjout = (page) => {
+  filtresAjout.page = page
+  chargerJoueursDisponibles()
+}
+
+const onChangePerPageAjout = (size) => {
+  filtresAjout.per_page = size
+  filtresAjout.page = 1
+  chargerJoueursDisponibles()
+}
+
+const mettreAJourRechercheAjout = (valeur) => {
+  filtresAjout.q = valeur
 }
 
 const deconnecter = () => {
@@ -336,8 +421,15 @@ onMounted(async () => {
         :model-value="formulaireAjout"
         :errors="erreursValidation"
         :loading="envoi"
+        :players="joueursDisponibles"
+        :players-loading="chargementJoueursDisponibles"
+        :players-pagination="paginationJoueursDisponibles"
+        :search="filtresAjout.q"
         @submit="ajouterJoueur"
         @update-field="mettreAJourChamp"
+        @update-search="mettreAJourRechercheAjout"
+        @change-page="onChangePageAjout"
+        @change-per-page="onChangePerPageAjout"
       />
     </AppModalShell>
 

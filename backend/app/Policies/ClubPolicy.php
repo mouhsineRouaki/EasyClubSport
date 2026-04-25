@@ -9,29 +9,26 @@ class ClubPolicy
 {
     public function voirListe(User $utilisateur): bool
     {
-        return $utilisateur->role === 'president';
+        return $utilisateur->isPresident();
     }
 
     public function voir(User $utilisateur, Club $club): bool
     {
-        return $utilisateur->role === 'president'
-            && $club->president_id === $utilisateur->id;
+        return $utilisateur->presidesClub($club);
     }
 
     public function creer(User $utilisateur): bool
     {
-        return $utilisateur->role === 'president';
+        return $utilisateur->isPresident();
     }
 
     public function modifier(User $utilisateur, Club $club): bool
     {
-        return $utilisateur->role === 'president'
-            && $club->president_id === $utilisateur->id;
+        return $utilisateur->presidesClub($club);
     }
 
     public function supprimer(User $utilisateur, Club $club): bool
     {
-        return $utilisateur->role === 'president'
-            && $club->president_id === $utilisateur->id;
+        return $utilisateur->presidesClub($club);
     }
 }

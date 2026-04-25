@@ -170,6 +170,40 @@ class EquipeRepository
         );
     }
 
+    public function listerJoueursDisponibles(Equipe $equipe, array $filtres = []): LengthAwarePaginator
+    {
+        $query = User::query()
+            ->where('role', 'joueur')
+            ->whereDoesntHave('membreEquipes', function ($subQuery) use ($equipe) {
+                $subQuery->where('role_equipe', 'joueur')
+                    ->where('equipe_id', '!=', $equipe->id);
+            })
+            ->whereDoesntHave('membreEquipes', function ($subQuery) use ($equipe) {
+                $subQuery->where('role_equipe', 'joueur')
+                    ->where('equipe_id', $equipe->id);
+            });
+
+        if (! empty($filtres['q'])) {
+            $terme = $filtres['q'];
+            $query->where(function ($subQuery) use ($terme) {
+                $subQuery->where('nom', 'like', "%{$terme}%")
+                    ->orWhere('prenom', 'like', "%{$terme}%")
+                    ->orWhere('email', 'like', "%{$terme}%")
+                    ->orWhere('telephone', 'like', "%{$terme}%");
+            });
+        }
+
+        return $query
+            ->orderBy('nom')
+            ->orderBy('prenom')
+            ->paginate(
+                (int) ($filtres['per_page'] ?? 6),
+                ['*'],
+                'page',
+                (int) ($filtres['page'] ?? 1)
+            );
+    }
+
     public function trouverMembreEquipe(int $utilisateurId): ?MembreEquipe
     {
         return MembreEquipe::where('utilisateur_id', $utilisateurId)

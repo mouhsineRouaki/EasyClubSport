@@ -81,6 +81,7 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::put('/clubs/{club}/equipes/{equipe}/coach', [EquipeController::class, 'assignerCoach']);
     Route::delete('/clubs/{club}/equipes/{equipe}/coach', [EquipeController::class, 'retirerCoach']);
     Route::get('/clubs/{club}/equipes/{equipe}/joueurs', [EquipeController::class, 'listerJoueurs']);
+    Route::get('/clubs/{club}/equipes/{equipe}/joueurs-disponibles', [EquipeController::class, 'listerJoueursDisponibles']);
     Route::post('/clubs/{club}/equipes/{equipe}/joueurs', [EquipeController::class, 'ajouterJoueur']);
     Route::delete('/clubs/{club}/equipes/{equipe}/joueurs/{joueur}', [EquipeController::class, 'retirerJoueur']);
 
@@ -97,6 +98,8 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::put('/annonces/{annonce}', [AnnonceController::class, 'update']);
     Route::delete('/annonces/{annonce}', [AnnonceController::class, 'destroy']);
     Route::get('/canaux/{canal}', [MessagerieController::class, 'showCanal']);
+    Route::get('/canaux/{canal}/participants', [MessagerieController::class, 'participantsCanal']);
+    Route::delete('/canaux/{canal}/participants/{participant}', [MessagerieController::class, 'retirerParticipant']);
     Route::get('/canaux/{canal}/messages', [MessagerieController::class, 'indexMessages']);
     Route::post('/canaux/{canal}/messages', [MessagerieController::class, 'storeMessage']);
     Route::get('/documents/{document}', [DocumentController::class, 'show']);
@@ -137,6 +140,10 @@ Route::middleware(['auth:sanctum', 'role:coach'])->prefix('coach')->group(functi
     Route::put('/profil', [ProfilCoachController::class, 'modifier']);
     Route::get('/equipes', [EquipeCoachController::class, 'index']);
     Route::get('/equipes/{equipe}/joueurs', [EquipeCoachController::class, 'joueurs']);
+    Route::post('/equipes/{equipe}/joueurs', [EquipeCoachController::class, 'storeJoueur']);
+    Route::get('/equipes/{equipe}/joueurs/{joueur}', [EquipeCoachController::class, 'showJoueur']);
+    Route::put('/equipes/{equipe}/joueurs/{joueur}', [EquipeCoachController::class, 'updateJoueur']);
+    Route::delete('/equipes/{equipe}/joueurs/{joueur}', [EquipeCoachController::class, 'destroyJoueur']);
     Route::get('/equipes/{equipe}/evenements', [EvenementCoachController::class, 'index']);
     Route::get('/equipes/{equipe}/evenements/{evenement}/disponibilites', [EvenementCoachController::class, 'disponibilites']);
     Route::get('/equipes/{equipe}/evenements/{evenement}/composition', [EvenementCoachController::class, 'composition']);

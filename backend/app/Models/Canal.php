@@ -17,6 +17,7 @@ class Canal extends Model
     protected $fillable = [
         'equipe_id',
         'nom',
+        'image',
         'type_canal',
         'description',
     ];

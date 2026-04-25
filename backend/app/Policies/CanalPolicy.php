@@ -10,19 +10,21 @@ class CanalPolicy
 {
     public function voirListe(User $utilisateur): bool
     {
-        return $utilisateur->role === 'president';
+        return $utilisateur->isPresident()
+            || $utilisateur->isCoach()
+            || $utilisateur->isJoueur();
     }
 
     public function creer(User $utilisateur, Equipe $equipe): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $equipe->club?->president_id === (int) $utilisateur->id;
+        return $utilisateur->presidesClub($equipe->club);
     }
 
     public function voir(User $utilisateur, Canal $canal): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $canal->equipe?->club?->president_id === (int) $utilisateur->id;
+        return $utilisateur->presidesClub($canal->equipe?->club)
+            || $utilisateur->coachesEquipe($canal->equipe)
+            || $utilisateur->belongsToCanal($canal);
     }
 
     public function gerer(User $utilisateur, Canal $canal): bool
