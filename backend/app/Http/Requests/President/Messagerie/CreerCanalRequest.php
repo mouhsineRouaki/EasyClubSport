@@ -14,9 +14,12 @@ class CreerCanalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nom' => ['required', 'string', 'max:255'],
+            'nom' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'description' => ['nullable', 'string'],
-            'type_canal' => ['nullable', 'in:equipe'],
+            'type_canal' => ['nullable', 'in:equipe,prive'],
+            'utilisateur_ids' => ['nullable', 'array'],
+            'utilisateur_ids.*' => ['integer', 'exists:users,id'],
         ];
     }
 }

@@ -2,17 +2,22 @@
 
 namespace App\Services\President\Evenement;
 
+use App\Services\Communication\ClubCommunicationService;
 use App\Models\Equipe;
 use App\Models\Evenement;
 use App\Models\User;
 use App\Repositories\President\Evenement\EvenementRepository;
 use App\Services\Evenement\MatchInvitationService;
+use App\Support\CompositionMatchPresenter;
+use App\Support\FeuilleMatchPresenter;
+use App\Support\StatistiqueMatchPresenter;
 
 class EvenementService
 {
     public function __construct(
         protected EvenementRepository $evenementRepository,
-        protected MatchInvitationService $matchInvitationService
+        protected MatchInvitationService $matchInvitationService,
+        protected ClubCommunicationService $clubCommunicationService
     ) {
     }
 
@@ -36,6 +41,7 @@ class EvenementService
 
         $evenement = $this->evenementRepository->creer($donnees);
         $this->matchInvitationService->notifierDemande($evenement);
+        $this->clubCommunicationService->notifierNouvelEvenement($utilisateur, $evenement);
 
         return $evenement;
     }
@@ -54,6 +60,12 @@ class EvenementService
             $this->matchInvitationService->notifierDemande($evenement);
         }
 
+        $createur = $evenement->createur ?: $evenement->equipe?->club?->president;
+
+        if ($createur) {
+            $this->clubCommunicationService->notifierNouvelEvenement($createur, $evenement, true);
+        }
+
         return $evenement;
     }
 
@@ -65,6 +77,27 @@ class EvenementService
     public function supprimer(Evenement $evenement): void
     {
         $this->evenementRepository->supprimer($evenement);
+    }
+
+    public function recupererCompositionMatch(Evenement $evenement): array
+    {
+        $evenement = $this->evenementRepository->recupererAvecComposition($evenement);
+
+        return CompositionMatchPresenter::depuisEvenement($evenement) ?? [];
+    }
+
+    public function recupererFeuilleMatch(Evenement $evenement): ?array
+    {
+        $evenement = $this->evenementRepository->recupererAvecFeuilleMatch($evenement);
+
+        return FeuilleMatchPresenter::depuisEvenement($evenement);
+    }
+
+    public function recupererStatistiquesMatch(Evenement $evenement): array
+    {
+        $evenement = $this->evenementRepository->recupererAvecStatistiques($evenement);
+
+        return StatistiqueMatchPresenter::depuisEvenement($evenement);
     }
 
     protected function synchroniserAdversaire(array $donnees, ?Evenement $evenement = null): array
@@ -124,4 +157,3 @@ class EvenementService
         return $ancienType !== 'match' || (int) $nouvelAdversaireEquipeId !== (int) $ancienAdversaireEquipeId;
     }
 }
-

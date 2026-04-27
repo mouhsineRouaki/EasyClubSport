@@ -25,6 +25,15 @@ class EvenementJoueurCollection extends ResourceCollection
                         'date_fin' => $evenement->date_fin,
                         'lieu' => $evenement->lieu,
                         'adversaire' => $evenement->adversaire,
+                        'adversaire_equipe' => $evenement->adversaireEquipe ? [
+                            'id' => $evenement->adversaireEquipe->id,
+                            'nom' => $evenement->adversaireEquipe->nom,
+                            'logo_url' => $evenement->adversaireEquipe->logo ? asset('storage/'.$evenement->adversaireEquipe->logo) : null,
+                            'club' => $evenement->adversaireEquipe->club ? [
+                                'id' => $evenement->adversaireEquipe->club->id,
+                                'nom' => $evenement->adversaireEquipe->club->nom,
+                            ] : null,
+                        ] : null,
                         'description' => $evenement->description,
                         'statut' => $evenement->statut,
                         'equipe' => $evenement->equipe ? [

@@ -9,26 +9,27 @@ class MessagePolicy
 {
     public function voirListe(User $utilisateur): bool
     {
-        return $utilisateur->role === 'president';
+        return $utilisateur->isPresident()
+            || $utilisateur->isCoach()
+            || $utilisateur->isJoueur();
     }
 
     public function creer(User $utilisateur, Message $message): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $message->equipe?->club?->president_id === (int) $utilisateur->id;
+        return $this->voir($utilisateur, $message);
     }
 
     public function voir(User $utilisateur, Message $message): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $message->equipe?->club?->president_id === (int) $utilisateur->id;
+        return $utilisateur->presidesClub($message->equipe?->club)
+            || $utilisateur->coachesEquipe($message->equipe)
+            || $utilisateur->belongsToCanal($message->canal);
     }
 
     public function modifier(User $utilisateur, Message $message): bool
     {
-        return $utilisateur->role === 'president'
-            && (int) $message->expediteur_id === (int) $utilisateur->id
-            && (int) $message->equipe?->club?->president_id === (int) $utilisateur->id;
+        return (int) $message->expediteur_id === (int) $utilisateur->id
+            && $this->voir($utilisateur, $message);
     }
 
     public function supprimer(User $utilisateur, Message $message): bool

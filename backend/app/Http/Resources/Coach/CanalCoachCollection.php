@@ -17,6 +17,8 @@ class CanalCoachCollection extends ResourceCollection
                     return [
                         'id' => $canal->id,
                         'nom' => $canal->nom,
+                        'image' => $canal->image,
+                        'image_url' => $canal->image ? asset('storage/'.$canal->image) : null,
                         'type_canal' => $canal->type_canal,
                         'description' => $canal->description,
                         'equipe' => $canal->equipe ? [

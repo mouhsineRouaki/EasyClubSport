@@ -10,28 +10,43 @@ class EvenementPolicy
 {
     public function voirListe(User $utilisateur): bool
     {
-        return $utilisateur->role === 'president';
+        return $utilisateur->isPresident()
+            || $utilisateur->isCoach()
+            || $utilisateur->isJoueur();
     }
 
     public function creer(User $utilisateur, Equipe $equipe): bool
     {
-        return $utilisateur->role === 'president'
-            && $equipe->club?->president_id === $utilisateur->id;
+        return $utilisateur->presidesClub($equipe->club)
+            || $utilisateur->coachesEquipe($equipe);
     }
 
     public function voir(User $utilisateur, Evenement $evenement): bool
     {
-        return $utilisateur->role === 'president'
-            && $evenement->equipe?->club?->president_id === $utilisateur->id;
+        return $utilisateur->presidesClub($evenement->equipe?->club)
+            || $utilisateur->coachesEquipe($evenement->equipe)
+            || $utilisateur->belongsToEquipe($evenement->equipe);
     }
 
     public function modifier(User $utilisateur, Evenement $evenement): bool
     {
-        return $this->voir($utilisateur, $evenement);
+        return $utilisateur->presidesClub($evenement->equipe?->club)
+            || $utilisateur->coachesEquipe($evenement->equipe);
     }
 
     public function supprimer(User $utilisateur, Evenement $evenement): bool
     {
-        return $this->voir($utilisateur, $evenement);
+        return $this->modifier($utilisateur, $evenement);
+    }
+
+    public function repondreDisponibilite(User $utilisateur, Evenement $evenement): bool
+    {
+        return $utilisateur->belongsToEquipe($evenement->equipe);
+    }
+
+    public function repondreInvitationAdversaire(User $utilisateur, Evenement $evenement): bool
+    {
+        return $utilisateur->isCoach()
+            && $utilisateur->coachesEquipe($evenement->adversaireEquipe);
     }
 }

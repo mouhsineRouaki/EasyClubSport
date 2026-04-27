@@ -33,11 +33,6 @@ class Club extends Model
         return $this->hasMany(Equipe::class, 'club_id');
     }
 
-    public function cotisations(): HasMany
-    {
-        return $this->hasMany(Cotisation::class, 'club_id');
-    }
-
     public function annonces(): HasMany
     {
         return $this->hasMany(Annonce::class, 'club_id');

@@ -5,12 +5,18 @@ namespace App\Services\Evenement;
 use App\Models\Evenement;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\Notification\NotificationService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class MatchInvitationService
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {
+    }
+
     public function notifierDemande(Evenement $evenement): void
     {
         $evenement->loadMissing(['equipe.club', 'adversaireEquipe.club', 'adversaireEquipe.coach']);
@@ -24,17 +30,21 @@ class MatchInvitationService
         $equipeAdverse = $evenement->adversaireEquipe?->nom ?? 'votre equipe';
 
         $this->destinatairesAdversaires($evenement)->each(function (User $destinataire) use ($evenement, $equipeLocale, $equipeAdverse, $dateMatch) {
-            Notification::updateOrCreate(
+            $this->notificationService->updateOrCreatePourUtilisateur(
+                $destinataire,
                 [
-                    'utilisateur_id' => $destinataire->id,
                     'evenement_id' => $evenement->id,
                     'action' => 'match_invitation',
                 ],
                 [
+                    'evenement_id' => $evenement->id,
                     'titre' => 'Demande de match a valider',
                     'contenu' => "{$equipeLocale} souhaite jouer contre {$equipeAdverse} le {$dateMatch}.",
                     'type_notification' => 'alerte',
+                    'action' => 'match_invitation',
                     'statut_action' => 'en_attente',
+                    'module_cible' => 'evenements',
+                    'cible_id' => $evenement->id,
                     'est_lue' => false,
                     'date_lecture' => null,
                 ]
@@ -128,14 +138,15 @@ class MatchInvitationService
             ->values();
 
         $destinataires->each(function (User $destinataire) use ($evenement, $statutLisible, $equipeAdverse) {
-            Notification::create([
-                'utilisateur_id' => $destinataire->id,
+            $this->notificationService->creerPourUtilisateur($destinataire, [
                 'evenement_id' => $evenement->id,
                 'titre' => 'Reponse a la demande de match',
                 'contenu' => "La demande de match contre {$equipeAdverse} a ete {$statutLisible}.",
                 'type_notification' => 'info',
                 'action' => 'match_invitation_response',
                 'statut_action' => $evenement->statut_invitation_adversaire,
+                'module_cible' => 'evenements',
+                'cible_id' => $evenement->id,
             ]);
         });
     }

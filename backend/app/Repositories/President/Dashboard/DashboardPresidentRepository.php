@@ -4,7 +4,6 @@ namespace App\Repositories\President\Dashboard;
 
 use App\Models\Annonce;
 use App\Models\Club;
-use App\Models\Cotisation;
 use App\Models\Equipe;
 use App\Models\Evenement;
 use App\Models\MembreEquipe;
@@ -62,24 +61,6 @@ class DashboardPresidentRepository
             ->count();
     }
 
-    public function compterCotisationsPayees(User $utilisateur): int
-    {
-        return Cotisation::whereHas('club', function ($query) use ($utilisateur) {
-            $query->where('president_id', $utilisateur->id);
-        })
-            ->where('statut_paiement', 'paye')
-            ->count();
-    }
-
-    public function compterCotisationsEnAttente(User $utilisateur): int
-    {
-        return Cotisation::whereHas('club', function ($query) use ($utilisateur) {
-            $query->where('president_id', $utilisateur->id);
-        })
-            ->where('statut_paiement', 'en_attente')
-            ->count();
-    }
-
     public function recupererClubsRecents(User $utilisateur, int $limite = 5): Collection
     {
         return Club::where('president_id', $utilisateur->id)
@@ -124,4 +105,3 @@ class DashboardPresidentRepository
             ->get();
     }
 }
-

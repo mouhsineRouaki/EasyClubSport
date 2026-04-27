@@ -7,8 +7,10 @@ use App\Http\Requests\President\Equipe\AjouterJoueurEquipeRequest;
 use App\Http\Requests\President\Equipe\AssignerCoachEquipeRequest;
 use App\Http\Requests\President\Equipe\CreerEquipeRequest;
 use App\Http\Requests\President\Equipe\ModifierEquipeRequest;
+use App\Http\Requests\President\Equipe\NotifierEquipeRequest;
 use App\Http\Resources\President\Equipe\EquipeCollection;
 use App\Http\Resources\President\Equipe\EquipeResource;
+use App\Http\Resources\President\Equipe\JoueurDisponibleCollection;
 use App\Http\Resources\President\Equipe\JoueurEquipeCollection;
 use App\Models\Club;
 use App\Models\Equipe;
@@ -141,6 +143,16 @@ class EquipeController extends Controller
         return new JoueurEquipeCollection($this->equipeService->listerJoueurs($equipe, $filtres));
     }
 
+    public function listerJoueursDisponibles(Club $club, Equipe $equipe): JoueurDisponibleCollection
+    {
+        $filtres = $this->cleanFilters($this->paginationParams(6, 24));
+
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('gererJoueurs', $equipe);
+
+        return new JoueurDisponibleCollection($this->equipeService->listerJoueursDisponibles($equipe, $filtres));
+    }
+
     public function ajouterJoueur(AjouterJoueurEquipeRequest $request, Club $club, Equipe $equipe): JsonResponse
     {
         $this->verifierAppartenanceAuClub($club, $equipe);
@@ -195,9 +207,47 @@ class EquipeController extends Controller
         ]);
     }
 
+    public function listerDestinatairesNotification(Request $request, Club $club, Equipe $equipe): JsonResponse
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('voir', $equipe);
+
+        $destinataires = $this->equipeService->listerDestinatairesNotification($equipe, [
+            'q' => $request->query('q', ''),
+            'limit' => $request->integer('limit', 24),
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Destinataires de notification recuperes avec succes.',
+            'data' => [
+                'destinataires' => $destinataires,
+                'code_invitation' => $equipe->code_invitation,
+            ],
+        ]);
+    }
+
+    public function notifierEquipe(NotifierEquipeRequest $request, Club $club, Equipe $equipe): JsonResponse
+    {
+        $this->verifierAppartenanceAuClub($club, $equipe);
+        $this->authorize('voir', $equipe);
+
+        $this->equipeService->notifierInvitationEquipe(
+            $request->user(),
+            $club,
+            $equipe,
+            $request->validated()
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Invitations envoyees avec succes.',
+            'data' => null,
+        ]);
+    }
+
     protected function verifierAppartenanceAuClub(Club $club, Equipe $equipe): void
     {
         abort_if($equipe->club_id !== $club->id, 404, 'Equipe introuvable pour ce club.');
     }
 }
-

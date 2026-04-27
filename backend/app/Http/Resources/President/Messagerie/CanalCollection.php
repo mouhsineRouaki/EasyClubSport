@@ -21,6 +21,8 @@ class CanalCollection extends ResourceCollection
                         'id' => $canal->id,
                         'equipe_id' => $canal->equipe_id,
                         'nom' => $canal->nom,
+                        'image' => $canal->image,
+                        'image_url' => $canal->image ? asset('storage/'.$canal->image) : null,
                         'type_canal' => $canal->type_canal,
                         'description' => $canal->description,
                         'equipe' => $canal->equipe ? [

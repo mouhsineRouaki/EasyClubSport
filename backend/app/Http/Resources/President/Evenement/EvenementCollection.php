@@ -40,6 +40,12 @@ class EvenementCollection extends ResourceCollection
                             'logo' => $evenement->equipe->club->logo,
                             'logo_url' => $evenement->equipe->club->logo ? asset('storage/'.$evenement->equipe->club->logo) : null,
                         ] : null,
+                        'disponibilites' => [
+                            'present_total' => $evenement->disponibilites_present_total ?? 0,
+                            'absent_total' => $evenement->disponibilites_absent_total ?? 0,
+                            'incertain_total' => $evenement->disponibilites_incertain_total ?? 0,
+                            'total_reponses' => $evenement->disponibilites_total ?? 0,
+                        ],
                         'created_at' => $evenement->created_at,
                         'updated_at' => $evenement->updated_at,
                     ];
@@ -71,4 +77,3 @@ class EvenementCollection extends ResourceCollection
         ];
     }
 }
-

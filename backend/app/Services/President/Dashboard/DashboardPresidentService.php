@@ -22,8 +22,6 @@ class DashboardPresidentService
                 'joueurs_total' => $this->dashboardPresidentRepository->compterJoueurs($utilisateur),
                 'evenements_a_venir_total' => $this->dashboardPresidentRepository->compterEvenementsAVenir($utilisateur),
                 'evenements_passes_total' => $this->dashboardPresidentRepository->compterEvenementsPasses($utilisateur),
-                'cotisations_payees_total' => $this->dashboardPresidentRepository->compterCotisationsPayees($utilisateur),
-                'cotisations_en_attente_total' => $this->dashboardPresidentRepository->compterCotisationsEnAttente($utilisateur),
             ],
             'clubs_recents' => $this->dashboardPresidentRepository->recupererClubsRecents($utilisateur),
             'equipes_recentes' => $this->dashboardPresidentRepository->recupererEquipesRecentes($utilisateur),
@@ -32,4 +30,3 @@ class DashboardPresidentService
         ];
     }
 }
-

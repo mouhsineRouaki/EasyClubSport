@@ -5,46 +5,41 @@ namespace App\Http\Controllers\Api\President\Notification;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\President\Notification\NotificationPresidentCollection;
 use App\Models\Notification;
+use App\Services\Notification\NotificationService;
 use Illuminate\Http\JsonResponse;
 
 class NotificationPresidentController extends Controller
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {
+    }
+
     public function index(): NotificationPresidentCollection
     {
-        $notifications = Notification::query()
-            ->where('utilisateur_id', request()->user()->id)
-            ->with(['evenement.equipe.club', 'evenement.adversaireEquipe.club'])
-            ->latest()
-            ->get();
+        $this->authorize('voirListe', Notification::class);
 
-        return new NotificationPresidentCollection($notifications);
+        return new NotificationPresidentCollection(
+            $this->notificationService->listerPourUtilisateur(request()->user())
+        );
     }
 
     public function marquerCommeLue(Notification $notification): JsonResponse
     {
-        abort_if((int) $notification->utilisateur_id !== (int) request()->user()->id, 403, 'Cette notification ne vous appartient pas.');
+        $this->authorize('modifier', $notification);
 
-        $notification->update([
-            'est_lue' => true,
-            'date_lecture' => now(),
-        ]);
+        $notification = $this->notificationService->marquerCommeLue($notification);
 
         return response()->json([
             'status' => true,
             'message' => 'Notification marquee comme lue avec succes.',
-            'data' => ['notification' => $notification->fresh(['evenement.equipe.club', 'evenement.adversaireEquipe.club'])],
+            'data' => ['notification' => $notification],
         ]);
     }
 
     public function marquerToutesCommeLues(): JsonResponse
     {
-        $total = Notification::query()
-            ->where('utilisateur_id', request()->user()->id)
-            ->where('est_lue', false)
-            ->update([
-                'est_lue' => true,
-                'date_lecture' => now(),
-            ]);
+        $total = $this->notificationService->marquerToutesCommeLues(request()->user());
 
         return response()->json([
             'status' => true,

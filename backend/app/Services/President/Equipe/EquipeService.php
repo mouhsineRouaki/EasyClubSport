@@ -2,6 +2,7 @@
 
 namespace App\Services\President\Equipe;
 
+use App\Services\Communication\ClubCommunicationService;
 use App\Models\Club;
 use App\Models\Equipe;
 use App\Models\User;
@@ -14,7 +15,8 @@ use Illuminate\Support\Str;
 class EquipeService
 {
     public function __construct(
-        protected EquipeRepository $equipeRepository
+        protected EquipeRepository $equipeRepository,
+        protected ClubCommunicationService $clubCommunicationService
     ) {
     }
 
@@ -88,7 +90,10 @@ class EquipeService
             ]);
         }
 
-        return $this->equipeRepository->assignerCoach($equipe, $coach);
+        $equipe = $this->equipeRepository->assignerCoach($equipe, $coach);
+        $this->clubCommunicationService->notifierAffectationEquipe($coach, $equipe, 'coach');
+
+        return $equipe;
     }
 
     public function retirerCoach(Equipe $equipe): Equipe
@@ -99,6 +104,11 @@ class EquipeService
     public function listerJoueurs(Equipe $equipe, array $filtres = [])
     {
         return $this->equipeRepository->listerJoueurs($equipe, $filtres);
+    }
+
+    public function listerJoueursDisponibles(Equipe $equipe, array $filtres = [])
+    {
+        return $this->equipeRepository->listerJoueursDisponibles($equipe, $filtres);
     }
 
     public function ajouterJoueur(Equipe $equipe, User $joueur): void
@@ -124,10 +134,31 @@ class EquipeService
         }
 
         $this->equipeRepository->ajouterJoueur($equipe, $joueur);
+        $this->clubCommunicationService->notifierAffectationEquipe($joueur, $equipe, 'joueur');
     }
 
     public function retirerJoueur(Equipe $equipe, User $joueur): void
     {
         $this->equipeRepository->retirerJoueur($equipe, $joueur);
+    }
+
+    public function listerDestinatairesNotification(Equipe $equipe, array $filtres = [])
+    {
+        return $this->clubCommunicationService->listerCandidatsInvitationEquipe($equipe, $filtres);
+    }
+
+    public function notifierInvitationEquipe(User $utilisateur, Club $club, Equipe $equipe, array $donnees): void
+    {
+        $destinataires = User::query()
+            ->whereIn('id', $donnees['utilisateur_ids'] ?? [])
+            ->get();
+
+        $this->clubCommunicationService->notifierInvitationEquipe(
+            $utilisateur,
+            $club,
+            $equipe,
+            $destinataires,
+            $donnees['message'] ?? null
+        );
     }
 }

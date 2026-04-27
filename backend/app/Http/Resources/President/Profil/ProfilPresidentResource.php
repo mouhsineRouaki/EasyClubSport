@@ -25,6 +25,17 @@ class ProfilPresidentResource extends JsonResource
                     'adresse' => $utilisateur->adresse,
                     'photo' => $utilisateur->photo,
                     'photo_url' => $utilisateur->photo ? asset('storage/'.$utilisateur->photo) : null,
+                    'numero_joueur' => $utilisateur->numero_joueur,
+                    'poste_principal' => $utilisateur->poste_principal,
+                    'poste_secondaire' => $utilisateur->poste_secondaire,
+                    'pied_fort' => $utilisateur->pied_fort,
+                    'note_globale' => $utilisateur->note_globale,
+                    'attaque' => $utilisateur->attaque,
+                    'defense' => $utilisateur->defense,
+                    'vitesse' => $utilisateur->vitesse,
+                    'passe' => $utilisateur->passe,
+                    'dribble' => $utilisateur->dribble,
+                    'physique' => $utilisateur->physique,
                     'role' => $utilisateur->role,
                     'statut' => $utilisateur->statut,
                 ],
@@ -32,4 +43,3 @@ class ProfilPresidentResource extends JsonResource
         ];
     }
 }
-

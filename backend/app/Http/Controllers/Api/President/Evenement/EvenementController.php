@@ -74,6 +74,48 @@ class EvenementController extends Controller
         ]);
     }
 
+    public function composition(Club $club, Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        $this->verifierAppartenanceEvenement($club, $equipe, $evenement);
+        $this->authorize('voir', $evenement);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Composition du match recuperee avec succes.',
+            'data' => [
+                'composition' => $this->evenementService->recupererCompositionMatch($evenement),
+            ],
+        ]);
+    }
+
+    public function feuilleMatch(Club $club, Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        $this->verifierAppartenanceEvenement($club, $equipe, $evenement);
+        $this->authorize('voir', $evenement);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Feuille de match recuperee avec succes.',
+            'data' => [
+                'feuille_match' => $this->evenementService->recupererFeuilleMatch($evenement),
+            ],
+        ]);
+    }
+
+    public function statistiquesMatch(Club $club, Equipe $equipe, Evenement $evenement): JsonResponse
+    {
+        $this->verifierAppartenanceEvenement($club, $equipe, $evenement);
+        $this->authorize('voir', $evenement);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Statistiques du match recuperees avec succes.',
+            'data' => [
+                'statistiques' => $this->evenementService->recupererStatistiquesMatch($evenement),
+            ],
+        ]);
+    }
+
     public function update(ModifierEvenementRequest $request, Club $club, Equipe $equipe, Evenement $evenement): EvenementResource
     {
         $this->verifierAppartenanceEvenement($club, $equipe, $evenement);
@@ -132,4 +174,3 @@ class EvenementController extends Controller
         abort_if($evenement->equipe_id !== $equipe->id, 404, 'Evenement introuvable pour cette equipe.');
     }
 }
-
