@@ -5,6 +5,7 @@ import logoMark from '@/assets/logo-easyclubsport-mark.svg'
 import AppProfileManager from '@/shared/components/AppProfileManager.vue'
 import AppRoleHeroBanner from '@/shared/components/AppRoleHeroBanner.vue'
 import AppRoleWorkspacePanel from '@/shared/components/AppRoleWorkspacePanel.vue'
+import JoueurAnnonces from '@/roles/joueur/annonces/components/JoueurAnnonces.vue'
 import JoueurConvocations from '@/roles/joueur/convocations/components/JoueurConvocations.vue'
 import JoueurDashboardHome from '@/roles/joueur/dashboard/components/JoueurDashboardHome.vue'
 import JoueurEvenements from '@/roles/joueur/evenements/components/JoueurEvenements.vue'
@@ -19,6 +20,7 @@ const { utilisateur: utilisateurConnecte, deconnecter, gererErreurAuthentificati
 const liensFonctionnalites = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'evenements', label: 'Evenements' },
+  { key: 'annonces', label: 'Annonces' },
   { key: 'convocations', label: 'Convocations' },
   { key: 'messagerie', label: 'Messagerie' },
   { key: 'profil', label: 'Profil' },
@@ -32,6 +34,7 @@ const liensGlobaux = [
 
 const placeholdersRecherche = {
   evenements: 'Rechercher un evenement',
+  annonces: 'Rechercher une annonce',
   convocations: 'Rechercher une convocation',
 }
 
@@ -62,10 +65,15 @@ const convocationsEquipe = ref([])
 
 // Evenements et convocations
 const chargementEvenements = ref(false)
+const chargementAnnonces = ref(false)
 const chargementConvocations = ref(false)
 const rechercheEvenements = ref('')
+const rechercheAnnonces = ref('')
 const rechercheConvocations = ref('')
 const debounceEvenements = ref(null)
+const debounceAnnonces = ref(null)
+const annoncesModule = ref([])
+const paginationAnnonces = ref(null)
 
 // Details d'un match
 const chargementCompositionMatch = ref(false)
@@ -92,6 +100,7 @@ const erreurCodeInvitation = ref('')
 
 const champsRechercheParModule = {
   evenements: rechercheEvenements,
+  annonces: rechercheAnnonces,
   convocations: rechercheConvocations,
 }
 
@@ -323,6 +332,25 @@ const chargerEvenements = async () => {
     notifyError(error?.response?.message || error.message || 'Impossible de charger les evenements.')
   } finally {
     chargementEvenements.value = false
+  }
+}
+
+const chargerAnnonces = async (page = 1) => {
+  chargementAnnonces.value = true
+
+  try {
+    const reponse = await authGet('/joueur/annonces', {
+      q: rechercheAnnonces.value,
+      page,
+      per_page: 8,
+    })
+
+    annoncesModule.value = reponse?.data?.annonces || []
+    paginationAnnonces.value = reponse?.data?.pagination || null
+  } catch (error) {
+    notifyError(error?.response?.message || error.message || 'Impossible de charger les annonces.')
+  } finally {
+    chargementAnnonces.value = false
   }
 }
 
@@ -570,6 +598,12 @@ const chargerModule = async (moduleKey, options = {}) => {
       }
       await chargerEvenements()
       break
+    case 'annonces':
+      if (!equipe.value) {
+        await chargerDashboard()
+      }
+      await chargerAnnonces()
+      break
     case 'convocations':
       if (!equipe.value) {
         await chargerDashboard()
@@ -627,6 +661,10 @@ const ouvrirNotificationJoueur = async (notification) => {
       moduleActif.value = 'evenements'
       await chargerModule('evenements')
       break
+    case 'annonces':
+      moduleActif.value = 'annonces'
+      await chargerModule('annonces')
+      break
     default:
       break
   }
@@ -661,6 +699,16 @@ watch(rechercheEvenements, () => {
   }, 350)
 })
 
+watch(rechercheAnnonces, () => {
+  clearTimeout(debounceAnnonces.value)
+
+  debounceAnnonces.value = setTimeout(() => {
+    if (moduleActif.value === 'annonces') {
+      chargerAnnonces(1)
+    }
+  }, 350)
+})
+
 onMounted(async () => {
   await chargerDashboard()
   await chargerNotifications()
@@ -677,6 +725,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   arreterRafraichissementAuto()
   clearTimeout(debounceEvenements.value)
+  clearTimeout(debounceAnnonces.value)
   stopRealtimeJoueur.value()
   stopRealtimeNotifications.value()
   disconnectRealtime()
@@ -726,7 +775,7 @@ onBeforeUnmount(() => {
         :active-module="moduleActif"
         :search-value="rechercheNavigation"
         :search-placeholder="placeholderRecherche"
-        :refresh-disabled="chargementRafraichissement || chargementEvenements || chargementConvocations"
+        :refresh-disabled="chargementRafraichissement || chargementEvenements || chargementAnnonces || chargementConvocations"
         :refresh-loading="chargementRafraichissement"
         :user="utilisateurResume"
         :notifications-props="notificationsDropdownProps"
@@ -772,6 +821,17 @@ onBeforeUnmount(() => {
             @update:recherche="rechercheEvenements = $event"
             @repondre-disponibilite="repondreDisponibilite"
             @ouvrir-detail="ouvrirDetailEvenement"
+          />
+
+          <JoueurAnnonces
+            v-else-if="moduleActif === 'annonces'"
+            :annonces="annoncesModule"
+            :equipe="equipe"
+            :chargement="chargementAnnonces"
+            :recherche="rechercheAnnonces"
+            :pagination="paginationAnnonces"
+            @update:recherche="rechercheAnnonces = $event"
+            @change-page="chargerAnnonces"
           />
 
           <JoueurConvocations

@@ -2,6 +2,7 @@
 
 namespace App\Services\President\Annonce;
 
+use App\Services\Communication\ClubCommunicationService;
 use App\Models\Annonce;
 use App\Models\Club;
 use App\Models\User;
@@ -14,7 +15,8 @@ class AnnonceService
 {
     public function __construct(
         protected AnnonceRepository $annonceRepository,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected ClubCommunicationService $clubCommunicationService
     ) {
     }
 
@@ -42,6 +44,7 @@ class AnnonceService
 
         $annonce = $this->annonceRepository->creer($donnees);
         $this->notificationService->notifierNouvelleAnnonce($annonce);
+        $this->clubCommunicationService->notifierAnnonce($utilisateur, $annonce);
 
         return $annonce;
     }
@@ -58,7 +61,14 @@ class AnnonceService
             $donnees['image'] = $image->store('annonces', 'public');
         }
 
-        return $this->annonceRepository->mettreAJour($annonce, $donnees);
+        $annonce = $this->annonceRepository->mettreAJour($annonce, $donnees);
+        $auteur = $annonce->auteur ?: $annonce->club?->president;
+
+        if ($auteur) {
+            $this->clubCommunicationService->notifierAnnonce($auteur, $annonce, true);
+        }
+
+        return $annonce;
     }
 
     public function supprimer(Annonce $annonce): void

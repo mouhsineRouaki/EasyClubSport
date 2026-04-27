@@ -13,6 +13,11 @@ class AnnoncePolicy
         return $utilisateur->isPresident();
     }
 
+    public function voirListeJoueur(User $utilisateur): bool
+    {
+        return $utilisateur->isJoueur();
+    }
+
     public function creer(User $utilisateur, Club $club): bool
     {
         return $utilisateur->presidesClub($club);

@@ -2,6 +2,7 @@
 
 namespace App\Services\President\Evenement;
 
+use App\Services\Communication\ClubCommunicationService;
 use App\Models\Equipe;
 use App\Models\Evenement;
 use App\Models\User;
@@ -15,7 +16,8 @@ class EvenementService
 {
     public function __construct(
         protected EvenementRepository $evenementRepository,
-        protected MatchInvitationService $matchInvitationService
+        protected MatchInvitationService $matchInvitationService,
+        protected ClubCommunicationService $clubCommunicationService
     ) {
     }
 
@@ -39,6 +41,7 @@ class EvenementService
 
         $evenement = $this->evenementRepository->creer($donnees);
         $this->matchInvitationService->notifierDemande($evenement);
+        $this->clubCommunicationService->notifierNouvelEvenement($utilisateur, $evenement);
 
         return $evenement;
     }
@@ -55,6 +58,12 @@ class EvenementService
 
         if ($invitationChangee) {
             $this->matchInvitationService->notifierDemande($evenement);
+        }
+
+        $createur = $evenement->createur ?: $evenement->equipe?->club?->president;
+
+        if ($createur) {
+            $this->clubCommunicationService->notifierNouvelEvenement($createur, $evenement, true);
         }
 
         return $evenement;

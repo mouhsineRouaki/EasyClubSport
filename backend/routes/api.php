@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Coach\Evenement\EvenementCoachController;
 use App\Http\Controllers\Api\Coach\Messagerie\MessagerieCoachController;
 use App\Http\Controllers\Api\Coach\Notification\NotificationCoachController;
 use App\Http\Controllers\Api\Coach\Profil\ProfilCoachController;
+use App\Http\Controllers\Api\Joueur\Annonce\AnnonceJoueurController;
 use App\Http\Controllers\Api\Joueur\Convocation\ConvocationJoueurController;
 use App\Http\Controllers\Api\Joueur\Dashboard\DashboardJoueurController;
 use App\Http\Controllers\Api\Joueur\Document\DocumentJoueurController;
@@ -80,6 +81,8 @@ Route::middleware(['auth:sanctum', 'role:president'])->prefix('president')->grou
     Route::delete('/clubs/{club}/equipes/{equipe}', [EquipeController::class, 'destroy']);
     Route::put('/clubs/{club}/equipes/{equipe}/coach', [EquipeController::class, 'assignerCoach']);
     Route::delete('/clubs/{club}/equipes/{equipe}/coach', [EquipeController::class, 'retirerCoach']);
+    Route::get('/clubs/{club}/equipes/{equipe}/notification-destinataires', [EquipeController::class, 'listerDestinatairesNotification']);
+    Route::post('/clubs/{club}/equipes/{equipe}/notifier', [EquipeController::class, 'notifierEquipe']);
     Route::get('/clubs/{club}/equipes/{equipe}/joueurs', [EquipeController::class, 'listerJoueurs']);
     Route::get('/clubs/{club}/equipes/{equipe}/joueurs-disponibles', [EquipeController::class, 'listerJoueursDisponibles']);
     Route::post('/clubs/{club}/equipes/{equipe}/joueurs', [EquipeController::class, 'ajouterJoueur']);
@@ -115,6 +118,7 @@ Route::middleware(['auth:sanctum', 'role:joueur'])->prefix('joueur')->group(func
     Route::get('/profil', [ProfilJoueurController::class, 'afficher']);
     Route::put('/profil', [ProfilJoueurController::class, 'modifier']);
     Route::get('/equipe', [EquipeJoueurController::class, 'afficher']);
+    Route::get('/annonces', [AnnonceJoueurController::class, 'index']);
     Route::get('/evenements', [EvenementJoueurController::class, 'index']);
     Route::get('/evenements/{evenement}/composition', [EvenementJoueurController::class, 'composition']);
     Route::get('/evenements/{evenement}/feuille-match', [EvenementJoueurController::class, 'feuilleMatch']);

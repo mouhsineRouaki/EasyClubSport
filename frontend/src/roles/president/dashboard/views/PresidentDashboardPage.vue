@@ -13,6 +13,7 @@ import PresidentMessagingSection from '@/roles/president/messagerie/components/P
 import PresidentPlayerCard from '@/roles/president/joueurs/components/PresidentPlayerCard.vue'
 import PresidentTeamCard from '@/roles/president/equipes/components/PresidentTeamCard.vue'
 import PresidentTeamForm from '@/roles/president/equipes/components/PresidentTeamForm.vue'
+import PresidentTeamNotifyModal from '@/roles/president/equipes/components/PresidentTeamNotifyModal.vue'
 import MatchCompositionSection from '@/shared/components/MatchCompositionSection.vue'
 import MatchSheetSection from '@/shared/components/MatchSheetSection.vue'
 import MatchStatisticsSection from '@/shared/components/MatchStatisticsSection.vue'
@@ -57,6 +58,16 @@ const modalCoachClubOuvert = ref(false)
 const chargementCoachsClub = ref(false)
 const envoiCoachClub = ref(false)
 const coachsClubDisponibles = ref([])
+const modalNotificationEquipeOuvert = ref(false)
+const chargementDestinatairesNotificationEquipe = ref(false)
+const envoiNotificationEquipe = ref(false)
+const destinatairesNotificationEquipe = ref([])
+const destinatairesNotificationEquipeSelectionnes = ref([])
+const rechercheDestinatairesNotificationEquipe = ref('')
+const messageNotificationEquipe = ref('')
+const codeInvitationNotificationEquipe = ref('')
+const erreursNotificationEquipe = ref({})
+const debounceNotificationEquipe = ref(null)
 const chargementClubsOptions = ref(false)
 const clubsOptions = ref([])
 const chargementEquipes = ref(false)
@@ -920,6 +931,116 @@ const fermerModalCoachClub = () => {
   coachsClubDisponibles.value = []
 }
 
+const ouvrirModalNotificationEquipe = async () => {
+  if (!clubEquipeId.value || !equipeGestionSelectionnee.value) {
+    notifyError('Ouvrez d abord le detail d une equipe avant de notifier des membres.')
+    return
+  }
+
+  erreursNotificationEquipe.value = {}
+  rechercheDestinatairesNotificationEquipe.value = ''
+  messageNotificationEquipe.value = ''
+  codeInvitationNotificationEquipe.value = equipeGestionSelectionnee.value.code_invitation || ''
+  destinatairesNotificationEquipe.value = []
+  destinatairesNotificationEquipeSelectionnes.value = []
+  modalNotificationEquipeOuvert.value = true
+  await chargerDestinatairesNotificationEquipe()
+}
+
+const fermerModalNotificationEquipe = () => {
+  modalNotificationEquipeOuvert.value = false
+  chargementDestinatairesNotificationEquipe.value = false
+  envoiNotificationEquipe.value = false
+  rechercheDestinatairesNotificationEquipe.value = ''
+  messageNotificationEquipe.value = ''
+  codeInvitationNotificationEquipe.value = ''
+  destinatairesNotificationEquipe.value = []
+  destinatairesNotificationEquipeSelectionnes.value = []
+  erreursNotificationEquipe.value = {}
+}
+
+const chargerDestinatairesNotificationEquipe = async () => {
+  if (!clubEquipeId.value || !equipeGestionSelectionnee.value) {
+    return
+  }
+
+  chargementDestinatairesNotificationEquipe.value = true
+
+  try {
+    const reponse = await authGet(
+      `/president/clubs/${clubEquipeId.value}/equipes/${equipeGestionSelectionnee.value.id}/notification-destinataires`,
+      {
+        q: rechercheDestinatairesNotificationEquipe.value || undefined,
+        limit: 24,
+      },
+    )
+
+    destinatairesNotificationEquipe.value = reponse?.data?.destinataires || []
+    codeInvitationNotificationEquipe.value = reponse?.data?.code_invitation || equipeGestionSelectionnee.value.code_invitation || ''
+    destinatairesNotificationEquipeSelectionnes.value = destinatairesNotificationEquipeSelectionnes.value.filter((id) =>
+      destinatairesNotificationEquipe.value.some((participant) => participant.id === id),
+    )
+  } catch (error) {
+    destinatairesNotificationEquipe.value = []
+    notifyError(error?.response?.message || error.message || 'Impossible de charger les destinataires.')
+  } finally {
+    chargementDestinatairesNotificationEquipe.value = false
+  }
+}
+
+const basculerDestinataireNotificationEquipe = (participantId) => {
+  if (!participantId) {
+    return
+  }
+
+  if (destinatairesNotificationEquipeSelectionnes.value.includes(participantId)) {
+    destinatairesNotificationEquipeSelectionnes.value = destinatairesNotificationEquipeSelectionnes.value.filter((id) => id !== participantId)
+    return
+  }
+
+  destinatairesNotificationEquipeSelectionnes.value = [...destinatairesNotificationEquipeSelectionnes.value, participantId]
+}
+
+const basculerTousDestinatairesNotificationEquipe = () => {
+  if (!destinatairesNotificationEquipe.value.length) {
+    return
+  }
+
+  if (destinatairesNotificationEquipeSelectionnes.value.length === destinatairesNotificationEquipe.value.length) {
+    destinatairesNotificationEquipeSelectionnes.value = []
+    return
+  }
+
+  destinatairesNotificationEquipeSelectionnes.value = destinatairesNotificationEquipe.value.map((participant) => participant.id)
+}
+
+const envoyerNotificationEquipe = async () => {
+  if (!clubEquipeId.value || !equipeGestionSelectionnee.value) {
+    return
+  }
+
+  envoiNotificationEquipe.value = true
+  erreursNotificationEquipe.value = {}
+
+  try {
+    const reponse = await authPost(
+      `/president/clubs/${clubEquipeId.value}/equipes/${equipeGestionSelectionnee.value.id}/notifier`,
+      {
+        utilisateur_ids: destinatairesNotificationEquipeSelectionnes.value,
+        message: messageNotificationEquipe.value || null,
+      },
+    )
+
+    notifySuccess(reponse?.message || 'Invitations envoyees avec succes.')
+    fermerModalNotificationEquipe()
+  } catch (error) {
+    erreursNotificationEquipe.value = error?.response?.data || {}
+    notifyError(error?.response?.message || error.message || 'Impossible d envoyer les invitations.')
+  } finally {
+    envoiNotificationEquipe.value = false
+  }
+}
+
 const assignerCoachAuClub = async (coach) => {
   if (!clubEquipeId.value || !equipeGestionSelectionnee.value || !coach?.id) {
     return
@@ -1716,6 +1837,20 @@ watch(rechercheCoachsClub, () => {
   }, 300)
 })
 
+watch(rechercheDestinatairesNotificationEquipe, () => {
+  if (!modalNotificationEquipeOuvert.value) {
+    return
+  }
+
+  if (debounceNotificationEquipe.value) {
+    clearTimeout(debounceNotificationEquipe.value)
+  }
+
+  debounceNotificationEquipe.value = setTimeout(() => {
+    chargerDestinatairesNotificationEquipe()
+  }, 300)
+})
+
 watch(rechercheEquipes, () => {
   if (debounceEquipes.value) {
     clearTimeout(debounceEquipes.value)
@@ -1777,6 +1912,10 @@ onBeforeUnmount(() => {
 
   if (debounceAdversairesEvenements.value) {
     clearTimeout(debounceAdversairesEvenements.value)
+  }
+
+  if (debounceNotificationEquipe.value) {
+    clearTimeout(debounceNotificationEquipe.value)
   }
 
   stopRealtimeNotifications.value?.()
@@ -2521,6 +2660,17 @@ onBeforeUnmount(() => {
                       <div class="flex gap-2">
                         <button
                           type="button"
+                          class="inline-flex items-center gap-2 rounded-full border border-[#dbe2ef] bg-white px-4 py-2 text-xs font-black text-[#2446d8] transition hover:border-[#c7d2ea] hover:bg-[#f8fbff]"
+                          @click="ouvrirModalNotificationEquipe"
+                        >
+                          <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <path d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h8a2.25 2.25 0 0 1 2.25 2.25v6.5A2.25 2.25 0 0 1 14 15.5H9.3l-3.44 2.23c-.3.2-.7-.02-.7-.38V15.5H6A2.25 2.25 0 0 1 3.75 13.25v-6.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M6.75 8.25h6.5M6.75 11h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                          </svg>
+                          Notifier
+                        </button>
+                        <button
+                          type="button"
                           class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dbe2ef] bg-white text-[#1f2a44] transition hover:border-[#c7d2ea] hover:bg-[#f8fbff]"
                           aria-label="Modifier l equipe"
                           title="Modifier l equipe"
@@ -2670,6 +2820,25 @@ onBeforeUnmount(() => {
                           </div>
                         </section>
                       </div>
+
+                      <PresidentTeamNotifyModal
+                        :visible="modalNotificationEquipeOuvert"
+                        :equipe="equipeGestionSelectionnee"
+                        :code-invitation="codeInvitationNotificationEquipe || equipeGestionSelectionnee?.code_invitation || ''"
+                        :search="rechercheDestinatairesNotificationEquipe"
+                        :message="messageNotificationEquipe"
+                        :participants="destinatairesNotificationEquipe"
+                        :selected-ids="destinatairesNotificationEquipeSelectionnes"
+                        :loading="chargementDestinatairesNotificationEquipe"
+                        :submitting="envoiNotificationEquipe"
+                        :errors="erreursNotificationEquipe"
+                        @close="fermerModalNotificationEquipe"
+                        @submit="envoyerNotificationEquipe"
+                        @update:search="rechercheDestinatairesNotificationEquipe = $event"
+                        @update:message="messageNotificationEquipe = $event"
+                        @toggle-participant="basculerDestinataireNotificationEquipe"
+                        @toggle-all="basculerTousDestinatairesNotificationEquipe"
+                      />
                     </div>
                   </template>
 
